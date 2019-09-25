@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e
+
+if [[ -n "${GRANARY_DEBUG}" ]]; then
+    set -x
+fi
+
+if [[ -n "${GIT_COMMIT}" ]]; then
+    GIT_COMMIT="${GIT_COMMIT:0:7}"
+else
+    GIT_COMMIT="$(git rev-parse --short HEAD)"
+fi
+
+function usage() {
+    echo -n \
+"Usage: $(basename "$0")
+
+Build application for staging or a release.
+"
+}
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+    if [ "${1:-}" = "--help" ]; then
+        usage
+    else
+        ./scripts/run-tests
+
+        echo "Build jar for API subproject"
+        GIT_COMMIT="${GIT_COMMIT}" docker-compose \
+            -f docker-compose.yml \
+            run --rm --no-deps \
+            sbt api/assembly
+
+        echo "Build scala container images"
+        GIT_COMMIT="${GIT_COMMIT}" docker-compose \
+            -f docker-compose.yml \
+            -f docker-compose.test.yml \
+            build app-backend app-backend-migrations
+    fi
+fi

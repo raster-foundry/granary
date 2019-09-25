@@ -1,0 +1,9 @@
+---
+- name: Install setuptools
+  pip: name="setuptools" state="latest"
+
+- name: Install HTTPie
+  pip: name="httpie" version="{{ httpie_version }}"
+
+- name: Install HTTPie JWT Auth plugin
+  pip: name="httpie-jwt-auth" version="{{ httpie_jwt_auth_version }}"

@@ -1,0 +1,87 @@
+version: '2.3'
+services:
+  database:
+    image: quay.io/azavea/postgis:2.3-postgres9.6-slim
+    environment:
+      - POSTGRES_USER=granary
+      - POSTGRES_PASSWORD=granary
+      - POSTGRES_DB=granary
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "granary"]
+      interval: 3s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  app-backend:
+    image: openjdk:11-jdk
+    command:
+      - "api/run"
+    depends_on:
+      database:
+        condition: service_healthy
+    entrypoint: java
+    command:
+      - "-jar"
+      - "granary-api-assembly.jar"
+    environment:
+      - AWS_PROFILE
+      - ENVIRONMENT=development
+      - POSTGRES_URL=jdbc:postgresql://database.service.internal/
+      - POSTGRES_NAME=granary
+      - POSTGRES_USER=granary
+      - POSTGRES_PASSWORD=granary
+    links:
+      - database:database.service.internal
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./app-backend/:/opt/granary/app-backend/
+      - $HOME/.sbt:/root/.sbt
+      - $HOME/.coursier:/root/.coursier
+      - ./.bintray:/root/.bintray
+      - $HOME/.ivy2:/root/.ivy2
+      - $HOME/.aws:/root/.aws:ro
+    working_dir: /opt/granary/app-backend/api/target/scala-2.11/
+
+  sbt:
+    image: hseeberger/scala-sbt:11.0.2_2.12.8_1.2.8
+    depends_on:
+      database:
+        condition: service_healthy
+    links:
+      - database:database.service.internal
+    environment:
+      - AWS_PROFILE
+      - POSTGRES_URL=jdbc:postgresql://database.service.internal/
+      - POSTGRES_NAME=granary
+      - POSTGRES_USER=granary
+      - POSTGRES_PASSWORD=granary
+      - COURSIER_CACHE=/root/.coursier
+    volumes:
+      - ./app-backend:/opt/granary
+      - $HOME/.sbt:/root/.sbt
+      - $HOME/.coursier:/root/.coursier
+      - ./.bintray:/root/.bintray
+      - $HOME/.ivy2:/root/.ivy2
+      - $HOME/.aws:/root/.aws:ro
+    working_dir: /opt/granary/
+    entrypoint: sbt
+
+  app-backend-migrations:
+    image: boxfuse/flyway:5.2.4
+    environment:
+      - FLYWAY_DRIVER=org.postgresql.Driver
+      - FLYWAY_URL=jdbc:postgresql://database.service.internal/granary
+      - FLYWAY_USER=granary
+      - FLYWAY_PASSWORD=granary
+      - FLYWAY_LOCATIONS=filesystem:/opt/granary/database/src/main/resources/db
+      - FLYWAY_SCHEMAS=public
+      - FLYWAY_BASELINE_ON_MIGRATE=true
+    depends_on:
+      database:
+        condition: service_healthy
+    links:
+      - database:database.service.internal
+    volumes:
+      - ./app-backend:/opt/granary
