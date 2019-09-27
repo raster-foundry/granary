@@ -15,9 +15,6 @@ core to the pursuit of those features:
 - we should deploy continuously
 - infrastructure should be kept as light as possible
 
-These requirements are located roughly a third of the way from "core competency
-team improvement" to vanity.
-
 The main question this ADR seeks to answer is how the API works and how
 communication between the external world and the API and the API and the model
 runner will work. This ADR will not attempt to answer questions of what a user interface
@@ -28,7 +25,48 @@ uses we envision for this project.
 
 ### Summary
 
-TODO
+The datamodel for the application includes three core entities, modeled here as
+scala case classes without imports:
+
+```scala
+// An area of interest
+case class AOI(
+  // the geographic bounding box imagery must intersect with
+  geom: Projected[Geometry],
+  // the largest acceptable ground sampling distance for new imagery
+  targetResolution: Double,
+  // required wavelengths that some of the image's bands must overlap
+  wavelengths: List[Double],
+  // what model this AOI is associated with
+  modelId: UUID
+)
+
+// A model
+case class Model(
+  // the name of the model
+  modelName: String,
+  // which job definition to use to run predictions using this model
+  // the container can't be overridden for a job definition, so we must
+  // know this at job submission time
+  jobDefinition: String,
+  // a description of the prediction command, to which a new image and
+  // a notification endpoint can be appended
+  command: List[String]
+)
+
+// A model run result
+case class Prediction(
+  // the model that this prediction is for
+  modelId: UUID,
+  // the AOI that this prediction is for
+  aoiId: UUID,
+  // an absolute uri for GeoJSON holding the results of this prediction
+  uri: URI
+)
+```
+
+`Model`s will be renamed to something less overloaded for developer sanity at
+some later date.
 
 ### New imagery from the outside world
 
@@ -45,10 +83,6 @@ spec extension. There are several reasons to prefer using STAC for a datamodel.
 These include tapping into ongoing work in the geospatial community to standardize
 data exchange, making validation easier for anyone hoping to rely on this API,
 and reusing our own work around a type-safe STAC datamodel in `geotrellis-server`.
-This choice also commits us to using Scala as the backend language. Using anything
-else would require us to rewrite data modeling work in another language, which is
-time consuming and would quickly get either ahead of or behind whatever it's
-supposed to be in sync with.
 
 ### Running models against new imagery
 
@@ -57,12 +91,13 @@ available models. A `model` is some function from raster to raster, raster to
 geojson, or raster to number. For simplicity, we'll start with the raster to geojson
 case, since it will save us some complexity on figuring out what kinds of
 contracts we need to enforce for the other kinds of models and is sufficient for
-object detection and chip classification tasks. `Model`s know what sorts of imagery
-are acceptable for them to obtain meaningful results:
+object detection, chip classification, and semantic segmentation tasks.
+`Model`s know what sorts of imagery are acceptable for them to obtain meaningful
+results:
 
 - an array of bandwidth requirements
 - a minimum spatial resolution
-- an area of interest
+- an `AOI`
 
 We can determine this information for any incoming imagery that adheres to the
 `eo` spec using band information.
@@ -77,9 +112,6 @@ guess at it based on heuristics.
 Once we identify that a `model` should run against an image, we'll kick off an
 AWS Batch job with the model's parameters. The `model`'s command _must_ accept a
 STAC item with the `eo` extension as its last parameter.
-
-`Model`s will be renamed to something less overloaded for developer sanity at
-some later date.
 
 ### Notifying the API
 
@@ -120,18 +152,15 @@ There are several consequences of the choice to aim for continuous deployment:
   generative testing of workflows modeled through API interaction both for
   correctness and performance regressions. I believe that we already have the
   tools and expertise on the team to do this.
+- The application should also include smoke tests. Smoke tests will be a new
+  feature of CI for us. We should be able to rely on the small application scope
+  to ensure that we can define a reasonable standard for "not on fire."
 - This repository probably shouldn't follow the `git flow` pattern, since the
   relationship between `develop` and `master` will be pretty
   confused (`develop = master` at all times). It is currently `develop` for
   consistency and to avoid the appearance of having made that choice final before
   this ADR has been reviewed.
-- We'll need to determine a good story about feature flagging and probably also
-  vertically slice user-facing development. Alternatively, if vertical slicing
-  is expected to become a bottleneck, we could attempt to find a solution through
-  team process changes, where every paired frontend and backend change requires
-  pairing. The latter alternative doesn't sound terrible to me and might have
-  the knock-on benefit of diminishing hard specialization within the team. How
-  we handle that process should be an ADR some time in the future.
+- We'll need to determine a good story about feature flagging. There
 
 ### Impact of keeping infrastructure as light as possible
 
