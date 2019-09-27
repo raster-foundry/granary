@@ -85,7 +85,7 @@ some later date.
 
 Since `model`s will be run in some asynchronous workflow, they'll need a way to
 notify the API. The form that notification should take is a [STAC item with the labeling extension](https://github.com/radiantearth/stac-spec/tree/master/extensions/label).
-Reasons to lean on STAC here are similar here to the reasons for leaning on it for new imagery. The API will accept a `POST` to a particular model
+Reasons to lean on STAC here are similar to the reasons for leaning on it for new imagery. The API will accept a `POST` to a particular model
 that contains a STAC item with an asset that points to predictions on the new im
 agery.
 
