@@ -160,8 +160,11 @@ There are several consequences of the choice to aim for continuous deployment:
   confused (`develop = master` at all times). It is currently `develop` for
   consistency and to avoid the appearance of having made that choice final before
   this ADR has been reviewed.
-- We'll need to determine a good story about feature flagging. Also maybe API
-  versioning? Seems like it might be OK! TODO
+- To enable the frontend to change without the backend's being ready, we will need
+  to work out a sensible story about feature flags. We'll also need to enable the
+  backend to change, even in breaking ways, without the frontend needing to know
+  or care. A likely candidate to solve the latter problem is API versioning. Later
+  ADRs should address implementation details for both of these problems.
 
 ### Impact of keeping infrastructure as light as possible
 
