@@ -160,7 +160,8 @@ There are several consequences of the choice to aim for continuous deployment:
   confused (`develop = master` at all times). It is currently `develop` for
   consistency and to avoid the appearance of having made that choice final before
   this ADR has been reviewed.
-- We'll need to determine a good story about feature flagging. There
+- We'll need to determine a good story about feature flagging. Also maybe API
+  versioning? Seems like it might be OK! TODO
 
 ### Impact of keeping infrastructure as light as possible
 
