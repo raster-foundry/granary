@@ -26,7 +26,7 @@ uses we envision for this project.
 ### Summary
 
 The datamodel for the application includes three core entities, modeled here as
-scala case classes without imports:
+scala case classes without imports (and without bookkeeping fields like `id`):
 
 ```scala
 // An area of interest
@@ -112,6 +112,13 @@ guess at it based on heuristics.
 Once we identify that a `model` should run against an image, we'll kick off an
 AWS Batch job with the model's parameters. The `model`'s command _must_ accept a
 STAC item with the `eo` extension as its last parameter.
+
+An important security concern is that the compute environment for running models
+must be in a VPC with general internet access (or at least a gateway to make POST
+requests to the application), but _without_ access to the database, to prevent
+users, even users who've somehow compromised the database credentials, from
+executing arbitrary code. If we as a team take responsibility for deployment
+code, we should make sure that the resulting configuration passes this check.
 
 ### Notifying the API
 
@@ -199,3 +206,23 @@ appropriately to an unbounded set of external resources. SNS allows us to
 achieve a clear separation of concerns.
 
 # Consequences
+
+Because we chose continuous deployment, we'll need to:
+
+- revert the default branch to `master`
+- create a pull request template that expresses the constraints
+  we've committed to by choosing continuous deployment
+- set up CI to deploy on every merge to `master`
+
+We'll also need to do standard startup work for a new Scala backend. Much
+of that work was free, thanks to the azavea.g8 template. However, we'll
+need to create a datamodel and `DAO`s and routes. We're good at this :tm:
+now, so I don't think this needs much elaboration, and most of the details
+will come out in implementation I think.
+
+We'll also need to make a decision about where deployment code lives. Since this
+is supposed to be open source and portable, I think it makes sense for us
+to bring deployment into the open source repository. The downside to that is
+that our open source tool will come with some vendor lock-in. On the other
+hand, if deployment lives separately, our small open source tool will
+probably never be deployed by anyone else.
