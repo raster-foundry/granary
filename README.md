@@ -3,27 +3,24 @@ An API project that uses http4s and doobie
 
 ## Requirements
 
-- Vagrant 2.0+
-- VirtualBox 4.3+
+- `docker`
+- `docker-compose`
 
 ## Quick Setup
 ```
-./scripts/setup
+./scripts/update
 ```
 
 Then `ssh` into the machine when that is complete and start the server with `./scripts/server`. In another shell inside the VM you should be able to make a request:
 
 `http :8080/api/hello/world`
 
-### VM rsync
-
-In order to sync file changes to the Vagrant VM, you'll need to run `vagrant rsync-auto` in a separate terminal while developing. Otherwise files will only be copied into the VM when it boots. `rsync` is used because when compiling inside the VM traditional file-sharing can be slow and cumbersome.
-
 ## Developing
 
-The VM includes [HTTPie](https://httpie.org/) and the
+It's easier to test changes with the API with [HTTPie](https://httpie.org/) and the
 [HTTPie JWT Auth plugin](https://github.com/teracyhq/httpie-jwt-auth) in order to make
-authentication with APIs as seamless as possible. All following commands should be run within the VM.
+authentication with APIs as seamless as possible. All following commands assume
+you have those available.
 
 ### Nexus Repository Manager
 
@@ -44,4 +41,4 @@ Running migrations and other tasks are managed through `./scripts/migrate`.
 ### Development workflow
 Usually at least two terminals should be open for doing development. The first terminal is where `sbt` should be run (`./scripts/console sbt`). In this terminal tests can be run, projects compiled, and the server assembled.
 
-The other terminal is where the server should be run `./scripts/server` or other one-off commands. To see changes you made to the API live you will need to first assemble the `jar` for the `api` server.
+The other terminal is where the server should be run `./scripts/server` or other one-off commands. To see changes you made to the API live you will need to first `assemble` the `jar` for the `api` server.

@@ -9,7 +9,7 @@ object Versions {
   val LogbackVersion = "1.2.3"
   val ScapegoatVersion = "1.3.8"
   val CirceVersion = "0.12.1"
-  val DoobieVersion = "0.7.00.8.02"
+  val DoobieVersion = "0.8.2"
 }
 
 object Dependencies {
