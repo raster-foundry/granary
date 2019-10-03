@@ -9,7 +9,7 @@ lazy val commonSettings = Seq(
   organization := "com.rasterfoundry",
   name := "granary",
   version := "0.0.1-SNAPSHOT",
-  scalaVersion := "2.12.8",
+  scalaVersion := "2.12.10",
   scalafmtOnCompile := true,
   scapegoatVersion := Versions.ScapegoatVersion,
   scalacOptions := Seq(
@@ -29,7 +29,6 @@ lazy val commonSettings = Seq(
 lazy val root = (project in file("."))
   .settings(commonSettings: _*)
   .aggregate(api, database, datamodel)
-lazy val rootRef = LocalProject("root")
 
 ///////////////
 // Datamodel //
@@ -67,7 +66,7 @@ lazy val databaseDependencies = commonDependencies ++ Seq(
 )
 
 lazy val database = (project in file("database"))
-  .dependsOn(rootRef, datamodel)
+  .dependsOn(datamodel)
   .settings(databaseSettings: _*)
   .settings({
     libraryDependencies ++= databaseDependencies
@@ -100,7 +99,7 @@ lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
 )
 
 lazy val api = (project in file("api"))
-  .dependsOn(rootRef, datamodel, database)
+  .dependsOn(datamodel, database)
   .settings(apiSettings: _*)
   .settings({
     libraryDependencies ++= apiDependencies
