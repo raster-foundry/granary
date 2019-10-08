@@ -21,10 +21,10 @@ function generate_sbtopts() {
 
         pushd "${DIR}/app-backend"
 
-        > .sbtopts
+        true >.sbtopts
 
-        echo "-Dsbt.override.build.repos=true" >> .sbtopts
-        echo "-Dsbt.repository.config=project/repositories" >> .sbtopts
+        echo "-Dsbt.override.build.repos=true" >>.sbtopts
+        echo "-Dsbt.repository.config=project/repositories" >>.sbtopts
 
         popd
     fi
