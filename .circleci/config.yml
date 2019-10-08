@@ -20,7 +20,6 @@ jobs:
       - restore_cache:
           keys:
             - sbt-cache-{{ checksum "app-backend/project/Dependencies.scala" }}
-            - sbt-cache-
 
       - run:
           command: sbt test:compile
