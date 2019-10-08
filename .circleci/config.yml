@@ -1,0 +1,43 @@
+version: 2.0
+jobs:
+  build:
+    # CircleCI does not run workflows for tags unless you explicitly specify tag filters
+    filters:
+      tags:
+        only:
+          - /^(.*)$/
+
+    docker:
+      - image: circleci/openjdk:11-jdk
+
+    steps:
+      - checkout
+
+      # https://circleci.com/docs/2.0/building-docker-images/
+      - setup_remote_docker:
+          docker_layer_caching: true
+
+      - restore_cache:
+          keys:
+            - sbt-cache-{{ checksum "app-backend/project/Dependencies.scala" }}
+            - sbt-cache-
+
+      - run:
+          command: sbt test:compile
+          working_directory: ~/project/app-backend
+
+      - save_cache:
+          paths:
+            - ~/.ivy2/cache
+            - ~/.sbt
+            - ~/.cache/coursier
+          key: sbt-cache-{{ checksum "app-backend/project/Dependencies.scala" }}
+
+      - run:
+          command: ./scripts/cibuild
+
+      - run: |
+          if [[ ! "${CIRCLE_BRANCH}" =~ ^develop$|^release/.*$|^hotfix/.*$|^feature/jrb/ci$ ]]; then
+              circleci-agent step halt
+          fi
+          ./scripts/cipublish
