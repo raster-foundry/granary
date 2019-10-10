@@ -27,7 +27,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     else
         ./scripts/test
 
-        pushd "${DIR}/app-backend"
+        pushd "${DIR}"
 
         echo "Building JAR for API subproject"
         ./sbt api/assembly
@@ -38,6 +38,6 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         GIT_COMMIT="${GIT_COMMIT}" docker-compose \
             -f docker-compose.yml \
             -f docker-compose.ci.yml \
-            build app-backend app-backend-migrations
+            build api api-migrations
     fi
 fi

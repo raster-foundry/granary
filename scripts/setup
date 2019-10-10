@@ -19,7 +19,7 @@ function generate_sbtopts() {
     if host nexus.internal.azavea.com; then
         echo "Generating .sbtopts"
 
-        pushd "${DIR}/app-backend"
+        pushd "${DIR}"
 
         true >.sbtopts
 

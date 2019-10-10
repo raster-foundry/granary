@@ -26,17 +26,17 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
 
         # Bring up PostgreSQL and SBT in a way that respects
         # configured service health checks.
-        docker-compose up -d database app-backend
+        docker-compose up -d database api
 
         # Apply any outstanding migrations.
         docker-compose \
             -f docker-compose.yml \
             run --rm \
-            app-backend-migrations migrate
+            api-migrations migrate
 
         # Remove service associated with `docker-compose up`
         # command above.
-        docker-compose kill app-backend &&
-            docker-compose rm -f app-backend
+        docker-compose kill api &&
+            docker-compose rm -f api
     fi
 fi

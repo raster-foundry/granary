@@ -13,7 +13,7 @@ services:
       retries: 3
       start_period: 5s
 
-  app-backend:
+  api:
     image: openjdk:11-jdk
     command:
       - "api/run"
@@ -36,13 +36,13 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./app-backend/:/opt/granary/app-backend/
+      - ./:/opt/granary/
       - $HOME/.sbt:/root/.sbt
       - $HOME/.coursier:/root/.coursier
       - ./.bintray:/root/.bintray
       - $HOME/.ivy2:/root/.ivy2
       - $HOME/.aws:/root/.aws:ro
-    working_dir: /opt/granary/app-backend/api/target/scala-2.11/
+    working_dir: /opt/granary/api/target/scala-2.12/
 
   sbt:
     image: openjdk:11-jdk
@@ -59,7 +59,7 @@ services:
       - POSTGRES_PASSWORD=granary
       - COURSIER_CACHE=/root/.coursier
     volumes:
-      - ./app-backend:/opt/granary
+      - ./:/opt/granary
       - $HOME/.sbt:/root/.sbt
       - $HOME/.coursier:/root/.coursier
       - ./.bintray:/root/.bintray
@@ -68,7 +68,7 @@ services:
     working_dir: /opt/granary/
     entrypoint: ./sbt
 
-  app-backend-migrations:
+  api-migrations:
     image: boxfuse/flyway:5.2.4
     environment:
       - FLYWAY_DRIVER=org.postgresql.Driver
@@ -84,4 +84,4 @@ services:
     links:
       - database:database.service.internal
     volumes:
-      - ./app-backend:/opt/granary
+      - ./:/opt/granary

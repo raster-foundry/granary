@@ -40,7 +40,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
 
         echo "Executing Scala tests"
         if [[ $CI ]]; then
-            pushd "${DIR}/app-backend"
+            pushd "${DIR}"
 
             ./sbt "; scalafix --check; test"
 
