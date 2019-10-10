@@ -24,7 +24,7 @@ jobs:
               pr_title="$(echo "${pr_data}" | jq -r .title)"
               pr_author="$(echo "${pr_data}" | jq -r .user.login)"
 
-              slackMessage+="\n${pr_title} - ${CIRCLE_PR_USERNAME}"
+              slackMessage+="\n${pr_title} - ${pr_author}"
             fi
             slackMessage+="\n<${CIRCLE_BUILD_URL}|View Build>"
             curl -X POST \
