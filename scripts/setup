@@ -36,7 +36,6 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     elif [ "${1:-}" = "--sbtopts" ]; then
         generate_sbtopts
     else
-        vagrant up --provision
         generate_sbtopts
     fi
 fi
