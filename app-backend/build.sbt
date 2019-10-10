@@ -11,7 +11,7 @@ lazy val commonSettings = Seq(
   version := "0.0.1-SNAPSHOT",
   scalaVersion := "2.12.10",
   scalafmtOnCompile := true,
-  scapegoatVersion := Versions.ScapegoatVersion,
+  scapegoatVersion in ThisBuild := Versions.ScapegoatVersion,
   scalacOptions := Seq(
     "-Ypartial-unification",
     // Required by ScalaFix

@@ -1,4 +1,4 @@
-version: '2.3'
+version: "2.3"
 services:
   database:
     image: quay.io/azavea/postgis:2.3-postgres9.6-slim
@@ -45,7 +45,7 @@ services:
     working_dir: /opt/granary/app-backend/api/target/scala-2.11/
 
   sbt:
-    image: hseeberger/scala-sbt:11.0.2_2.12.8_1.2.8
+    image: openjdk:11-jdk
     depends_on:
       database:
         condition: service_healthy
@@ -66,7 +66,7 @@ services:
       - $HOME/.ivy2:/root/.ivy2
       - $HOME/.aws:/root/.aws:ro
     working_dir: /opt/granary/
-    entrypoint: sbt
+    entrypoint: ./sbt
 
   app-backend-migrations:
     image: boxfuse/flyway:5.2.4
