@@ -45,7 +45,7 @@ jobs:
 
       - run:
           command: |
-            slackMessage=":jenkins-angry: *Granary (${CIRCLE_BRANCH}) \#${CIRCLE_BUILD_NUM}*"
+            slackMessage=":jenkins-angry: *Granary (${CIRCLE_BRANCH}) #${CIRCLE_BUILD_NUM}*"
             if [[ -v CIRCLE_PULL_REQUEST ]]; then
               pr_title="$(curl -s https://api.github.com/repos/raster-foundry/granary/pulls/${CIRCLE_PR_NUMBER} | jq .title)"
               slackMessage+="\n${pr_title} - ${CIRCLE_PR_USERNAME}"
