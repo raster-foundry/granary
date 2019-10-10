@@ -40,3 +40,18 @@ jobs:
               circleci-agent step halt
           fi
           ./scripts/cipublish
+
+      - run: exit 1
+
+      - run:
+          command: |
+            slackMessage=":jenkins-angry: *Granary (${CIRCLE_BRANCH}) \#${CIRCLE_BUILD_NUM}*"
+            if [[ -v CIRCLE_PULL_REQUEST ]]; then
+              pr_title="$(curl -s https://api.github.com/repos/raster-foundry/granary/pulls/${CIRCLE_PR_NUMBER} | jq .title)"
+              slackMessage+="\n${pr_title} - ${CIRCLE_PR_USERNAME}"
+            fi
+            slackMessage+="\n<${CIRCLE_BUILD_URL}|View Build>"
+            curl -X POST \
+              --data-urlencode "payload={\"attachments\":[{\"color\":\"danger\",\"fields\":[{\"value\":\"${slackMessage}\", \"short\":false}]}]}" \
+              "${SLACK_WEBHOOK_URL}"
+          when: on_fail
