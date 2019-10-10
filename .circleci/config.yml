@@ -13,6 +13,8 @@ jobs:
     steps:
       - checkout
 
+      - run: exit 0
+
       # https://circleci.com/docs/2.0/building-docker-images/
       - setup_remote_docker:
           docker_layer_caching: true
@@ -32,12 +34,16 @@ jobs:
             - ~/.cache/coursier
           key: sbt-cache-{{ checksum "app-backend/project/Dependencies.scala" }}
 
-      - run: ./scripts/cibuild
+      - run:
+          name: cibuild
+          command: ./scripts/cibuild
 
-      - run: |
-          if [[ "${CIRCLE_BRANCH}" =~ ^develop$|^release/.*$|^hotfix/.*$ ]]; then
-            ./scripts/cipublish
-          fi
+      - run:
+          name: cipublish
+          command: |
+            if [[ "${CIRCLE_BRANCH}" =~ ^develop$|^release/.*$|^hotfix/.*$ ]]; then
+              ./scripts/cipublish
+            fi
 
       - run:
           name: Slack notification
