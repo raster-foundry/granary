@@ -32,25 +32,21 @@ jobs:
             - ~/.cache/coursier
           key: sbt-cache-{{ checksum "app-backend/project/Dependencies.scala" }}
 
-      - run:
-          command: ./scripts/cibuild
+      - run: ./scripts/cibuild
 
       - run: |
-          echo "${CIRCLE_BRANCH}"
-          if [[ ! "${CIRCLE_BRANCH}" =~ ^develop$|^release/.*$|^hotfix/.*$ ]]; then
-              echo "Hello!"
-              circleci-agent step halt
+          if [[ "${CIRCLE_BRANCH}" =~ ^develop$|^release/.*$|^hotfix/.*$ ]]; then
+            ./scripts/cipublish
           fi
-          ./scripts/cipublish
 
       - run:
           name: Slack notification
           command: |
             if [[ ! "${CIRCLE_BRANCH}" =~ ^develop$|^release/.*$|^hotfix/.*$ && ! -v CIRCLE_PULL_REQUEST ]]; then
-                circleci-agent step halt
+              exit 0
             fi
             # Assemble an appropriate error message for Slack for branches that
-            # pass the conditionals above, and PRs.
+            # pass the conditionals above.
             slackMessage=":jenkins-angry: *Granary (${CIRCLE_BRANCH}) #${CIRCLE_BUILD_NUM}*"
             if [[ -v CIRCLE_PULL_REQUEST ]]; then
               pr_number="$(echo "${CIRCLE_PULL_REQUEST}" | cut -d'/' -f7)"
@@ -67,17 +63,17 @@ jobs:
           when: on_fail
 
       - run:
-          name: Happy Slack notification
+          name: Slack notification
           command: |
             if [[ ! -v CIRCLE_PREVIOUS_BUILD_NUM ]]; then
-                circleci-agent step halt
+              exit 0
             fi
             if [[ ! "${CIRCLE_BRANCH}" =~ ^develop$|^release/.*$|^hotfix/.*$ && ! -v CIRCLE_PULL_REQUEST ]]; then
-                circleci-agent step halt
+              exit 0
             fi
             outcome="$(curl -s "https://circleci.com/api/v1.1/project/gh/raster-foundry/granary/${CIRCLE_PREVIOUS_BUILD_NUM}" | jq -r .outcome)"
             if [[ "${outcome}" = "success" ]]; then
-                circleci-agent step halt
+              exit 0
             fi
             # Assemble an appropriate success message for Slack for branches
             # that are fixed and pass the conditionals above.
