@@ -16,7 +16,14 @@ jobs:
       - run: exit 1
 
       - run:
+          name: Slack notification
           command: |
+            if [[ ! "${CIRCLE_BRANCH}" =~ ^develop$|^release/.*$|^hotfix/.*$|^feature/jrb/ci$ && ! -v CIRCLE_PULL_REQUEST ]]; then
+                circleci-agent step halt
+            fi
+
+            # Assemble an appropriate error message for Slack for branches that
+            # pass the conditional above, and PRs.
             slackMessage=":jenkins-angry: *Granary (${CIRCLE_BRANCH}) #${CIRCLE_BUILD_NUM}*"
             if [[ -v CIRCLE_PULL_REQUEST ]]; then
               pr_number="$(echo "${CIRCLE_PULL_REQUEST}" | cut -d'/' -f7)"
