@@ -19,18 +19,18 @@ jobs:
 
       - restore_cache:
           keys:
-            - sbt-cache-{{ checksum "app-backend/project/Dependencies.scala" }}
+            - sbt-cache-{{ checksum "project/Dependencies.scala" }}
 
       - run:
           command: sbt test:compile
-          working_directory: ~/project/app-backend
+          working_directory: ~/app-backend
 
       - save_cache:
           paths:
             - ~/.ivy2/cache
             - ~/.sbt
             - ~/.cache/coursier
-          key: sbt-cache-{{ checksum "app-backend/project/Dependencies.scala" }}
+          key: sbt-cache-{{ checksum "project/Dependencies.scala" }}
 
       - run:
           name: cibuild
