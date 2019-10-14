@@ -39,14 +39,14 @@ jobs:
       - run:
           name: cipublish
           command: |
-            if [[ "${CIRCLE_BRANCH}" =~ ^develop$|^release/.*$|^hotfix/.*$ ]]; then
+            if [[ "${CIRCLE_BRANCH}" =~ ^master|^release/.*$|^hotfix/.*$ ]]; then
               ./scripts/cipublish
             fi
 
       - run:
           name: Slack notification
           command: |
-            if [[ ! "${CIRCLE_BRANCH}" =~ ^develop$|^release/.*$|^hotfix/.*$ && ! -v CIRCLE_PULL_REQUEST ]]; then
+            if [[ ! "${CIRCLE_BRANCH}" =~ ^master|^release/.*$|^hotfix/.*$ && ! -v CIRCLE_PULL_REQUEST ]]; then
               exit 0
             fi
             # Assemble an appropriate error message for Slack for branches that
@@ -72,7 +72,7 @@ jobs:
             if [[ ! -v CIRCLE_PREVIOUS_BUILD_NUM ]]; then
               exit 0
             fi
-            if [[ ! "${CIRCLE_BRANCH}" =~ ^develop$|^release/.*$|^hotfix/.*$ && ! -v CIRCLE_PULL_REQUEST ]]; then
+            if [[ ! "${CIRCLE_BRANCH}" =~ ^master|^release/.*$|^hotfix/.*$ && ! -v CIRCLE_PULL_REQUEST ]]; then
               exit 0
             fi
             outcome="$(curl -s "https://circleci.com/api/v1.1/project/gh/raster-foundry/granary/${CIRCLE_PREVIOUS_BUILD_NUM}" | jq -r .outcome)"
