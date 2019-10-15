@@ -1,0 +1,19 @@
+version: "2.3"
+services:
+  api:
+    image: "granary-api:${GIT_COMMIT}"
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+
+  api-migrations:
+    image: "granary-api-migrations:${GIT_COMMIT}"
+    build:
+      context: ./database
+      dockerfile: Dockerfile.migrations
+
+  shellcheck:
+    image: koalaman/shellcheck:stable
+    volumes:
+      - ./:/usr/local/src
+    working_dir: /usr/local/src

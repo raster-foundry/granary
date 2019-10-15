@@ -1,4 +1,4 @@
-# granary
+# granary [![CircleCI](https://circleci.com/gh/raster-foundry/granary.svg?style=svg)](https://circleci.com/gh/raster-foundry/granary) [![Docker Repository on Quay](https://quay.io/repository/raster-foundry/granary-api/status "Docker Repository on Quay")](https://quay.io/repository/raster-foundry/granary-api)
 An API project that uses http4s and doobie
 
 ## Requirements
@@ -24,7 +24,7 @@ you have those available.
 
 ### Nexus Repository Manager
 
-When developing at the Azavea office, strongly consider use of the Nexus proxy. This is automatically configured in project setup. If you are not connected to the `vpn` you will need to disable it by deleting or moving `app-backend/.sbtopts`.
+When developing at the Azavea office, strongly consider use of the Nexus proxy. This is automatically configured in project setup. If you are not connected to the `vpn` you will need to disable it by deleting or moving `.sbtopts`.
 
 ### Project Organization
 
@@ -34,7 +34,7 @@ By default the backend is organized into 3 subprojects:
  - database: handles database interaction with models
 
 ### Migrations
-This project uses [flyway](https://flywaydb.org/) for migrations. The migrations are stored in the database subproject (`app-backend/database/src/main/resources/db/migrations`). For information on the naming and formatting conventions consult the [documentation](https://flywaydb.org/documentation/migrations#naming). Each migration should be `sql` and generally follows the format of `V<number>__<description>.aql`.
+This project uses [flyway](https://flywaydb.org/) for migrations. The migrations are stored in the database subproject (`database/src/main/resources/db/migrations`). For information on the naming and formatting conventions consult the [documentation](https://flywaydb.org/documentation/migrations#naming). Each migration should be `sql` and generally follows the format of `V<number>__<description>.aql`.
 
 Running migrations and other tasks are managed through `./scripts/migrate`.
 

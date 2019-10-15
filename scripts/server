@@ -24,7 +24,7 @@ then
         *)
             echo "Starting API service"
             docker-compose -f docker-compose.yml \
-                up app-backend
+                up api
             ;;
     esac
 fi

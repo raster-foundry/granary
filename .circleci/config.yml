@@ -1,0 +1,97 @@
+version: 2.0
+jobs:
+  build:
+    # CircleCI does not run workflows for tags unless you explicitly specify tag filters
+    filters:
+      tags:
+        only:
+          - /^(.*)$/
+
+    docker:
+      - image: circleci/openjdk:11-jdk
+
+    steps:
+      - checkout
+
+      # https://circleci.com/docs/2.0/building-docker-images/
+      - setup_remote_docker:
+          docker_layer_caching: true
+
+      - restore_cache:
+          keys:
+            - sbt-cache-{{ checksum "project/Dependencies.scala" }}
+
+      - run:
+          command: sbt test:compile
+          working_directory: ~/app-backend
+
+      - save_cache:
+          paths:
+            - ~/.ivy2/cache
+            - ~/.sbt
+            - ~/.cache/coursier
+          key: sbt-cache-{{ checksum "project/Dependencies.scala" }}
+
+      - run:
+          name: cibuild
+          command: ./scripts/cibuild
+
+      - run:
+          name: cipublish
+          command: |
+            if [[ "${CIRCLE_BRANCH}" =~ ^master|^release/.*$|^hotfix/.*$ ]]; then
+              ./scripts/cipublish
+            fi
+
+      - run:
+          name: Slack notification
+          command: |
+            if [[ ! "${CIRCLE_BRANCH}" =~ ^master|^release/.*$|^hotfix/.*$ && ! -v CIRCLE_PULL_REQUEST ]]; then
+              exit 0
+            fi
+            # Assemble an appropriate error message for Slack for branches that
+            # pass the conditionals above.
+            slackMessage=":jenkins-angry: *Granary (${CIRCLE_BRANCH}) #${CIRCLE_BUILD_NUM}*"
+            if [[ -v CIRCLE_PULL_REQUEST ]]; then
+              pr_number="$(echo "${CIRCLE_PULL_REQUEST}" | cut -d'/' -f7)"
+              pr_data="$(curl -s "https://api.github.com/repos/raster-foundry/granary/pulls/${pr_number}")"
+              pr_title="$(echo "${pr_data}" | jq -r .title)"
+              pr_author="$(echo "${pr_data}" | jq -r .user.login)"
+
+              slackMessage+="\n${pr_title} - ${pr_author}"
+            fi
+            slackMessage+="\n<${CIRCLE_BUILD_URL}|View Build>"
+            curl -X POST \
+              --data-urlencode "payload={\"attachments\":[{\"color\":\"danger\",\"fields\":[{\"value\":\"${slackMessage}\", \"short\":false}]}]}" \
+              "${SLACK_WEBHOOK_URL}"
+          when: on_fail
+
+      - run:
+          name: Slack notification
+          command: |
+            if [[ ! -v CIRCLE_PREVIOUS_BUILD_NUM ]]; then
+              exit 0
+            fi
+            if [[ ! "${CIRCLE_BRANCH}" =~ ^master|^release/.*$|^hotfix/.*$ && ! -v CIRCLE_PULL_REQUEST ]]; then
+              exit 0
+            fi
+            outcome="$(curl -s "https://circleci.com/api/v1.1/project/gh/raster-foundry/granary/${CIRCLE_PREVIOUS_BUILD_NUM}" | jq -r .outcome)"
+            if [[ "${outcome}" = "success" ]]; then
+              exit 0
+            fi
+            # Assemble an appropriate success message for Slack for branches
+            # that are fixed and pass the conditionals above.
+            slackMessage=":jenkins: *Granary (${CIRCLE_BRANCH}) #${CIRCLE_BUILD_NUM}*"
+            if [[ -v CIRCLE_PULL_REQUEST ]]; then
+              pr_number="$(echo "${CIRCLE_PULL_REQUEST}" | cut -d'/' -f7)"
+              pr_data="$(curl -s "https://api.github.com/repos/raster-foundry/granary/pulls/${pr_number}")"
+              pr_title="$(echo "${pr_data}" | jq -r .title)"
+              pr_author="$(echo "${pr_data}" | jq -r .user.login)"
+
+              slackMessage+="\n${pr_title} - ${pr_author}"
+            fi
+            slackMessage+="\n<${CIRCLE_BUILD_URL}|View Build>"
+            curl -X POST \
+              --data-urlencode "payload={\"attachments\":[{\"color\":\"good\",\"fields\":[{\"value\":\"${slackMessage}\", \"short\":false}]}]}" \
+              "${SLACK_WEBHOOK_URL}"
+          when: on_success

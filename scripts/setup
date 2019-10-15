@@ -6,19 +6,36 @@ if [[ -n "${GRANARY_DEBUG}" ]]; then
     set -x
 fi
 
+DIR="$(dirname "${0}")/../"
+
 function usage() {
     echo -n \
-         "Usage: $(basename "$0")
+        "Usage: $(basename "$0")
 Attempts to setup the project's development environment.
 "
 }
 
-if [ "${BASH_SOURCE[0]}" = "${0}" ]
-then
-    if [ "${1:-}" = "--help" ]
-    then
+function generate_sbtopts() {
+    if host nexus.internal.azavea.com; then
+        echo "Generating .sbtopts"
+
+        pushd "${DIR}"
+
+        true >.sbtopts
+
+        echo "-Dsbt.override.build.repos=true" >>.sbtopts
+        echo "-Dsbt.repository.config=project/repositories" >>.sbtopts
+
+        popd
+    fi
+}
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+    if [ "${1:-}" = "--help" ]; then
         usage
+    elif [ "${1:-}" = "--sbtopts" ]; then
+        generate_sbtopts
     else
-        vagrant up --provision
+        generate_sbtopts
     fi
 fi
