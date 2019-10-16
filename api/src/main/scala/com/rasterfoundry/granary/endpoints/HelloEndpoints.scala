@@ -4,6 +4,8 @@ import io.circe._
 import tapir._
 import tapir.json.circe._
 
+import scala.language.higherKinds
+
 object HelloEndpoints {
 
   val base = endpoint.in("hello")
