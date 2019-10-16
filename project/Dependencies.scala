@@ -8,9 +8,9 @@ object Versions {
   val DoobieVersion      = "0.8.2"
   val Http4sVersion      = "0.20.11"
   val LogbackVersion     = "1.2.3"
-  val OpenTracingVersion = "0.1.0"
+  val OpenTracingVersion = "0.0.7"
   val PureConfig         = "0.12.1"
-  // val RasterFoundryVersion = "1.31.0"
+  val RasterFoundryVersion = "1.31.0-11-g486496c-SNAPSHOT"
   val ScapegoatVersion = "1.3.8"
   val Specs2Version    = "4.1.0"
   val TapirVersion     = "0.11.6"
@@ -31,7 +31,7 @@ object Dependencies {
   val logbackClassic  = "ch.qos.logback"        % "logback-classic"      % Versions.LogbackVersion
   val openTracing     = "com.colisweb"          %% "scala-opentracing"   % Versions.OpenTracingVersion
   val pureConfig      = "com.github.pureconfig" %% "pureconfig"          % Versions.PureConfig
-  // val rasterFoundryHttp4s   = "com.rasterfoundry"      %% "http4s-util"              % Versions.RasterFoundryVersion
+  val rasterFoundryHttp4s   = "com.rasterfoundry"      %% "http4s-util"              % Versions.RasterFoundryVersion
   val specs2Core            = "org.specs2"             %% "specs2-core"              % Versions.Specs2Version % "test"
   val tapir                 = "com.softwaremill.tapir" %% "tapir-core"               % Versions.TapirVersion
   val tapirCirce            = "com.softwaremill.tapir" %% "tapir-json-circe"         % Versions.TapirVersion

@@ -23,6 +23,9 @@ lazy val commonSettings = Seq(
   ),
   externalResolvers := Seq(
     DefaultMavenRepository,
+    Resolver.sonatypeRepo("snapshots"),
+    // Required transitively
+    Resolver.bintrayRepo("guizmaii", "maven"),
     Resolver.bintrayRepo("colisweb", "maven")
   ),
   autoCompilerPlugins := true,
@@ -103,7 +106,7 @@ lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
   Dependencies.http4sServer,
   Dependencies.openTracing,
   Dependencies.pureConfig,
-  // Dependencies.rasterFoundryHttp4s,
+  Dependencies.rasterFoundryHttp4s,
   Dependencies.tapir,
   Dependencies.tapirCirce,
   Dependencies.tapirHttp4sServer,

@@ -1,9 +1,13 @@
 package com.rasterfoundry.granary.api
 
+import com.rasterfoundry.granary.api.endpoints._
+import com.rasterfoundry.granary.api.services._
+
 import cats.data.EitherT
 import cats.effect._
 import cats.implicits._
-import com.colisweb.tracing.NoOpTracingContext
+import com.colisweb.tracing.TracingContext.TracingContextBuilder
+import com.rasterfoundry.http4s.{JaegerTracer, XRayTracer}
 import com.typesafe.scalalogging.LazyLogging
 import org.http4s._
 import org.http4s.implicits._
@@ -23,15 +27,15 @@ object ApiServer extends IOApp with LazyLogging {
   def getApp: EitherT[IO, ConfigReaderFailures, HttpApp[IO]] =
     EitherT {
       ConfigSource.default.at("tracing").load[TracingConfig] traverse {
-        case TracingConfig(true, s) if s.toUpperCase() == "JAEGER" => ???
-        case TracingConfig(true, s) if s.toUpperCase() == "XRAY"  => ???
-        case TracingConfig(true, s) =>
+        case TracingConfig(s) if s.toUpperCase() == "JAEGER" =>
+          IO.pure { JaegerTracer.tracingContextBuilder }
+        case TracingConfig(s) if s.toUpperCase() == "XRAY" =>
+          IO.pure { XRayTracer.tracingContextBuilder }
+        case TracingConfig(s) =>
           logger.warn(s"Not a recognized tracing sink: $s. Using Jaeger")
-          ???
-        case TracingConfig(false, _) =>
-          NoOpTracingContext.getNoOpTracingContextBuilder[IO]
+          IO.pure { JaegerTracer.tracingContextBuilder }
       }
-    } map { contextBuilder =>
+    } map { (contextBuilder: TracingContextBuilder[IO]) =>
       implicit val tracingContextBuilder = contextBuilder
 
       val allEndpoints              = HelloEndpoints.endpoints

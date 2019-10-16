@@ -1,4 +1,6 @@
-package com.rasterfoundry.granary.api
+package com.rasterfoundry.granary.api.endpoints
+
+import com.rasterfoundry.granary.api.error._
 
 import io.circe._
 import tapir._
