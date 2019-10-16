@@ -23,8 +23,8 @@ object ApiServer extends IOApp with LazyLogging {
   def getApp: EitherT[IO, ConfigReaderFailures, HttpApp[IO]] =
     EitherT {
       ConfigSource.default.at("tracing").load[TracingConfig] traverse {
-        case TracingConfig(true, "JAEGER") => ???
-        case TracingConfig(true, "XRAY")   => ???
+        case TracingConfig(true, s) if s.toUpperCase() == "JAEGER" => ???
+        case TracingConfig(true, s) if s.toUpperCase() == "XRAY"  => ???
         case TracingConfig(true, s) =>
           logger.warn(s"Not a recognized tracing sink: $s. Using Jaeger")
           ???
