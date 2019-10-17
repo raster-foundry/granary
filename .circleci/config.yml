@@ -15,7 +15,7 @@ jobs:
 
       # https://circleci.com/docs/2.0/building-docker-images/
       - setup_remote_docker:
-          docker_layer_caching: true
+          docker_layer_caching: false
 
       - restore_cache:
           keys:
