@@ -106,7 +106,6 @@ services:
 
   xray:
     image: amazon/aws-xray-daemon
-    env_file: .env
     volumes:
       - $HOME/.aws:/root/.aws:ro
     ports:
