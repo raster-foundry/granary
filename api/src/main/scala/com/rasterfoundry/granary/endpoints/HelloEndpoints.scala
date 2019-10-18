@@ -1,8 +1,12 @@
-package com.rasterfoundry.granary.api
+package com.rasterfoundry.granary.api.endpoints
+
+import com.rasterfoundry.granary.api.error._
 
 import io.circe._
 import tapir._
 import tapir.json.circe._
+
+import scala.language.higherKinds
 
 object HelloEndpoints {
 

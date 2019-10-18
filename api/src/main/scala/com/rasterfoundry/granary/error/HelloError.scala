@@ -1,4 +1,4 @@
-package com.rasterfoundry.granary.api
+package com.rasterfoundry.granary.api.error
 
 import io.circe._
 import io.circe.generic.semiauto._

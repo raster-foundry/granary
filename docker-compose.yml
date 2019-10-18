@@ -27,12 +27,16 @@ services:
     environment:
       - AWS_PROFILE
       - ENVIRONMENT=development
+      - GRANARY_LOG_LEVEL=DEBUG
       - POSTGRES_URL=jdbc:postgresql://database.service.internal/
       - POSTGRES_NAME=granary
       - POSTGRES_USER=granary
       - POSTGRES_PASSWORD=granary
+      - GRANARY_TRACING_SINK=jaeger
     links:
       - database:database.service.internal
+      - jaeger:jaeger.service.internal
+      - xray:xray.service.internal
     ports:
       - "8080:8080"
     volumes:
@@ -85,3 +89,31 @@ services:
       - database:database.service.internal
     volumes:
       - ./:/opt/granary
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.8
+    expose:
+      - 5775/udp
+      - 6831/udp
+      - 6832/udp
+      - 5778
+      - 16686
+      - 14268
+      - 9411
+    ports:
+      - 16686:16686
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+
+  xray:
+    image: amazon/aws-xray-daemon
+    volumes:
+      - $HOME/.aws:/root/.aws:ro
+    ports:
+      - 2000
+    entrypoint: "/usr/bin/xray"
+    command:
+      - "-t"
+      - "0.0.0.0:2000"
+      - "-b"
+      - "0.0.0.0:2000"

@@ -16,8 +16,18 @@ lazy val commonSettings = Seq(
     "-Ypartial-unification",
     // Required by ScalaFix
     "-Yrangepos",
+    "-language:higherKinds",
     "-Ywarn-unused",
-    "-Ywarn-unused-import"
+    "-Ywarn-unused-import",
+    "-deprecation",
+    "-feature"
+  ),
+  externalResolvers := Seq(
+    DefaultMavenRepository,
+    Resolver.sonatypeRepo("snapshots"),
+    // Required transitively
+    Resolver.bintrayRepo("guizmaii", "maven"),
+    Resolver.bintrayRepo("colisweb", "maven")
   ),
   autoCompilerPlugins := true,
   addCompilerPlugin("org.spire-math"  %% "kind-projector"     % "0.9.6"),
@@ -95,11 +105,15 @@ lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
   Dependencies.http4sCirce,
   Dependencies.http4sDsl,
   Dependencies.http4sServer,
+  Dependencies.log4cats,
+  Dependencies.openTracing,
+  Dependencies.pureConfig,
+  Dependencies.rasterFoundryHttp4s,
   Dependencies.tapir,
   Dependencies.tapirCirce,
   Dependencies.tapirHttp4sServer,
-  Dependencies.tapirOpenAPIDocs,
   Dependencies.tapirOpenAPICirceYAML,
+  Dependencies.tapirOpenAPIDocs,
   Dependencies.tapirSwaggerUIHttp4s
 )
 
