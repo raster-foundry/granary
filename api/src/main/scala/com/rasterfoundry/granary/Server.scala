@@ -17,7 +17,6 @@ import pureconfig.generic.auto._
 import tapir.openapi.circe.yaml._
 import tapir.docs.openapi._
 import tapir.swagger.http4s.SwaggerHttp4s
-import cats.effect.implicits._
 
 object ApiServer extends IOApp with LazyLogging {
 
