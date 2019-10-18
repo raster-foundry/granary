@@ -16,6 +16,7 @@ lazy val commonSettings = Seq(
     "-Ypartial-unification",
     // Required by ScalaFix
     "-Yrangepos",
+    "-language:higherKinds",
     "-Ywarn-unused",
     "-Ywarn-unused-import",
     "-deprecation",
