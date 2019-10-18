@@ -8,6 +8,7 @@ object Versions {
   val DoobieVersion        = "0.8.2"
   val Http4sVersion        = "0.20.11"
   val LogbackVersion       = "1.2.3"
+  val Log4CatsVersion      = "1.0.1"
   val OpenTracingVersion   = "0.0.6"
   val PureConfig           = "0.12.1"
   val RasterFoundryVersion = "1.31.0-11-g486496c-SNAPSHOT"
@@ -29,6 +30,7 @@ object Dependencies {
   val http4sDsl             = "org.http4s"             %% "http4s-dsl"               % Versions.Http4sVersion
   val http4sServer          = "org.http4s"             %% "http4s-blaze-server"      % Versions.Http4sVersion
   val logbackClassic        = "ch.qos.logback"         % "logback-classic"           % Versions.LogbackVersion
+  val log4cats              = "io.chrisdavenport" %% "log4cats-slf4j" % Versions.Log4CatsVersion
   val openTracing           = "com.colisweb"           %% "scala-opentracing"        % Versions.OpenTracingVersion
   val pureConfig            = "com.github.pureconfig"  %% "pureconfig"               % Versions.PureConfig
   val rasterFoundryHttp4s   = "com.rasterfoundry"      %% "http4s-util"              % Versions.RasterFoundryVersion

@@ -4,6 +4,7 @@
       <pattern>[%thread] %highlight(%-5level) %cyan(%logger{15}) - %msg %n</pattern>
     </encoder>
   </appender>
+  <logger name="com.rasterfoundry.granary" level="${GRANARY_LOG_LEVEL:-INFO}"/>
   <root level="INFO">
     <appender-ref ref="STDOUT" />
   </root>

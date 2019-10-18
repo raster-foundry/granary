@@ -105,6 +105,7 @@ lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
   Dependencies.http4sCirce,
   Dependencies.http4sDsl,
   Dependencies.http4sServer,
+  Dependencies.log4cats,
   Dependencies.openTracing,
   Dependencies.pureConfig,
   Dependencies.rasterFoundryHttp4s,
