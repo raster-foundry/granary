@@ -1,7 +1,6 @@
 numpy==1.17.3
 rasterio==1.1.0
 click==7.0.0
-boto3==1.9.182
 GDAL==2.4.0
 Shapely==1.6.4.post2
 geopandas==0.6.0
