@@ -2,10 +2,13 @@ package com.rasterfoundry.granary.api
 
 import com.rasterfoundry.granary.api.endpoints._
 import com.rasterfoundry.granary.api.services._
+import com.rasterfoundry.granary.database.{Config => DBConfig}
 import cats.effect._
 import cats.implicits._
 import com.colisweb.tracing.TracingContext.TracingContextBuilder
 import com.rasterfoundry.http4s.{JaegerTracer, XRayTracer}
+import doobie.hikari.HikariTransactor
+import doobie.util.ExecutionContexts
 import io.chrisdavenport.log4cats.Logger
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import org.http4s.implicits._
@@ -47,13 +50,18 @@ object ApiServer extends IOApp {
           case Right(builder) => IO.pure(builder)
         }
       }
-      allEndpoints = HelloEndpoints.endpoints
+      connectionEc <- ExecutionContexts.fixedThreadPool[IO](2)
+      blocker      <- Blocker[IO]
+      transactor <- HikariTransactor
+        .fromHikariConfig[IO](DBConfig.hikariConfig, connectionEc, blocker)
+      allEndpoints = HelloEndpoints.endpoints ++ ModelEndpoints.endpoints
       docs         = allEndpoints.toOpenAPI("Granary", "0.0.1")
       docRoutes    = new SwaggerHttp4s(docs.toYaml).routes
       helloRoutes  = new HelloService(tracingContextBuilder).routes
+      modelRoutes  = new ModelService(tracingContextBuilder, transactor).routes
       router = CORS(
         Router(
-          "/api" -> (helloRoutes <+> docRoutes)
+          "/api" -> (helloRoutes <+> modelRoutes <+> docRoutes)
         )
       ).orNotFound
       server <- BlazeServerBuilder[IO]

@@ -90,7 +90,7 @@ services:
       - FLYWAY_URL=jdbc:postgresql://database.service.internal/granary
       - FLYWAY_USER=granary
       - FLYWAY_PASSWORD=granary
-      - FLYWAY_LOCATIONS=filesystem:/opt/granary/database/src/main/resources/db
+      - FLYWAY_LOCATIONS=filesystem:/opt/granary/database/src/main/resources/migrations
       - FLYWAY_SCHEMAS=public
       - FLYWAY_BASELINE_ON_MIGRATE=true
     depends_on:

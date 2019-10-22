@@ -27,7 +27,8 @@ lazy val commonSettings = Seq(
     Resolver.sonatypeRepo("snapshots"),
     // Required transitively
     Resolver.bintrayRepo("guizmaii", "maven"),
-    Resolver.bintrayRepo("colisweb", "maven")
+    Resolver.bintrayRepo("colisweb", "maven"),
+    "jitpack".at("https://jitpack.io")
   ),
   autoCompilerPlugins := true,
   addCompilerPlugin("org.spire-math"  %% "kind-projector"     % "0.9.6"),
@@ -49,10 +50,14 @@ lazy val datamodelSettings = commonSettings ++ Seq(
 )
 
 lazy val datamodelDependencies = commonDependencies ++ Seq(
+  Dependencies.catsScalacheck,
   Dependencies.circeCore,
   Dependencies.circeGeneric,
+  Dependencies.circeJsonSchema,
+  Dependencies.circeTesting,
   Dependencies.http4s,
-  Dependencies.http4sCirce
+  Dependencies.http4sCirce,
+  Dependencies.scalacheck
 )
 
 lazy val datamodel = (project in file("datamodel"))
@@ -71,6 +76,7 @@ lazy val databaseDependencies = commonDependencies ++ Seq(
   Dependencies.doobie,
   Dependencies.doobieHikari,
   Dependencies.doobiePostgres,
+  Dependencies.doobiePostgresCirce,
   Dependencies.doobieSpecs2,
   Dependencies.doobieScalatest
 )
