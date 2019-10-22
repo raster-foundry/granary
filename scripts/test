@@ -6,6 +6,8 @@ if [[ -n "${GRANARY_DEBUG}" ]]; then
     set -x
 fi
 
+DIR="$(dirname "$0")/../"
+
 function usage() {
     echo -ne \
         "Usage: $(basename "${0}")
@@ -37,8 +39,16 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         fi
 
         echo "Executing Scala tests"
-	docker-compose \
-	    run --rm sbt \
-	    "; scalafix --check; test"
+        if [[ $CI ]]; then
+            pushd "${DIR}"
+
+            ./sbt "; scalafix --check; test"
+
+            popd
+        else
+            docker-compose \
+                run --rm sbt \
+                "; scalafix --check; test"
+        fi
     fi
 fi
