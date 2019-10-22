@@ -12,6 +12,9 @@ services:
       context: ./database
       dockerfile: Dockerfile.migrations
 
+  calculate-water:
+    image: "granary-calculate-water:${GIT_COMMIT}"
+
   shellcheck:
     image: koalaman/shellcheck:stable
     volumes:
