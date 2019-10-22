@@ -6,8 +6,6 @@ if [[ -n "${GRANARY_DEBUG}" ]]; then
     set -x
 fi
 
-DIR="$(dirname "$0")/../"
-
 function usage() {
     echo -ne \
         "Usage: $(basename "${0}")
