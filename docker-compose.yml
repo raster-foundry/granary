@@ -48,6 +48,17 @@ services:
       - $HOME/.aws:/root/.aws:ro
     working_dir: /opt/granary/api/target/scala-2.12/
 
+  calculate-water:
+    build:
+      context: example-models
+      dockerfile: Dockerfile.calculate-water
+    environment:
+      - AWS_PROFILE
+    volumes:
+      - ./example-models/:/opt/granary/
+      - $HOME/.aws:/root/.aws:ro
+    working_dir: /opt/granary/
+
   sbt:
     image: openjdk:11-jdk
     depends_on:
