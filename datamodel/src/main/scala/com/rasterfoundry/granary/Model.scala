@@ -25,7 +25,6 @@ object Model {
     "jobDefinition",
     "computeEnvironment"
   )(
-    (id: UUID, name: String, validator: Json, jobDefinition: String, computeEnvironment: String) =>
-      Model(id, name, new Validator(validator), jobDefinition, computeEnvironment)
+    Model.apply _
   )
 }

@@ -25,7 +25,6 @@ object Dependencies {
   val circeCore             = "io.circe"               %% "circe-core"               % Versions.CirceVersion
   val circeGeneric          = "io.circe"               %% "circe-generic"            % Versions.CirceVersion
   val circeJsonSchema       = "io.circe"               %% "circe-json-schema"        % Versions.CirceJsonSchemaVersion
-  val circeTesting          = "io.circe"               %% "circe-testing"            % Versions.CirceVersion % "test"
   val doobie                = "org.tpolecat"           %% "doobie-core"              % Versions.DoobieVersion
   val doobieHikari          = "org.tpolecat"           %% "doobie-hikari"            % Versions.DoobieVersion
   val doobiePostgres        = "org.tpolecat"           %% "doobie-postgres"          % Versions.DoobieVersion

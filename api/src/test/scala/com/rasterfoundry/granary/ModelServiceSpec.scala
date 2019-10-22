@@ -2,7 +2,6 @@ package com.rasterfoundry.granary.api.services
 
 import com.rasterfoundry.granary.database.{Config => DBConfig}
 import com.rasterfoundry.granary.datamodel._
-import com.rasterfoundry.granary.datamodel.Generators
 
 import cats.data.OptionT
 import cats.effect.{ContextShift, IO}
@@ -28,8 +27,7 @@ class ModelServiceSpec extends Specification with ScalaCheck with Generators {
 """
 
   implicit val cs: ContextShift[IO] = IO.contextShift(global)
-
-  val transactor = DBConfig.nonHikariTransactor[IO]
+  val transactor                    = DBConfig.nonHikariTransactor[IO]
 
   val routes: HttpRoutes[IO] =
     new ModelService[IO](JaegerTracer.tracingContextBuilder, transactor).routes
@@ -40,11 +38,12 @@ class ModelServiceSpec extends Specification with ScalaCheck with Generators {
         Request[IO](method = Method.POST, uri = Uri.uri("/models")).withEntity(model)
       val returned: OptionT[IO, Model] = for {
         resp    <- routes.run(request)
-        _       <- OptionT.liftF { IO { println(s"Resp is: $resp") } }
         decoded <- OptionT.liftF { resp.as[Model] }
       } yield decoded
 
-      returned.value.unsafeRunSync must be(Some(model))
+      val out: Model = returned.value.unsafeRunSync.get
+
+      out ==== model
     }
   }
 }

@@ -11,8 +11,6 @@ object Config {
   val jdbcNoDBUrl: String =
     Properties.envOrElse("POSTGRES_URL", "jdbc:postgresql://database.service.internal/")
 
-  println(s"Initializing with url: $jdbcNoDBUrl")
-
   val jdbcDBName: String =
     Properties.envOrElse("POSTGRES_NAME", "granary")
   val jdbcUrl: String = jdbcNoDBUrl + jdbcDBName
