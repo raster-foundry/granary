@@ -12,7 +12,7 @@ import java.util.UUID
 
 trait Generators extends ArbitraryInstances {
 
-  private val shortStringGen: Gen[String] = Gen.listOfN(20, arbitrary[Char]) map { _.mkString }
+  private val shortStringGen: Gen[String] = Gen.listOfN(20, Gen.alphaChar) map { _.mkString }
 
   val modelGen: Gen[Model] =
     (Gen.delay(UUID.randomUUID), shortStringGen, arbitrary[JsonObject] map { jsObj =>

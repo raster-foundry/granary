@@ -19,19 +19,21 @@ object ModelDao {
   def unsafeGetModel(id: UUID): ConnectionIO[Model] =
     (selectF ++ Fragments.whereOr(fr"id = ${id}")).query[Model].unique
 
-  def insertModel(model: Model): ConnectionIO[Model] =
-    fr"""
+  def insertModel(model: Model): ConnectionIO[Model] = {
+    val fragment = fr"""
       INSERT INTO models
         (id, name, validator, job_definition, compute_environment)
       VALUES
-        (${model.id}, ${model.name}, ${model.validator}, ${model.jobDefinition}, ${model.computeEnvironment});
-    """.update.withUniqueGeneratedKeys[Model](
+        (${model.id}, ${model.name}, ${model.validator}, ${model.jobDefinition}, ${model.computeEnvironment})
+    """
+    fragment.update.withUniqueGeneratedKeys[Model](
       "id",
       "name",
       "validator",
       "job_definition",
       "compute_environment"
     )
+  }
 
   def deleteModel(modelId: UUID): ConnectionIO[Option[Int]] =
     fr"DELETE FROM models WHERE id = $modelId".update.run map {

@@ -16,7 +16,7 @@ object Versions {
   val RasterFoundryVersion   = "1.31.0-11-g486496c-SNAPSHOT"
   val ScapegoatVersion       = "1.3.8"
   val ScalacheckVersion      = "1.14.2"
-  val Specs2Version          = "4.1.0"
+  val Specs2Version          = "4.6.0"
   val TapirVersion           = "0.11.6"
 }
 
@@ -43,6 +43,7 @@ object Dependencies {
   val rasterFoundryHttp4s   = "com.rasterfoundry"      %% "http4s-util"              % Versions.RasterFoundryVersion
   val scalacheck            = "org.scalacheck"         %% "scalacheck"               % Versions.ScalacheckVersion % "test"
   val specs2Core            = "org.specs2"             %% "specs2-core"              % Versions.Specs2Version % "test"
+  val specs2Scalacheck      = "org.specs2"             %% "specs2-scalacheck"        % Versions.Specs2Version % "test"
   val tapir                 = "com.softwaremill.tapir" %% "tapir-core"               % Versions.TapirVersion
   val tapirCirce            = "com.softwaremill.tapir" %% "tapir-json-circe"         % Versions.TapirVersion
   val tapirHttp4sServer     = "com.softwaremill.tapir" %% "tapir-http4s-server"      % Versions.TapirVersion

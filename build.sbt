@@ -2,6 +2,7 @@ cancelable in Global := true
 
 lazy val commonDependencies = Seq(
   Dependencies.specs2Core,
+  Dependencies.specs2Scalacheck,
   Dependencies.logbackClassic
 )
 
@@ -124,7 +125,7 @@ lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
 )
 
 lazy val api = (project in file("api"))
-  .dependsOn(datamodel, database)
+  .dependsOn(datamodel % "compile->compile;test->test", database)
   .settings(apiSettings: _*)
   .settings({
     libraryDependencies ++= apiDependencies
