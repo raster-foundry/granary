@@ -5,15 +5,11 @@ import com.rasterfoundry.granary.datamodel._
 import com.rasterfoundry.granary.datamodel.Generators
 
 import cats.data.OptionT
-import cats.effect.{ContextShift, IO, Resource}
-import com.colisweb.tracing.{NoOpTracingContext, TracingContext}
-import com.colisweb.tracing.TracingContext.TracingContextBuilder
+import cats.effect.{ContextShift, IO}
 import com.rasterfoundry.http4s.JaegerTracer
 import org.http4s._
-import org.http4s.circe._
 import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.circe.CirceEntityEncoder._
-import org.http4s.dsl.io._
 import org.specs2.{ScalaCheck, Specification}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -31,12 +27,12 @@ class ModelServiceSpec extends Specification with ScalaCheck with Generators {
     - return 404s for deleting missing models deleteModels404Expectation
 """
 
+  implicit val cs: ContextShift[IO] = IO.contextShift(global)
+
   val transactor = DBConfig.nonHikariTransactor[IO]
 
   val routes: HttpRoutes[IO] =
     new ModelService[IO](JaegerTracer.tracingContextBuilder, transactor).routes
-
-  implicit val cs: ContextShift[IO] = IO.contextShift(global)
 
   def createExpectation = prop { (model: Model) =>
     {
