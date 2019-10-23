@@ -8,7 +8,7 @@ import com.rasterfoundry.granary.datamodel.Model
 import java.util.UUID
 
 object ModelDao {
-  val selectF = fr"select id, name, validator, job_definition, compute_environment FROM models"
+  val selectF = fr"select id, name, validator, job_definition, job_queue FROM models"
 
   def listModels: ConnectionIO[List[Model]] =
     selectF.query[Model].to[List]
@@ -22,16 +22,16 @@ object ModelDao {
   def insertModel(model: Model): ConnectionIO[Model] = {
     val fragment = fr"""
       INSERT INTO models
-        (id, name, validator, job_definition, compute_environment)
+        (id, name, validator, job_definition, job_queue)
       VALUES
-        (${model.id}, ${model.name}, ${model.validator}, ${model.jobDefinition}, ${model.computeEnvironment})
+        (${model.id}, ${model.name}, ${model.validator}, ${model.jobDefinition}, ${model.jobQueue})
     """
     fragment.update.withUniqueGeneratedKeys[Model](
       "id",
       "name",
       "validator",
       "job_definition",
-      "compute_environment"
+      "job_queue"
     )
   }
 

@@ -10,7 +10,7 @@ case class Model(
     name: String,
     validator: Validator,
     jobDefinition: String,
-    computeEnvironment: String
+    jobQueue: String
 ) {
   def validate = validator.validate _
 }
@@ -23,7 +23,7 @@ object Model {
     "name",
     "validator",
     "jobDefinition",
-    "computeEnvironment"
+    "jobQueue"
   )(
     Model.apply _
   )
