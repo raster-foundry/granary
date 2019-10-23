@@ -2,6 +2,8 @@ version: "2.3"
 services:
   database:
     image: quay.io/azavea/postgis:2.3-postgres9.6-slim
+    volumes:
+      - ./data/:/tmp/data/
     environment:
       - POSTGRES_USER=granary
       - POSTGRES_PASSWORD=granary

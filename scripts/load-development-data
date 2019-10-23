@@ -1,0 +1,64 @@
+#!/bin/bash
+set -e
+
+if [[ -n "${RF_DEBUG}" ]]; then
+    set -x
+fi
+
+source "scripts/update"
+
+DIR="$(dirname "$0")"
+
+function usage() {
+
+    echo -n \
+"Usage: $(basename "$0") [--download]
+
+Load the database dump located at data/database.pgdump if present.
+Otherwise, downloads the dump from S3. If the download flag is used, ignores
+and overwrites the existing dump.
+"
+}
+
+function download_database_backup() {
+
+    pushd "${DIR}/.."
+    echo "Downloading database from s3"
+    mkdir -p data
+    aws s3 cp s3://rasterfoundry-development-data-us-east-1/granary/database.pgdump data/database.pgdump
+    popd
+}
+
+function load_database_backup() {
+    docker-compose up -d database
+    sleep 1
+
+    echo "Drop granary database"
+    docker-compose \
+        exec -T database dropdb -U granary granary
+
+    echo "Create granary database"
+    docker-compose \
+        exec -T database createdb -U granary granary
+
+    echo "Restore database from backup"
+    # Command to create database backup
+    # gosu postgres pg_dump -Fc granary > database.pgdump
+    docker-compose \
+        exec -T database psql -U granary -d granary -f /tmp/data/database.pgdump
+    ./scripts/migrate migrate
+}
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]
+then
+    if [ "${1:-}" = "--help" ]
+    then
+        usage
+    else
+        if [ "${1:-}" = "--download" ] || [ ! -f data/database.pgdump ]; then
+            download_database_backup
+        fi
+        load_database_backup
+    fi
+    exit
+fi
