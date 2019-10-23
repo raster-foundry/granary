@@ -82,7 +82,7 @@ class ModelServiceSpec extends Specification with ScalaCheck with Generators wit
     } yield (models, listed)
 
     val (inserted, listed) = listIO.value.unsafeRunSync.get
-    listed.contains(inserted)
+    listed.intersect(inserted).toSet == inserted.toSet
   }
 
   def deleteModelExpectation = prop { (model: Model) =>
