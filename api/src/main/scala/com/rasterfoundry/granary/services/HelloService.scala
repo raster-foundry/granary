@@ -4,7 +4,7 @@ import cats._
 import com.rasterfoundry.granary.api.endpoints._
 import com.rasterfoundry.granary.api.error._
 import cats.effect._
-import com.colisweb.tracing.TracingContext.TracingContextBuilder
+import com.colisweb.tracing.TracingContextBuilder
 import io.circe._
 import org.http4s._
 import org.http4s.dsl.Http4sDsl

@@ -5,8 +5,7 @@ import com.rasterfoundry.granary.api.services._
 import com.rasterfoundry.granary.database.{Config => DBConfig}
 import cats.effect._
 import cats.implicits._
-import com.colisweb.tracing.TracingContext.TracingContextBuilder
-import com.rasterfoundry.http4s.{JaegerTracer, XRayTracer}
+import com.colisweb.tracing._
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
 import io.chrisdavenport.log4cats.Logger
@@ -28,18 +27,12 @@ object ApiServer extends IOApp {
 
   def getTracingContextBuilder: IO[Either[ConfigReaderFailures, TracingContextBuilder[IO]]] =
     ConfigSource.default.at("tracing").load[TracingConfig] traverse {
-      case TracingConfig(s) if s.toUpperCase() == "JAEGER" =>
-        Logger[IO].debug("Using jaeger tracer") map { _ =>
-          JaegerTracer.tracingContextBuilder
+      case TracingConfig(s) => {
+        Logger[IO].info(s"Ignoring tracer $s due to a large tower of dependency Jenga") flatMap {
+          _ =>
+            NoOpTracingContext.getNoOpTracingContextBuilder[IO]
         }
-      case TracingConfig(s) if s.toUpperCase() == "XRAY" =>
-        Logger[IO].debug("Using XRay tracer") map { _ =>
-          XRayTracer.tracingContextBuilder
-        }
-      case TracingConfig(s) =>
-        Logger[IO].warn(s"Not a recognized tracing sink: $s. Using Jaeger") map { _ =>
-          JaegerTracer.tracingContextBuilder
-        }
+      }
     }
 
   def createServer: Resource[IO, Server[IO]] =

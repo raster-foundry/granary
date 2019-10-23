@@ -94,6 +94,7 @@ lazy val database = (project in file("database"))
 lazy val apiSettings = commonSettings ++ Seq(
   name := "api",
   fork in run := true,
+  test in assembly := false,
   assemblyJarName in assembly := "granary-api-assembly.jar",
   assemblyMergeStrategy in assembly := {
     case "reference.conf"                       => MergeStrategy.concat
@@ -114,7 +115,6 @@ lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
   Dependencies.log4cats,
   Dependencies.openTracing,
   Dependencies.pureConfig,
-  Dependencies.rasterFoundryHttp4s,
   Dependencies.tapir,
   Dependencies.tapirCirce,
   Dependencies.tapirHttp4sServer,

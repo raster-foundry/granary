@@ -5,15 +5,14 @@ import sbt._
 // Versions
 object Versions {
   val CatsScalacheckVersion  = "0.2.0"
-  val CirceVersion           = "0.12.1"
+  val CirceVersion           = "0.12.2"
   val CirceJsonSchemaVersion = "0.1.0"
   val DoobieVersion          = "0.8.2"
   val Http4sVersion          = "0.21.0-M5"
   val LogbackVersion         = "1.2.3"
   val Log4CatsVersion        = "1.0.1"
-  val OpenTracingVersion     = "0.0.6"
+  val OpenTracingVersion     = "0.1.0"
   val PureConfig             = "0.12.1"
-  val RasterFoundryVersion   = "1.31.0-11-g486496c-SNAPSHOT"
   val ScapegoatVersion       = "1.3.8"
   val ScalacheckVersion      = "1.14.2"
   val Specs2Version          = "4.6.0"
@@ -39,7 +38,6 @@ object Dependencies {
   val log4cats              = "io.chrisdavenport"      %% "log4cats-slf4j"           % Versions.Log4CatsVersion
   val openTracing           = "com.colisweb"           %% "scala-opentracing"        % Versions.OpenTracingVersion
   val pureConfig            = "com.github.pureconfig"  %% "pureconfig"               % Versions.PureConfig
-  val rasterFoundryHttp4s   = "com.rasterfoundry"      %% "http4s-util"              % Versions.RasterFoundryVersion
   val scalacheck            = "org.scalacheck"         %% "scalacheck"               % Versions.ScalacheckVersion % "test"
   val specs2Core            = "org.specs2"             %% "specs2-core"              % Versions.Specs2Version % "test"
   val specs2Scalacheck      = "org.specs2"             %% "specs2-scalacheck"        % Versions.Specs2Version % "test"

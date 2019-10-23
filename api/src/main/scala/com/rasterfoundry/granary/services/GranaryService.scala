@@ -1,8 +1,7 @@
 package com.rasterfoundry.granary.api.services
 
 import cats.effect.Resource
-import com.colisweb.tracing.TracingContext
-import com.colisweb.tracing.TracingContext.TracingContextBuilder
+import com.colisweb.tracing.{TracingContext, TracingContextBuilder}
 
 import scala.language.higherKinds
 

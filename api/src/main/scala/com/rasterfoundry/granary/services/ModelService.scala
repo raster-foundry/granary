@@ -3,7 +3,7 @@ package com.rasterfoundry.granary.api.services
 import cats._
 import cats.effect._
 import cats.implicits._
-import com.colisweb.tracing.TracingContext.TracingContextBuilder
+import com.colisweb.tracing.TracingContextBuilder
 import com.rasterfoundry.granary.api.endpoints._
 import com.rasterfoundry.granary.api.error._
 import com.rasterfoundry.granary.database.ModelDao

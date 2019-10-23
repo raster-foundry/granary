@@ -13,13 +13,19 @@ import java.util.UUID
 object ModelEndpoints {
   val base = endpoint.in("models")
 
-  val idLookup = base.get.in(path[UUID]).out(jsonBody[Model]).errorOut(jsonBody[NotFound])
+  val idLookup = base.get
+    .in(path[UUID])
+    .out(jsonBody[Model])
+    .errorOut(oneOf(statusMapping(404, jsonBody[NotFound].description("not found"))))
 
   val create = base.post.in(jsonBody[Model]).out(jsonBody[Model])
 
   val list = base.get.out(jsonBody[List[Model]])
 
-  val delete = base.delete.in(path[UUID]).out(jsonBody[DeleteMessage]).errorOut(jsonBody[NotFound])
+  val delete = base.delete
+    .in(path[UUID])
+    .out(jsonBody[DeleteMessage])
+    .errorOut(oneOf(statusMapping(404, jsonBody[NotFound])))
 
   val endpoints = List(idLookup, create, list, delete)
 }
