@@ -9,3 +9,10 @@ object NotFound {
   implicit val encNotFound: Encoder[NotFound] = deriveEncoder
   implicit val decNotFound: Decoder[NotFound] = deriveDecoder
 }
+
+case class ValidationError(msg: String)
+
+object ValidationError {
+  implicit val encValidationError: Encoder[ValidationError] = deriveEncoder
+  implicit val decValidationError: Decoder[ValidationError] = deriveDecoder
+}
