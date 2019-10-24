@@ -19,12 +19,12 @@ object ModelDao {
   def unsafeGetModel(id: UUID): ConnectionIO[Model] =
     (selectF ++ Fragments.whereOr(fr"id = ${id}")).query[Model].unique
 
-  def insertModel(model: Model): ConnectionIO[Model] = {
+  def insertModel(model: Model.Create): ConnectionIO[Model] = {
     val fragment = fr"""
       INSERT INTO models
         (id, name, validator, job_definition, job_queue)
       VALUES
-        (${model.id}, ${model.name}, ${model.validator}, ${model.jobDefinition}, ${model.jobQueue})
+        (uuid_generate_v4(), ${model.name}, ${model.validator}, ${model.jobDefinition}, ${model.jobQueue})
     """
     fragment.update.withUniqueGeneratedKeys[Model](
       "id",

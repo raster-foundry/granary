@@ -18,7 +18,7 @@ object ModelEndpoints {
     .out(jsonBody[Model])
     .errorOut(oneOf(statusMapping(404, jsonBody[NotFound].description("not found"))))
 
-  val create = base.post.in(jsonBody[Model]).out(jsonBody[Model])
+  val create = base.post.in(jsonBody[Model.Create]).out(jsonBody[Model])
 
   val list = base.get.out(jsonBody[List[Model]])
 

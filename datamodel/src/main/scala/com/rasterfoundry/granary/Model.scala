@@ -13,6 +13,13 @@ case class Model(
     jobQueue: String
 ) {
   def validate = validator.validate _
+
+  def toCreate: Model.Create = Model.Create(
+    name,
+    validator,
+    jobDefinition,
+    jobQueue
+  )
 }
 
 object Model {
@@ -27,4 +34,16 @@ object Model {
   )(
     Model.apply _
   )
+
+  case class Create(
+      name: String,
+      validator: Validator,
+      jobDefinition: String,
+      jobQueue: String
+  )
+
+  object Create {
+    implicit val encCreate: Encoder[Create] = deriveEncoder
+    implicit val decCreate: Decoder[Create] = deriveDecoder
+  }
 }

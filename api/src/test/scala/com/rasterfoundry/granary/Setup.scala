@@ -11,7 +11,7 @@ import org.http4s.circe.CirceEntityEncoder._
 
 trait Setup {
 
-  def createModel(model: Model, service: ModelService[IO]): OptionT[IO, Model] = {
+  def createModel(model: Model.Create, service: ModelService[IO]): OptionT[IO, Model] = {
     val request =
       Request[IO](method = Method.POST, uri = Uri.uri("/models")).withEntity(model)
     for {

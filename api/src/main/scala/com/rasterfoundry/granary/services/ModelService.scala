@@ -19,7 +19,7 @@ class ModelService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa: Tra
     implicit contextShift: ContextShift[F]
 ) extends GranaryService {
 
-  def createModel(model: Model): F[Either[Unit, Model]] =
+  def createModel(model: Model.Create): F[Either[Unit, Model]] =
     mkContext("createModel", Map.empty, contextBuilder) use { _ =>
       Functor[F].map(ModelDao.insertModel(model).transact(xa))(Right(_))
     }

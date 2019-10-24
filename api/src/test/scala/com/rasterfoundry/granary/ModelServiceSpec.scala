@@ -37,15 +37,15 @@ class ModelServiceSpec extends Specification with ScalaCheck with Generators wit
   val service: ModelService[IO] =
     new ModelService[IO](tracingContextBuilder, transactor)
 
-  def createExpectation = prop { (model: Model) =>
+  def createExpectation = prop { (model: Model.Create) =>
     {
       val out: Model = createModel(model, service).value.unsafeRunSync.get
 
-      out ==== model
+      out.toCreate ==== model
     }
   }
 
-  def getByIdExpectation = prop { (model: Model) =>
+  def getByIdExpectation = prop { (model: Model.Create) =>
     {
       val getByIdAndBogus: OptionT[IO, (Model, Response[IO], NotFound)] = for {
         decoded <- createModel(model, service)
@@ -64,13 +64,13 @@ class ModelServiceSpec extends Specification with ScalaCheck with Generators wit
 
       val (outModel, missingResp, missingBody) = getByIdAndBogus.value.unsafeRunSync.get
 
-      outModel ==== model && missingResp.status.code ==== 404 && missingBody ==== NotFound()
+      outModel.toCreate ==== model && missingResp.status.code ==== 404 && missingBody ==== NotFound()
 
     }
   }
 
   def listModelsExpectation = {
-    val models = Arbitrary.arbitrary[List[Model]].sample.get
+    val models = Arbitrary.arbitrary[List[Model.Create]].sample.get
     val listIO = for {
       models <- models traverse { model =>
         createModel(model, service)
@@ -85,7 +85,7 @@ class ModelServiceSpec extends Specification with ScalaCheck with Generators wit
     listed.intersect(inserted).toSet == inserted.toSet
   }
 
-  def deleteModelExpectation = prop { (model: Model) =>
+  def deleteModelExpectation = prop { (model: Model.Create) =>
     {
       val deleteIO = for {
         decoded <- createModel(model, service)
