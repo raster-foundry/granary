@@ -57,8 +57,7 @@ lazy val datamodelDependencies = commonDependencies ++ Seq(
   Dependencies.circeJsonSchema,
   Dependencies.http4s,
   Dependencies.http4sCirce,
-  Dependencies.scalacheck,
-  Dependencies.scalaNewType
+  Dependencies.scalacheck
 )
 
 lazy val datamodel = (project in file("datamodel"))

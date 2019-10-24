@@ -1,5 +1,5 @@
 package com.rasterfoundry.granary
 
-import com.rasterfoundry.granary.database.meta.{CirceJsonbMeta, NewTypeMeta}
+import com.rasterfoundry.granary.database.meta.CirceJsonbMeta
 
-package object database extends CirceJsonbMeta with NewTypeMeta
+package object database extends CirceJsonbMeta

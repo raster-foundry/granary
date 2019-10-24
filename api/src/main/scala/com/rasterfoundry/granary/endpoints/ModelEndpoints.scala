@@ -8,12 +8,13 @@ import tapir.json.circe._
 
 import scala.language.higherKinds
 
-object ModelEndpoints {
+import java.util.UUID
 
+object ModelEndpoints {
   val base = endpoint.in("models")
 
   val idLookup = base.get
-    .in(path[ModelId])
+    .in(path[UUID])
     .out(jsonBody[Model])
     .errorOut(oneOf(statusMapping(404, jsonBody[NotFound].description("not found"))))
 
@@ -22,7 +23,7 @@ object ModelEndpoints {
   val list = base.get.out(jsonBody[List[Model]])
 
   val delete = base.delete
-    .in(path[ModelId])
+    .in(path[UUID])
     .out(jsonBody[DeleteMessage])
     .errorOut(oneOf(statusMapping(404, jsonBody[NotFound])))
 
