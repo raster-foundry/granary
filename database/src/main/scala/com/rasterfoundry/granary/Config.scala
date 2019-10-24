@@ -1,5 +1,7 @@
 package com.rasterfoundry.granary.database
 
+import cats.effect.{Async, ContextShift}
+import doobie.Transactor
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import scala.util.Properties
 
@@ -22,6 +24,15 @@ object Config {
 
   val dbMaximumPoolSize: Int =
     Properties.envOrElse("POSTGRES_DB_POOL_SIZE", "5").toInt
+
+  def nonHikariTransactor[F[_]: Async](implicit cs: ContextShift[F]) = {
+    Transactor.fromDriverManager[F](
+      "org.postgresql.Driver",
+      jdbcUrl,
+      dbUser,
+      dbPassword
+    )
+  }
 
   val hikariConfig = new HikariConfig()
   hikariConfig.setPoolName("granary-pool")

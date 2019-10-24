@@ -2,6 +2,7 @@ cancelable in Global := true
 
 lazy val commonDependencies = Seq(
   Dependencies.specs2Core,
+  Dependencies.specs2Scalacheck,
   Dependencies.logbackClassic
 )
 
@@ -27,7 +28,8 @@ lazy val commonSettings = Seq(
     Resolver.sonatypeRepo("snapshots"),
     // Required transitively
     Resolver.bintrayRepo("guizmaii", "maven"),
-    Resolver.bintrayRepo("colisweb", "maven")
+    Resolver.bintrayRepo("colisweb", "maven"),
+    "jitpack".at("https://jitpack.io")
   ),
   autoCompilerPlugins := true,
   addCompilerPlugin("org.spire-math"  %% "kind-projector"     % "0.9.6"),
@@ -49,10 +51,13 @@ lazy val datamodelSettings = commonSettings ++ Seq(
 )
 
 lazy val datamodelDependencies = commonDependencies ++ Seq(
+  Dependencies.catsScalacheck,
   Dependencies.circeCore,
   Dependencies.circeGeneric,
+  Dependencies.circeJsonSchema,
   Dependencies.http4s,
-  Dependencies.http4sCirce
+  Dependencies.http4sCirce,
+  Dependencies.scalacheck
 )
 
 lazy val datamodel = (project in file("datamodel"))
@@ -71,6 +76,7 @@ lazy val databaseDependencies = commonDependencies ++ Seq(
   Dependencies.doobie,
   Dependencies.doobieHikari,
   Dependencies.doobiePostgres,
+  Dependencies.doobiePostgresCirce,
   Dependencies.doobieSpecs2,
   Dependencies.doobieScalatest
 )
@@ -88,6 +94,7 @@ lazy val database = (project in file("database"))
 lazy val apiSettings = commonSettings ++ Seq(
   name := "api",
   fork in run := true,
+  test in assembly := false,
   assemblyJarName in assembly := "granary-api-assembly.jar",
   assemblyMergeStrategy in assembly := {
     case "reference.conf"                       => MergeStrategy.concat
@@ -108,7 +115,6 @@ lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
   Dependencies.log4cats,
   Dependencies.openTracing,
   Dependencies.pureConfig,
-  Dependencies.rasterFoundryHttp4s,
   Dependencies.tapir,
   Dependencies.tapirCirce,
   Dependencies.tapirHttp4sServer,
@@ -118,7 +124,7 @@ lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
 )
 
 lazy val api = (project in file("api"))
-  .dependsOn(datamodel, database)
+  .dependsOn(datamodel % "compile->compile;test->test", database)
   .settings(apiSettings: _*)
   .settings({
     libraryDependencies ++= apiDependencies

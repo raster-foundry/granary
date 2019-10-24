@@ -2,6 +2,8 @@ version: "2.3"
 services:
   database:
     image: quay.io/azavea/postgis:2.3-postgres9.6-slim
+    volumes:
+      - ./data/:/tmp/data/
     environment:
       - POSTGRES_USER=granary
       - POSTGRES_PASSWORD=granary
@@ -66,6 +68,7 @@ services:
         condition: service_healthy
     links:
       - database:database.service.internal
+      - jaeger:jaeger.service.internal
     environment:
       - AWS_PROFILE
       - POSTGRES_URL=jdbc:postgresql://database.service.internal/
@@ -90,7 +93,7 @@ services:
       - FLYWAY_URL=jdbc:postgresql://database.service.internal/granary
       - FLYWAY_USER=granary
       - FLYWAY_PASSWORD=granary
-      - FLYWAY_LOCATIONS=filesystem:/opt/granary/database/src/main/resources/db
+      - FLYWAY_LOCATIONS=filesystem:/opt/granary/database/src/main/resources/migrations
       - FLYWAY_SCHEMAS=public
       - FLYWAY_BASELINE_ON_MIGRATE=true
     depends_on:

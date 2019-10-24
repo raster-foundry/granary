@@ -47,7 +47,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
             popd
         else
             docker-compose \
-                run --rm --no-deps sbt \
+                run --rm sbt \
                 "; scalafix --check; test"
         fi
     fi
