@@ -7,13 +7,11 @@ import com.colisweb.tracing.TracingContextBuilder
 import com.rasterfoundry.granary.api.endpoints._
 import com.rasterfoundry.granary.api.error._
 import com.rasterfoundry.granary.database.ModelDao
-import com.rasterfoundry.granary.datamodel.Model
+import com.rasterfoundry.granary.datamodel._
 import doobie._
 import doobie.implicits._
 import org.http4s._
 import tapir.server.http4s._
-
-import java.util.UUID
 
 class ModelService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa: Transactor[F])(
     implicit contextShift: ContextShift[F]
@@ -30,7 +28,7 @@ class ModelService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa: Tra
         Functor[F].map(ModelDao.listModels.transact(xa))(Right(_))
     }
 
-  def getById(id: UUID): F[Either[NotFound, Model]] =
+  def getById(id: ModelId): F[Either[NotFound, Model]] =
     mkContext("lookupModelById", Map("modelId" -> s"$id"), contextBuilder) use { _ =>
       Functor[F].map(ModelDao.getModel(id).transact(xa))({
         case Some(model) => Right(model)
@@ -38,7 +36,7 @@ class ModelService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa: Tra
       })
     }
 
-  def deleteById(id: UUID): F[Either[NotFound, DeleteMessage]] =
+  def deleteById(id: ModelId): F[Either[NotFound, DeleteMessage]] =
     mkContext("deleteModelById", Map("modelId" -> s"$id"), contextBuilder) use { _ =>
       Functor[F].map(ModelDao.deleteModel(id).transact(xa))({
         case Some(n) => Right(DeleteMessage(n))

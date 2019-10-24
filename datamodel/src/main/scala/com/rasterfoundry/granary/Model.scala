@@ -3,10 +3,8 @@ package com.rasterfoundry.granary.datamodel
 import io.circe._
 import io.circe.generic.semiauto._
 
-import java.util.UUID
-
 case class Model(
-    id: UUID,
+    id: ModelId,
     name: String,
     validator: Validator,
     jobDefinition: String,

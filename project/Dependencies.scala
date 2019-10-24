@@ -15,6 +15,7 @@ object Versions {
   val PureConfig             = "0.12.1"
   val ScapegoatVersion       = "1.3.8"
   val ScalacheckVersion      = "1.14.2"
+  val ScalaNewType           = "0.4.3"
   val Specs2Version          = "4.6.0"
   val TapirVersion           = "0.11.9"
 }
@@ -39,6 +40,7 @@ object Dependencies {
   val openTracing           = "com.colisweb"           %% "scala-opentracing"        % Versions.OpenTracingVersion
   val pureConfig            = "com.github.pureconfig"  %% "pureconfig"               % Versions.PureConfig
   val scalacheck            = "org.scalacheck"         %% "scalacheck"               % Versions.ScalacheckVersion % "test"
+  val scalaNewType          = "io.estatico"            %% "newtype"                  % Versions.ScalaNewType
   val specs2Core            = "org.specs2"             %% "specs2-core"              % Versions.Specs2Version % "test"
   val specs2Scalacheck      = "org.specs2"             %% "specs2-scalacheck"        % Versions.Specs2Version % "test"
   val tapir                 = "com.softwaremill.tapir" %% "tapir-core"               % Versions.TapirVersion
