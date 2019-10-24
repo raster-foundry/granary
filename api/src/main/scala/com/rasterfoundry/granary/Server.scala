@@ -47,7 +47,9 @@ object ApiServer extends IOApp {
       blocker      <- Blocker[IO]
       transactor <- HikariTransactor
         .fromHikariConfig[IO](DBConfig.hikariConfig, connectionEc, blocker)
-      allEndpoints     = HelloEndpoints.endpoints ++ ModelEndpoints.endpoints
+      allEndpoints = {
+        HelloEndpoints.endpoints ++ ModelEndpoints.endpoints ++ PredictionEndpoints.endpoints
+      }
       docs             = allEndpoints.toOpenAPI("Granary", "0.0.1")
       docRoutes        = new SwaggerHttp4s(docs.toYaml).routes
       helloRoutes      = new HelloService(tracingContextBuilder).routes
