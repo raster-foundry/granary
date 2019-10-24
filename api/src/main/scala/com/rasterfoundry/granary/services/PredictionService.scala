@@ -54,4 +54,6 @@ class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa
   val detail = PredictionEndpoints.idLookup.toRoutes(getById)
   val create = PredictionEndpoints.create.toRoutes(createPrediction)
 
+  val routes: HttpRoutes[F] = detail <+> create <+> list
+
 }
