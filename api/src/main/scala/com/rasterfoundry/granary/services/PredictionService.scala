@@ -11,7 +11,6 @@ import com.rasterfoundry.granary.datamodel._
 import doobie._
 import doobie.implicits._
 import org.http4s._
-import shapeless._
 import tapir.server.http4s._
 
 import java.util.UUID
@@ -19,8 +18,6 @@ import java.util.UUID
 class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa: Transactor[F])(
     implicit contextShift: ContextShift[F]
 ) extends GranaryService {
-
-  type PredictionCreationError = ValidationError :+: NotFound :+: CNil
 
   def listPredictions(
       modelId: Option[UUID],
@@ -40,15 +37,15 @@ class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa
 
   def createPrediction(
       prediction: Prediction.Create
-  ): F[Either[PredictionCreationError, Prediction]] =
+  ): F[Either[CrudError, Prediction]] =
     mkContext("createPrediction", Map.empty, contextBuilder) use { _ =>
       Functor[F].map(PredictionDao.insertPrediction(prediction).transact(xa))({
         case Right(created) => Right(created)
         case Left(PredictionDao.ModelNotFound) =>
-          Left(Coproduct[PredictionCreationError](NotFound()))
+          Left(NotFound())
         case Left(PredictionDao.ArgumentsValidationFailed(errs)) =>
           Left(
-            Coproduct[PredictionCreationError](ValidationError(errs map { _.getMessage } reduce))
+            ValidationError(errs map { _.getMessage } reduce)
           )
       })
     }

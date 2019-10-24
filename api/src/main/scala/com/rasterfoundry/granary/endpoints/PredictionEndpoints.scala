@@ -24,7 +24,7 @@ object PredictionEndpoints {
     .in(jsonBody[Prediction.Create])
     .out(jsonBody[Prediction])
     .errorOut(
-      oneOf(
+      oneOf[CrudError](
         statusMapping(404, jsonBody[NotFound].description("not found")),
         statusMapping(
           400,
