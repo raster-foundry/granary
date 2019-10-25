@@ -19,4 +19,17 @@ trait Setup {
       decoded <- OptionT.liftF { resp.as[Model] }
     } yield decoded
   }
+
+  def createPrediction(
+      prediction: Prediction.Create,
+      service: PredictionService[IO]
+  ): OptionT[IO, Prediction] = {
+    val request =
+      Request[IO](method = Method.POST, uri = Uri.uri("/predictions")).withEntity(prediction)
+    for {
+      resp    <- service.routes.run(request)
+      decoded <- OptionT.liftF { resp.as[Prediction] }
+    } yield decoded
+
+  }
 }

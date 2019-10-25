@@ -6,3 +6,6 @@ CREATE TABLE predictions (
   status job_status not null,
   status_reason text
 );
+
+CREATE INDEX predictions_status_idx ON predictions (status);
+CREATE INDEX predictions_model_id_idx ON predictions (model_id);
