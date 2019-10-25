@@ -32,14 +32,9 @@ class ModelServiceSpec
     - delete models                           $deleteModelExpectation
 """
 
-  def serviceCreator: Unit = {}
-
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
 
-  def service: ModelService[IO] = {
-
-    new ModelService[IO](tracingContextBuilder, transactor)
-  }
+  def service: ModelService[IO] = new ModelService[IO](tracingContextBuilder, transactor)
 
   def createExpectation = prop { (model: Model.Create) =>
     {
