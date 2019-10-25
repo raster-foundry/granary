@@ -10,6 +10,13 @@ jobs:
     docker:
       - image: circleci/openjdk:11-jdk
 
+      - image: quay.io/azavea/postgis:2.3-postgres9.6-slim
+        name: database.service.internal
+        environment:
+          - POSTGRES_USER=granary
+          - POSTGRES_PASSWORD=granary
+          - POSTGRES_DB=granary
+
     steps:
       - checkout
 

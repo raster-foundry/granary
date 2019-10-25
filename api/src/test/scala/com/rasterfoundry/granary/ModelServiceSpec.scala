@@ -1,25 +1,27 @@
 package com.rasterfoundry.granary.api.services
 
-import com.rasterfoundry.granary.api.endpoints.DeleteMessage
-import com.rasterfoundry.granary.api.error.NotFound
-
-import com.rasterfoundry.granary.database.{Config => DBConfig}
-import com.rasterfoundry.granary.datamodel._
+import java.util.UUID
 
 import cats.data.OptionT
-import cats.effect.{ContextShift, IO}
+import cats.effect.IO
 import cats.implicits._
 import com.colisweb.tracing.NoOpTracingContext
+import com.rasterfoundry.granary.api.endpoints.DeleteMessage
+import com.rasterfoundry.granary.api.error.NotFound
+import com.rasterfoundry.granary.database.TestDatabaseSpec
+import com.rasterfoundry.granary.datamodel._
 import org.http4s._
 import org.http4s.circe.CirceEntityDecoder._
 import org.scalacheck._
 import org.specs2.{ScalaCheck, Specification}
 
-import scala.concurrent.ExecutionContext.Implicits.global
+class ModelServiceSpec
+    extends Specification
+    with ScalaCheck
+    with Generators
+    with Setup
+    with TestDatabaseSpec {
 
-import java.util.UUID
-
-class ModelServiceSpec extends Specification with ScalaCheck with Generators with Setup {
   def is = s2"""
   This specification verifies that the Model Service can run without crashing
 
@@ -30,12 +32,14 @@ class ModelServiceSpec extends Specification with ScalaCheck with Generators wit
     - delete models                           $deleteModelExpectation
 """
 
-  implicit val cs: ContextShift[IO] = IO.contextShift(global)
-  val transactor                    = DBConfig.nonHikariTransactor[IO]
-  val tracingContextBuilder         = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
+  def serviceCreator: Unit = {}
 
-  val service: ModelService[IO] =
+  val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
+
+  def service: ModelService[IO] = {
+
     new ModelService[IO](tracingContextBuilder, transactor)
+  }
 
   def createExpectation = prop { (model: Model.Create) =>
     {
