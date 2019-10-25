@@ -25,10 +25,10 @@ object Config {
   val dbMaximumPoolSize: Int =
     Properties.envOrElse("POSTGRES_DB_POOL_SIZE", "5").toInt
 
-  def nonHikariTransactor[F[_]: Async](implicit cs: ContextShift[F]) = {
+  def nonHikariTransactor[F[_]: Async](databaseName: String)(implicit cs: ContextShift[F]) = {
     Transactor.fromDriverManager[F](
       "org.postgresql.Driver",
-      jdbcUrl,
+      jdbcNoDBUrl + databaseName,
       dbUser,
       dbPassword
     )

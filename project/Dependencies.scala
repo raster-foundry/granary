@@ -8,6 +8,7 @@ object Versions {
   val CirceVersion           = "0.12.2"
   val CirceJsonSchemaVersion = "0.1.0"
   val DoobieVersion          = "0.8.2"
+  val Flyway                 = "5.2.4"
   val Http4sVersion          = "0.21.0-M5"
   val LogbackVersion         = "1.2.3"
   val Log4CatsVersion        = "1.0.1"
@@ -30,6 +31,7 @@ object Dependencies {
   val doobiePostgresCirce   = "org.tpolecat"           %% "doobie-postgres-circe"    % Versions.DoobieVersion
   val doobieScalatest       = "org.tpolecat"           %% "doobie-scalatest"         % Versions.DoobieVersion % "test"
   val doobieSpecs2          = "org.tpolecat"           %% "doobie-specs2"            % Versions.DoobieVersion % "test"
+  val flyway                = "org.flywaydb"           % "flyway-core"               % Versions.Flyway % "test"
   val http4s                = "org.http4s"             %% "http4s-blaze-server"      % Versions.Http4sVersion
   val http4sCirce           = "org.http4s"             %% "http4s-circe"             % Versions.Http4sVersion
   val http4sDsl             = "org.http4s"             %% "http4s-dsl"               % Versions.Http4sVersion

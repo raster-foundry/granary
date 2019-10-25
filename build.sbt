@@ -78,7 +78,8 @@ lazy val databaseDependencies = commonDependencies ++ Seq(
   Dependencies.doobiePostgres,
   Dependencies.doobiePostgresCirce,
   Dependencies.doobieSpecs2,
-  Dependencies.doobieScalatest
+  Dependencies.doobieScalatest,
+  Dependencies.flyway
 )
 
 lazy val database = (project in file("database"))
@@ -124,7 +125,7 @@ lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
 )
 
 lazy val api = (project in file("api"))
-  .dependsOn(datamodel % "compile->compile;test->test", database)
+  .dependsOn(datamodel % "compile->compile;test->test", database % "compile->compile;test->test")
   .settings(apiSettings: _*)
   .settings({
     libraryDependencies ++= apiDependencies
