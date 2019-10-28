@@ -7,8 +7,6 @@ import com.rasterfoundry.granary.datamodel._
 import tapir.{ValidationError => _, _}
 import tapir.json.circe._
 
-import scala.language.higherKinds
-
 import java.util.UUID
 
 object PredictionEndpoints {
