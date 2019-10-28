@@ -20,14 +20,9 @@ class ModelServiceSpec
     with ScalaCheck
     with Generators
     with Setup
+    with Teardown
     with TestDatabaseSpec {
 
-class ModelServiceSpec
-    extends Specification
-    with ScalaCheck
-    with Generators
-    with Setup
-    with Teardown {
   def is = s2"""
   This specification verifies that the Model Service can run without crashing
 
@@ -58,7 +53,10 @@ class ModelServiceSpec
       val getByIdAndBogus: OptionT[IO, (Model, Response[IO], NotFound)] = for {
         decoded <- createModel(model, service)
         successfulByIdRaw <- service.routes.run(
-          Request[IO](method = Method.GET, uri = Uri.fromString(s"/models/${decoded.id}").right.get)
+          Request[IO](
+            method = Method.GET,
+            uri = Uri.fromString(s"/models/${decoded.id}").right.get
+          )
         )
         successfulById <- OptionT.liftF { successfulByIdRaw.as[Model] }
         missingByIdRaw <- service.routes.run(

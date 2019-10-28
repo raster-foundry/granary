@@ -1,10 +1,10 @@
 package com.rasterfoundry.granary.api.services
 
-import com.rasterfoundry.granary.database.{Config => DBConfig}
+import com.rasterfoundry.granary.database.TestDatabaseSpec
 import com.rasterfoundry.granary.datamodel._
 
 import cats.data.OptionT
-import cats.effect.{ContextShift, IO}
+import cats.effect.IO
 import cats.implicits._
 import com.colisweb.tracing.NoOpTracingContext
 import io.circe._
@@ -15,15 +15,13 @@ import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.circe.CirceEntityEncoder._
 import org.specs2.{ScalaCheck, Specification}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Random
-
 class PredictionServiceSpec
     extends Specification
     with ScalaCheck
     with Setup
     with Teardown
-    with Generators {
+    with Generators
+    with TestDatabaseSpec {
   def is = s2"""
   This specification verifies the functionality of the prediction service
 
@@ -33,12 +31,7 @@ class PredictionServiceSpec
     - get a prediction by id                            $getPredictionByIdExpectation
   """
 
-  def deleteModel(model: Model): IO[Unit] = ???
-  def deletePrediction: IO[Unit]          = ???
-
-  implicit val cs: ContextShift[IO] = IO.contextShift(global)
-  val transactor                    = DBConfig.nonHikariTransactor[IO]
-  val tracingContextBuilder         = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
+  val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
 
   val modelService: ModelService[IO] =
     new ModelService[IO](tracingContextBuilder, transactor)
