@@ -10,6 +10,7 @@ import com.rasterfoundry.granary.database.PredictionDao
 import com.rasterfoundry.granary.datamodel._
 import doobie._
 import doobie.implicits._
+import io.circe.syntax._
 import org.http4s._
 import tapir.server.http4s._
 
@@ -47,6 +48,12 @@ class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa
           Left(
             ValidationError(errs map { _.getMessage } reduce)
           )
+        case Left(PredictionDao.WebhookAlreadyUsed) =>
+          Left(
+            ValidationError(
+              "Webhook check somehow invoked in create endpoint. Something is very wrong"
+            )
+          )
       })
     }
 
@@ -55,7 +62,27 @@ class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa
       predictionWebhookId: UUID,
       updateMessage: PredictionStatusUpdate
   ): F[Either[CrudError, Prediction]] =
-    ???
+    mkContext(
+      "addPredictionResults",
+      Map("statusUpdate" -> updateMessage.asJson.noSpaces),
+      contextBuilder
+    ) use { _ =>
+      Functor[F].map(
+        PredictionDao
+          .addResults(predictionId, predictionWebhookId, updateMessage)
+          .value
+          .transact(xa)
+      )({
+        case None =>
+          Left(NotFound())
+        case Some(Left(PredictionDao.WebhookAlreadyUsed)) =>
+          Left(
+            Conflict(s"Webhook $predictionWebhookId for prediction $predictionId was already used")
+          )
+        case Some(Right(p)) =>
+          Right(p)
+      })
+    }
 
   val list       = PredictionEndpoints.list.toRoutes(Function.tupled(listPredictions))
   val detail     = PredictionEndpoints.idLookup.toRoutes(getById)

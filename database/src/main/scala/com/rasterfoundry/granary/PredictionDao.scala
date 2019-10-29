@@ -17,6 +17,7 @@ object PredictionDao {
 
   sealed abstract class PredictionDaoError extends Throwable
   case object ModelNotFound                extends PredictionDaoError
+  case object WebhookAlreadyUsed           extends PredictionDaoError
 
   case class ArgumentsValidationFailed(underlying: NonEmptyList[ValidationError])
       extends PredictionDaoError
@@ -84,8 +85,10 @@ object PredictionDao {
     }
   }
 
-  def update(predictionId: UUID,
-             webhookId: UUID,
-             status: PredictionStatusUpdate): ConnectionIO[Either[PredictionDaoError, Unit]] =
+  def addResults(
+      predictionId: UUID,
+      webhookId: UUID,
+      status: PredictionStatusUpdate
+  ): OptionT[ConnectionIO, Either[WebhookAlreadyUsed.type, Prediction]] =
     ???
 }
