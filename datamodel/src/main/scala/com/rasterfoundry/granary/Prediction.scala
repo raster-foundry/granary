@@ -12,7 +12,8 @@ case class Prediction(
     invokedAt: Instant,
     arguments: Json,
     status: JobStatus,
-    statusReason: Option[String]
+    statusReason: Option[String],
+    outputLocation: Option[String]
 )
 
 object Prediction {
