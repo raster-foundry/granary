@@ -1,6 +1,6 @@
 package com.rasterfoundry.granary.api.services
 
-import com.rasterfoundry.granary.api.error.{Conflict, NotFound}
+import com.rasterfoundry.granary.api.error.NotFound
 import com.rasterfoundry.granary.database.TestDatabaseSpec
 import com.rasterfoundry.granary.datamodel._
 
@@ -34,6 +34,7 @@ class PredictionServiceSpec
     - respond appropriately to POSTs of different types $createPredictionExpectation
     - list filtered predictions                         $listPredictionsExpectation
     - get a prediction by id                            $getPredictionByIdExpectation
+    - store prediction results only when expected to    $addPredictionResultsExpectation
   """
 
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
@@ -44,11 +45,11 @@ class PredictionServiceSpec
   val predictionService: PredictionService[IO] =
     new PredictionService[IO](tracingContextBuilder, transactor)
 
-  def updatePrediction[T: Decoder](
+  def updatePredictionRaw(
       message: PredictionStatusUpdate,
       prediction: Prediction,
       webhookId: UUID
-  ): OptionT[IO, T] =
+  ): OptionT[IO, Response[IO]] =
     predictionService.routes.run(
       Request[IO](
         method = Method.POST,
@@ -59,7 +60,14 @@ class PredictionServiceSpec
           .right
           .get
       ).withEntity(message)
-    ) flatMap { resp =>
+    )
+
+  def updatePrediction[T: Decoder](
+      message: PredictionStatusUpdate,
+      prediction: Prediction,
+      webhookId: UUID
+  ): OptionT[IO, T] =
+    updatePredictionRaw(message, prediction, webhookId) flatMap { resp =>
       OptionT.liftF { resp.as[T] }
     }
 
@@ -201,35 +209,45 @@ class PredictionServiceSpec
             createdPrediction,
             createdPrediction.webhookId.get
           )
-          update2 <- updatePrediction[Conflict](
+          // Do it again, with the same webhook id
+          update2 <- updatePredictionRaw(
             message,
             createdPrediction,
             createdPrediction.webhookId.get
           )
-          update3 <- updatePrediction[NotFound](
+          update2Body <- OptionT.liftF { update2.as[NotFound] }
+          // Do it again, but with a random ID for the webhook
+          update3 <- updatePredictionRaw(
             message,
             createdPrediction,
             UUID.randomUUID
           )
-          _ <- deleteModel(createdModel, modelService)
-        } yield { (message, update1, update2, update3) }
+          update3Body <- OptionT.liftF { update3.as[NotFound] }
+          _           <- deleteModel(createdModel, modelService)
+        } yield { (message, update1, update2, update2Body, update3, update3Body) }
 
-        val (msg, successfulUpdate, conflictUpdate, noWebhookUpdate) =
+        val (msg, successfulUpdate, conflictUpdateResp, _, noWebhookUpdateResp, _) =
           testIO.value.unsafeRunSync.get
 
-        msg match {
-          case PredictionSuccess(_) =>
-            update1.outputLocation must not be empty
-            update1.status ==== JobStatus.Successful
-            update1.statusReason must be empty
-          case PredictionFailure(_) =>
-            update1.outputLocation must be empty
-            update1.status ==== JobStatus.Failed
-            update1.statusReason must not be empty
-        }
+        val updateExpectation =
+          msg match {
+            case PredictionSuccess(_) =>
+              List(
+                successfulUpdate.outputLocation !=== None,
+                successfulUpdate.status ==== JobStatus.Successful,
+                successfulUpdate.statusReason ==== None
+              )
+            case PredictionFailure(_) =>
+              List(
+                successfulUpdate.outputLocation ==== None,
+                successfulUpdate.status ==== JobStatus.Failed,
+                successfulUpdate.statusReason !=== None
+              )
+          }
 
-        conflictUpdate.status.code ==== 409
-        noWebhookUpdate.status.code ==== 404
+        conflictUpdateResp.status.code ==== 404 &&
+        noWebhookUpdateResp.status.code ==== 404 &&
+        updateExpectation
       }
   }
 }

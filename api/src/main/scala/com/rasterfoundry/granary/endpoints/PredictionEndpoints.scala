@@ -47,11 +47,7 @@ object PredictionEndpoints {
       .out(jsonBody[Prediction])
       .errorOut(
         oneOf[CrudError](
-          statusMapping(404, jsonBody[NotFound].description("not found")),
-          statusMapping(
-            409,
-            jsonBody[Conflict].description("prediction update webhook already used")
-          )
+          statusMapping(404, jsonBody[NotFound].description("not found"))
         )
       )
 

@@ -48,12 +48,6 @@ class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa
           Left(
             ValidationError(errs map { _.getMessage } reduce)
           )
-        case Left(PredictionDao.WebhookAlreadyUsed) =>
-          Left(
-            ValidationError(
-              "Webhook check somehow invoked in create endpoint. Something is very wrong"
-            )
-          )
       })
     }
 
@@ -75,11 +69,7 @@ class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa
       )({
         case None =>
           Left(NotFound())
-        case Some(Left(PredictionDao.WebhookAlreadyUsed)) =>
-          Left(
-            Conflict(s"Webhook $predictionWebhookId for prediction $predictionId was already used")
-          )
-        case Some(Right(p)) =>
+        case Some(p) =>
           Right(p)
       })
     }

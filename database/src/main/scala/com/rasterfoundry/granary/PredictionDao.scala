@@ -17,7 +17,6 @@ object PredictionDao {
 
   sealed abstract class PredictionDaoError extends Throwable
   case object ModelNotFound                extends PredictionDaoError
-  case object WebhookAlreadyUsed           extends PredictionDaoError
 
   case class ArgumentsValidationFailed(underlying: NonEmptyList[ValidationError])
       extends PredictionDaoError
@@ -89,7 +88,7 @@ object PredictionDao {
       predictionId: UUID,
       webhookId: UUID,
       status: PredictionStatusUpdate
-  ): OptionT[ConnectionIO, Either[WebhookAlreadyUsed.type, Prediction]] =
+  ): OptionT[ConnectionIO, Prediction] =
     for {
       existingPrediction <- OptionT(getPrediction(predictionId)) flatMap {
         case pred if pred.webhookId == Some(webhookId) => OptionT.some(pred)
@@ -129,6 +128,6 @@ object PredictionDao {
           "output_location",
           "webhook_id"
         )
-      } map { Right(_) }
+      }
     } yield update
 }
