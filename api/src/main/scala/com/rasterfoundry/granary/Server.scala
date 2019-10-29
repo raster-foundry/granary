@@ -47,14 +47,17 @@ object ApiServer extends IOApp {
       blocker      <- Blocker[IO]
       transactor <- HikariTransactor
         .fromHikariConfig[IO](DBConfig.hikariConfig, connectionEc, blocker)
-      allEndpoints = HelloEndpoints.endpoints ++ ModelEndpoints.endpoints
-      docs         = allEndpoints.toOpenAPI("Granary", "0.0.1")
-      docRoutes    = new SwaggerHttp4s(docs.toYaml).routes
-      helloRoutes  = new HelloService(tracingContextBuilder).routes
-      modelRoutes  = new ModelService(tracingContextBuilder, transactor).routes
+      allEndpoints = {
+        HelloEndpoints.endpoints ++ ModelEndpoints.endpoints ++ PredictionEndpoints.endpoints
+      }
+      docs             = allEndpoints.toOpenAPI("Granary", "0.0.1")
+      docRoutes        = new SwaggerHttp4s(docs.toYaml).routes
+      helloRoutes      = new HelloService(tracingContextBuilder).routes
+      modelRoutes      = new ModelService(tracingContextBuilder, transactor).routes
+      predictionRoutes = new PredictionService(tracingContextBuilder, transactor).routes
       router = CORS(
         Router(
-          "/api" -> (helloRoutes <+> modelRoutes <+> docRoutes)
+          "/api" -> (helloRoutes <+> modelRoutes <+> predictionRoutes <+> docRoutes)
         )
       ).orNotFound
       server <- BlazeServerBuilder[IO]

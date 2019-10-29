@@ -20,6 +20,7 @@ class ModelServiceSpec
     with ScalaCheck
     with Generators
     with Setup
+    with Teardown
     with TestDatabaseSpec {
 
   def is = s2"""
@@ -38,9 +39,12 @@ class ModelServiceSpec
 
   def createExpectation = prop { (model: Model.Create) =>
     {
-      val out: Model = createModel(model, service).value.unsafeRunSync.get
+      val out = for {
+        created <- createModel(model, service)
+        _       <- deleteModel(created, service)
+      } yield created
 
-      out.toCreate ==== model
+      out.value.unsafeRunSync.get.toCreate ==== model
     }
   }
 
@@ -49,7 +53,10 @@ class ModelServiceSpec
       val getByIdAndBogus: OptionT[IO, (Model, Response[IO], NotFound)] = for {
         decoded <- createModel(model, service)
         successfulByIdRaw <- service.routes.run(
-          Request[IO](method = Method.GET, uri = Uri.fromString(s"/models/${decoded.id}").right.get)
+          Request[IO](
+            method = Method.GET,
+            uri = Uri.fromString(s"/models/${decoded.id}").right.get
+          )
         )
         successfulById <- OptionT.liftF { successfulByIdRaw.as[Model] }
         missingByIdRaw <- service.routes.run(
@@ -59,6 +66,7 @@ class ModelServiceSpec
           )
         )
         missingById <- OptionT.liftF { missingByIdRaw.as[NotFound] }
+        _           <- deleteModel(decoded, service)
       } yield { (successfulById, missingByIdRaw, missingById) }
 
       val (outModel, missingResp, missingBody) = getByIdAndBogus.value.unsafeRunSync.get
@@ -78,6 +86,9 @@ class ModelServiceSpec
         Request[IO](method = Method.GET, uri = Uri.uri("/models"))
       )
       listed <- OptionT.liftF { listedRaw.as[List[Model]] }
+      _ <- models traverse { model =>
+        deleteModel(model, service)
+      }
     } yield (models, listed)
 
     val (inserted, listed) = listIO.value.unsafeRunSync.get
@@ -87,14 +98,8 @@ class ModelServiceSpec
   def deleteModelExpectation = prop { (model: Model.Create) =>
     {
       val deleteIO = for {
-        decoded <- createModel(model, service)
-        deleteByIdRaw <- service.routes.run(
-          Request[IO](
-            method = Method.DELETE,
-            uri = Uri.fromString(s"/models/${decoded.id}").right.get
-          )
-        )
-        deleteById <- OptionT.liftF { deleteByIdRaw.as[DeleteMessage] }
+        decoded    <- createModel(model, service)
+        deleteById <- deleteModel(decoded, service)
         missingByIdRaw <- service.routes.run(
           Request[IO](
             method = Method.DELETE,

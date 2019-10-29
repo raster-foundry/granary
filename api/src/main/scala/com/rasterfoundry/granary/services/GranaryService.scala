@@ -3,8 +3,6 @@ package com.rasterfoundry.granary.api.services
 import cats.effect.Resource
 import com.colisweb.tracing.{TracingContext, TracingContextBuilder}
 
-import scala.language.higherKinds
-
 trait GranaryService {
   // The service tag is required for Jaeger tracer to separate calls correctly
   // It otherwise defaults to raster-foundry
