@@ -154,18 +154,60 @@ class PredictionServiceSpec
           ) flatMap { resp =>
             OptionT.liftF { resp.as[List[Prediction]] }
           }
+          _ <- List(
+            PredictionSuccess("s3://center/of/the/universe.geojson"),
+            PredictionFailure("wasn't set up to succeed")
+          ).zip(allCreatedPreds) traverse {
+            case (msg, prediction) =>
+              updatePrediction[Prediction](msg, prediction, prediction.webhookId.get)
+          }
+          successUri = Uri.fromString(s"/predictions?status=successful").right.get
+          failureUri = Uri.fromString(s"/predictions?status=failed").right.get
+          listedForSuccess <- predictionService.routes.run(
+            Request[IO](method = Method.GET, uri = successUri)
+          ) flatMap { resp =>
+            OptionT.liftF { resp.as[List[Prediction]] }
+          }
+          listedForFailure <- predictionService.routes.run(
+            Request[IO](method = Method.GET, uri = failureUri)
+          ) flatMap { resp =>
+            OptionT.liftF { resp.as[List[Prediction]] }
+          }
           _ <- deleteModel(createdModel1, modelService)
           _ <- deleteModel(createdModel2, modelService)
         } yield {
-          (createdModel1.id, createdModel2.id, listedForModel1, listedForModel2, allCreatedPreds)
+          (
+            createdModel1.id,
+            createdModel2.id,
+            listedForModel1,
+            listedForModel2,
+            allCreatedPreds,
+            listedForSuccess,
+            listedForFailure
+          )
         }
 
-        val (model1Id, model2Id, model1Preds, model2Preds, allCreatedPreds) =
+        val (
+          model1Id,
+          model2Id,
+          model1Preds,
+          model2Preds,
+          allCreatedPreds,
+          successResults,
+          failureResults
+        ) =
           testIO.value.unsafeRunSync.get
 
         model1Preds.filter(_.modelId == model1Id) ==== model1Preds && model2Preds.filter(
           _.modelId == model2Id
-        ) ==== model2Preds && (model1Preds ++ model2Preds).toSet ==== allCreatedPreds.toSet
+        ) ==== model2Preds && (model1Preds ++ model2Preds).toSet ==== allCreatedPreds.toSet &&
+        (successResults map { _.status }) ==== (successResults map { _ =>
+          JobStatus.Successful
+        }) && (failureResults map {
+          _.status
+        }) ==== (failureResults map { _ =>
+          JobStatus.Failed
+        })
       }
   }
 
