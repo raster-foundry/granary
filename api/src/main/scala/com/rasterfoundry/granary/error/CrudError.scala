@@ -8,13 +8,16 @@ import io.circe.syntax._
 sealed abstract class CrudError
 
 object CrudError {
+
   implicit val decCrudErrror
     : Decoder[CrudError] = Decoder[NotFound].widen or Decoder[ValidationError].widen
+
   implicit val encCrudError: Encoder[CrudError] = new Encoder[CrudError] {
 
     def apply(thing: CrudError): Json = thing match {
       case t: NotFound        => t.asJson
       case t: ValidationError => t.asJson
+      case t: Conflict        => t.asJson
     }
   }
 }
@@ -31,4 +34,11 @@ case class ValidationError(msg: String) extends CrudError
 object ValidationError {
   implicit val encValidationError: Encoder[ValidationError] = deriveEncoder
   implicit val decValidationError: Decoder[ValidationError] = deriveDecoder
+}
+
+case class Conflict(msg: String) extends CrudError
+
+object Conflict {
+  implicit val encConflict: Encoder[Conflict] = deriveEncoder
+  implicit val decConflict: Decoder[Conflict] = deriveDecoder
 }

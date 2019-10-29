@@ -38,5 +38,22 @@ object PredictionEndpoints {
       .in(query[Option[JobStatus]]("status"))
       .out(jsonBody[List[Prediction]])
 
-  val endpoints = List(idLookup, create, list)
+  val addResults =
+    base.post
+      .in(path[UUID])
+      .in("results")
+      .in(path[UUID])
+      .in(jsonBody[PredictionStatusUpdate])
+      .out(jsonBody[Prediction])
+      .errorOut(
+        oneOf[CrudError](
+          statusMapping(404, jsonBody[NotFound].description("not found")),
+          statusMapping(
+            409,
+            jsonBody[Conflict].description("prediction update webhook already used")
+          )
+        )
+      )
+
+  val endpoints = List(idLookup, create, list, addResults)
 }

@@ -22,7 +22,12 @@ object PredictionDao {
       extends PredictionDaoError
 
   val selectF =
-    fr"select id, model_id, invoked_at, arguments, status, status_reason FROM predictions"
+    fr"""
+      SELECT
+        id, model_id, invoked_at, arguments, status,
+        status_reason, output_location, webhook_id
+      FROM predictions
+    """
 
   def listPredictions(
       modelId: Option[UUID],
@@ -47,9 +52,10 @@ object PredictionDao {
   ): ConnectionIO[Either[PredictionDaoError, Prediction]] = {
     val fragment = fr"""
       INSERT INTO predictions
-        (id, model_id, invoked_at, arguments, status, status_reason)
+        (id, model_id, invoked_at, arguments, status, status_reason, output_location, webhook_id)
       VALUES
-        (uuid_generate_v4(), ${prediction.modelId}, now(), ${prediction.arguments}, 'CREATED', NULL)
+        (uuid_generate_v4(), ${prediction.modelId}, now(), ${prediction.arguments},
+        'CREATED', NULL, NULL, uuid_generate_v4())
     """
     val insertIO: OptionT[ConnectionIO, Either[PredictionDaoError, Prediction]] = for {
       model <- OptionT { ModelDao.getModel(prediction.modelId) }
@@ -64,7 +70,9 @@ object PredictionDao {
               "invoked_at",
               "arguments",
               "status",
-              "status_reason"
+              "status_reason",
+              "output_location",
+              "webhook_id"
             ) map { Right(_) }
         }
       }
@@ -75,4 +83,9 @@ object PredictionDao {
       case None      => Left(ModelNotFound)
     }
   }
+
+  def update(predictionId: UUID,
+             webhookId: UUID,
+             status: PredictionStatusUpdate): ConnectionIO[Either[PredictionDaoError, Unit]] =
+    ???
 }

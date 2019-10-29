@@ -50,10 +50,18 @@ class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa
       })
     }
 
-  val list   = PredictionEndpoints.list.toRoutes(Function.tupled(listPredictions))
-  val detail = PredictionEndpoints.idLookup.toRoutes(getById)
-  val create = PredictionEndpoints.create.toRoutes(createPrediction)
+  def addPredictionResults(
+      predictionId: UUID,
+      predictionWebhookId: UUID,
+      updateMessage: PredictionStatusUpdate
+  ): F[Either[CrudError, Prediction]] =
+    ???
 
-  val routes: HttpRoutes[F] = detail <+> create <+> list
+  val list       = PredictionEndpoints.list.toRoutes(Function.tupled(listPredictions))
+  val detail     = PredictionEndpoints.idLookup.toRoutes(getById)
+  val create     = PredictionEndpoints.create.toRoutes(createPrediction)
+  val addResults = PredictionEndpoints.addResults.toRoutes(Function.tupled(addPredictionResults))
+
+  val routes: HttpRoutes[F] = detail <+> create <+> list <+> addResults
 
 }

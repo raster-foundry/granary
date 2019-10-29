@@ -13,7 +13,8 @@ case class Prediction(
     arguments: Json,
     status: JobStatus,
     statusReason: Option[String],
-    outputLocation: Option[String]
+    outputLocation: Option[String],
+    webhookId: Option[UUID]
 )
 
 object Prediction {
