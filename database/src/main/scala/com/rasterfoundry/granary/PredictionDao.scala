@@ -90,5 +90,45 @@ object PredictionDao {
       webhookId: UUID,
       status: PredictionStatusUpdate
   ): OptionT[ConnectionIO, Either[WebhookAlreadyUsed.type, Prediction]] =
-    ???
+    for {
+      existingPrediction <- OptionT(getPrediction(predictionId)) flatMap {
+        case pred if pred.webhookId == Some(webhookId) => OptionT.some(pred)
+        case _                                         => OptionT.none[ConnectionIO, Prediction]
+      }
+      newPrediction = status match {
+        case PredictionSuccess(output) =>
+          existingPrediction.copy(
+            status = JobStatus.Successful,
+            outputLocation = Some(output),
+            webhookId = None
+          )
+        case PredictionFailure(reason) =>
+          existingPrediction.copy(
+            status = JobStatus.Failed,
+            statusReason = Some(reason),
+            webhookId = None
+          )
+      }
+      update <- OptionT.liftF {
+        fr"""
+        UPDATE predictions
+        SET
+          status = ${newPrediction.status},
+          status_reason = ${newPrediction.statusReason},
+          output_location = ${newPrediction.outputLocation},
+          webhook_id = ${newPrediction.webhookId}
+        WHERE
+          id = ${predictionId}
+      """.update.withUniqueGeneratedKeys[Prediction](
+          "id",
+          "model_id",
+          "invoked_at",
+          "arguments",
+          "status",
+          "status_reason",
+          "output_location",
+          "webhook_id"
+        )
+      } map { Right(_) }
+    } yield update
 }
