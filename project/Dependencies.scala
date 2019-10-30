@@ -4,6 +4,7 @@ import sbt._
 
 // Versions
 object Versions {
+  val awsSDK                 = "1.11.662"
   val CatsScalacheckVersion  = "0.2.0"
   val CirceVersion           = "0.12.2"
   val CirceJsonSchemaVersion = "0.1.0"
@@ -21,6 +22,7 @@ object Versions {
 }
 
 object Dependencies {
+  val awsBatch              = "com.amazonaws"          % "aws-java-sdk-batch"        % Versions.awsSDK
   val catsScalacheck        = "io.chrisdavenport"      %% "cats-scalacheck"          % Versions.CatsScalacheckVersion % "test"
   val circeCore             = "io.circe"               %% "circe-core"               % Versions.CirceVersion
   val circeGeneric          = "io.circe"               %% "circe-generic"            % Versions.CirceVersion

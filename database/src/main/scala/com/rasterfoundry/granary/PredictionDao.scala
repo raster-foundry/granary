@@ -47,6 +47,33 @@ object PredictionDao {
   def unsafeGetPrediction(id: UUID): ConnectionIO[Prediction] =
     (selectF ++ Fragments.whereOr(fr"id = $id")).query[Prediction].unique
 
+  def kickOffPredictionJob(prediction: Prediction, model: Model): ConnectionIO[Prediction] = {
+    implicitly[Put[JobStatus]]
+    implicitly[Put[UUID]]
+    for {
+      _ <- AWSBatch.submitJobRequest[ConnectionIO](
+        model.jobDefinition,
+        model.jobQueue,
+        prediction.arguments,
+        s"${model.name} -- ${prediction.id}"
+      )
+      newStatus: JobStatus = JobStatus.Started
+      updated <- (fr"update predictions set status = $newStatus" ++ Fragments.whereOr(
+        fr"id = ${prediction.id}"
+      )).update
+        .withUniqueGeneratedKeys[Prediction](
+          "id",
+          "model_id",
+          "invoked_at",
+          "arguments",
+          "status",
+          "status_reason",
+          "output_location",
+          "webhook_id"
+        )
+    } yield updated
+  }
+
   def insertPrediction(
       prediction: Prediction.Create
   ): ConnectionIO[Either[PredictionDaoError, Prediction]] = {
@@ -76,7 +103,8 @@ object PredictionDao {
             ) map { Right(_) }
         }
       }
-    } yield insert
+      updated <- OptionT.liftF { insert traverse { kickOffPredictionJob(_, model) } }
+    } yield updated
 
     insertIO.value map {
       case Some(res) => res

@@ -19,7 +19,11 @@ object PredictionEndpoints {
     .errorOut(oneOf(statusMapping(404, jsonBody[NotFound].description("not found"))))
 
   val create = base.post
-    .in(jsonBody[Prediction.Create])
+    .in(
+      jsonBody[Prediction.Create].description(
+        "A model ID and arguments to use to run a prediction. Arguments must conform to the schema on the associated model"
+      )
+    )
     .out(jsonBody[Prediction])
     .errorOut(
       oneOf[CrudError](

@@ -73,13 +73,15 @@ lazy val databaseSettings = commonSettings ++ Seq(
 )
 
 lazy val databaseDependencies = commonDependencies ++ Seq(
+  Dependencies.awsBatch,
   Dependencies.doobie,
   Dependencies.doobieHikari,
   Dependencies.doobiePostgres,
   Dependencies.doobiePostgresCirce,
   Dependencies.doobieSpecs2,
   Dependencies.doobieScalatest,
-  Dependencies.flyway
+  Dependencies.flyway,
+  Dependencies.log4cats
 )
 
 lazy val database = (project in file("database"))
