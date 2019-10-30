@@ -56,6 +56,7 @@ object PredictionDao {
         prediction.arguments,
         s"${model.name} -- ${prediction.id}"
       )
+      // TODO -- update to failed if job could not be kicked off
       newStatus: JobStatus = JobStatus.Started
       updated <- (fr"update predictions set status = $newStatus" ++ Fragments.whereOr(
         fr"id = ${prediction.id}"
