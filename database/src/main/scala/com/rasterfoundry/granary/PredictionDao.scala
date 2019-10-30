@@ -48,8 +48,7 @@ object PredictionDao {
     (selectF ++ Fragments.whereOr(fr"id = $id")).query[Prediction].unique
 
   def kickOffPredictionJob(prediction: Prediction, model: Model): ConnectionIO[Prediction] = {
-    implicitly[Put[JobStatus]]
-    implicitly[Put[UUID]]
+
     for {
       _ <- AWSBatch.submitJobRequest[ConnectionIO](
         model.jobDefinition,
