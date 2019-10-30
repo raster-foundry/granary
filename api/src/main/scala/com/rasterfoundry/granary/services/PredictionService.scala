@@ -10,6 +10,7 @@ import com.rasterfoundry.granary.database.PredictionDao
 import com.rasterfoundry.granary.datamodel._
 import doobie._
 import doobie.implicits._
+import io.circe.syntax._
 import org.http4s._
 import tapir.server.http4s._
 
@@ -50,10 +51,34 @@ class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa
       })
     }
 
-  val list   = PredictionEndpoints.list.toRoutes(Function.tupled(listPredictions))
-  val detail = PredictionEndpoints.idLookup.toRoutes(getById)
-  val create = PredictionEndpoints.create.toRoutes(createPrediction)
+  def addPredictionResults(
+      predictionId: UUID,
+      predictionWebhookId: UUID,
+      updateMessage: PredictionStatusUpdate
+  ): F[Either[CrudError, Prediction]] =
+    mkContext(
+      "addPredictionResults",
+      Map("statusUpdate" -> updateMessage.asJson.noSpaces),
+      contextBuilder
+    ) use { _ =>
+      Functor[F].map(
+        PredictionDao
+          .addResults(predictionId, predictionWebhookId, updateMessage)
+          .value
+          .transact(xa)
+      )({
+        case None =>
+          Left(NotFound())
+        case Some(p) =>
+          Right(p)
+      })
+    }
 
-  val routes: HttpRoutes[F] = detail <+> create <+> list
+  val list       = PredictionEndpoints.list.toRoutes(Function.tupled(listPredictions))
+  val detail     = PredictionEndpoints.idLookup.toRoutes(getById)
+  val create     = PredictionEndpoints.create.toRoutes(createPrediction)
+  val addResults = PredictionEndpoints.addResults.toRoutes(Function.tupled(addPredictionResults))
+
+  val routes: HttpRoutes[F] = detail <+> create <+> list <+> addResults
 
 }

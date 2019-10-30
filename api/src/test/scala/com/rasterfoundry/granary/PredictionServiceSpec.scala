@@ -1,5 +1,6 @@
 package com.rasterfoundry.granary.api.services
 
+import com.rasterfoundry.granary.api.error.NotFound
 import com.rasterfoundry.granary.database.TestDatabaseSpec
 import com.rasterfoundry.granary.datamodel._
 
@@ -15,6 +16,10 @@ import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.circe.CirceEntityEncoder._
 import org.specs2.{ScalaCheck, Specification}
 
+import scala.util.Random
+
+import java.util.UUID
+
 class PredictionServiceSpec
     extends Specification
     with ScalaCheck
@@ -29,6 +34,7 @@ class PredictionServiceSpec
     - respond appropriately to POSTs of different types $createPredictionExpectation
     - list filtered predictions                         $listPredictionsExpectation
     - get a prediction by id                            $getPredictionByIdExpectation
+    - store prediction results only when expected to    $addPredictionResultsExpectation
   """
 
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
@@ -38,6 +44,32 @@ class PredictionServiceSpec
 
   val predictionService: PredictionService[IO] =
     new PredictionService[IO](tracingContextBuilder, transactor)
+
+  def updatePredictionRaw(
+      message: PredictionStatusUpdate,
+      prediction: Prediction,
+      webhookId: UUID
+  ): OptionT[IO, Response[IO]] =
+    predictionService.routes.run(
+      Request[IO](
+        method = Method.POST,
+        uri = Uri
+          .fromString(
+            s"/predictions/${prediction.id}/results/${webhookId}"
+          )
+          .right
+          .get
+      ).withEntity(message)
+    )
+
+  def updatePrediction[T: Decoder](
+      message: PredictionStatusUpdate,
+      prediction: Prediction,
+      webhookId: UUID
+  ): OptionT[IO, T] =
+    updatePredictionRaw(message, prediction, webhookId) flatMap { resp =>
+      OptionT.liftF { resp.as[T] }
+    }
 
   def createPredictionExpectation = prop { (model: Model.Create, pred: Prediction.Create) =>
     {
@@ -122,18 +154,60 @@ class PredictionServiceSpec
           ) flatMap { resp =>
             OptionT.liftF { resp.as[List[Prediction]] }
           }
+          _ <- List(
+            PredictionSuccess("s3://center/of/the/universe.geojson"),
+            PredictionFailure("wasn't set up to succeed")
+          ).zip(allCreatedPreds) traverse {
+            case (msg, prediction) =>
+              updatePrediction[Prediction](msg, prediction, prediction.webhookId.get)
+          }
+          successUri = Uri.fromString(s"/predictions?status=successful").right.get
+          failureUri = Uri.fromString(s"/predictions?status=failed").right.get
+          listedForSuccess <- predictionService.routes.run(
+            Request[IO](method = Method.GET, uri = successUri)
+          ) flatMap { resp =>
+            OptionT.liftF { resp.as[List[Prediction]] }
+          }
+          listedForFailure <- predictionService.routes.run(
+            Request[IO](method = Method.GET, uri = failureUri)
+          ) flatMap { resp =>
+            OptionT.liftF { resp.as[List[Prediction]] }
+          }
           _ <- deleteModel(createdModel1, modelService)
           _ <- deleteModel(createdModel2, modelService)
         } yield {
-          (createdModel1.id, createdModel2.id, listedForModel1, listedForModel2, allCreatedPreds)
+          (
+            createdModel1.id,
+            createdModel2.id,
+            listedForModel1,
+            listedForModel2,
+            allCreatedPreds,
+            listedForSuccess,
+            listedForFailure
+          )
         }
 
-        val (model1Id, model2Id, model1Preds, model2Preds, allCreatedPreds) =
+        val (
+          model1Id,
+          model2Id,
+          model1Preds,
+          model2Preds,
+          allCreatedPreds,
+          successResults,
+          failureResults
+        ) =
           testIO.value.unsafeRunSync.get
 
         model1Preds.filter(_.modelId == model1Id) ==== model1Preds && model2Preds.filter(
           _.modelId == model2Id
-        ) ==== model2Preds && (model1Preds ++ model2Preds).toSet ==== allCreatedPreds.toSet
+        ) ==== model2Preds && (model1Preds ++ model2Preds).toSet ==== allCreatedPreds.toSet &&
+        (successResults map { _.status }) ==== (successResults map { _ =>
+          JobStatus.Successful
+        }) && (failureResults map {
+          _.status
+        }) ==== (failureResults map { _ =>
+          JobStatus.Failed
+        })
       }
   }
 
@@ -159,5 +233,63 @@ class PredictionServiceSpec
       val (createdPrediction, predictionById) = testIO.value.unsafeRunSync.get
       createdPrediction ==== predictionById
     }
+  }
+
+  def addPredictionResultsExpectation = prop {
+    (model: Model.Create, prediction: Prediction.Create) =>
+      {
+        val testIO = for {
+          createdModel <- createModel(model, modelService)
+          createdPrediction <- createPrediction(
+            prediction.copy(modelId = createdModel.id),
+            predictionService
+          )
+          message = if (Random.nextFloat > 0.5) PredictionSuccess("s3://foo/bar.geojson")
+          else PredictionFailure("model failed sorry sorry sorry")
+          update1 <- updatePrediction[Prediction](
+            message,
+            createdPrediction,
+            createdPrediction.webhookId.get
+          )
+          // Do it again, with the same webhook id
+          update2 <- updatePredictionRaw(
+            message,
+            createdPrediction,
+            createdPrediction.webhookId.get
+          )
+          update2Body <- OptionT.liftF { update2.as[NotFound] }
+          // Do it again, but with a random ID for the webhook
+          update3 <- updatePredictionRaw(
+            message,
+            createdPrediction,
+            UUID.randomUUID
+          )
+          update3Body <- OptionT.liftF { update3.as[NotFound] }
+          _           <- deleteModel(createdModel, modelService)
+        } yield { (message, update1, update2, update2Body, update3, update3Body) }
+
+        val (msg, successfulUpdate, conflictUpdateResp, _, noWebhookUpdateResp, _) =
+          testIO.value.unsafeRunSync.get
+
+        val updateExpectation =
+          msg match {
+            case PredictionSuccess(_) =>
+              List(
+                successfulUpdate.outputLocation !=== None,
+                successfulUpdate.status ==== JobStatus.Successful,
+                successfulUpdate.statusReason ==== None
+              )
+            case PredictionFailure(_) =>
+              List(
+                successfulUpdate.outputLocation ==== None,
+                successfulUpdate.status ==== JobStatus.Failed,
+                successfulUpdate.statusReason !=== None
+              )
+          }
+
+        conflictUpdateResp.status.code ==== 404 &&
+        noWebhookUpdateResp.status.code ==== 404 &&
+        updateExpectation
+      }
   }
 }
