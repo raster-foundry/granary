@@ -65,11 +65,11 @@ object PredictionDao {
         val resultErr = e match {
           case err: DecodingFailure =>
             PredictionDao.BatchSubmissionFailed(
-              s"Could not decode arguments to Map[String, String]: ${err.getMessage}"
+              s"Could not decode arguments to Map[String, String] for prediction ${prediction.id}: ${err.getMessage}"
             )
           case err: ClientException =>
             PredictionDao.BatchSubmissionFailed(
-              s"Client exception with AWS batch: ${err.getMessage}"
+              s"Client exception with AWS batch for prediction ${prediction.id}: ${err.getMessage}"
             )
         }
         val newPrediction =
