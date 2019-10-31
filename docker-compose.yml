@@ -35,7 +35,6 @@ services:
       - POSTGRES_USER=granary
       - POSTGRES_PASSWORD=granary
       - GRANARY_TRACING_SINK=jaeger
-      - GRANARY_ENVIRONMENT=production
     links:
       - database:database.service.internal
       - jaeger:jaeger.service.internal
