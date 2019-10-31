@@ -28,7 +28,7 @@ object AWSBatch {
         .withJobQueue(jobQueueName)
         .withParameters(params.asJava)
 
-      val runJob = Config.environment != "development"
+      val runJob = Config.environment.toUpperCase() === "PRODUCTION"
 
       (if (runJob) {
          IO {
