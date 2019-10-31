@@ -43,7 +43,7 @@ jobs:
           name: cibuild
           command: ./scripts/cibuild
           environment:
-            AWS_DEFAULT_REGION=us-east-1
+            AWS_DEFAULT_REGION: us-east-1
 
       - run:
           name: cipublish
