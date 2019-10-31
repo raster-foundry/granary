@@ -6,7 +6,7 @@ import com.amazonaws.services.batch.AWSBatchClientBuilder
 import com.amazonaws.services.batch.model.SubmitJobRequest
 import io.chrisdavenport.log4cats.Logger
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
-import io.circe.{DecodingFailure, Json}
+import io.circe.{Json}
 
 import scala.collection.JavaConverters._
 
@@ -20,7 +20,7 @@ object AWSBatch {
       jobQueueName: String,
       parameters: Json,
       jobName: String
-  ): F[Either[DecodingFailure, Unit]] = LiftIO[F].liftIO {
+  ): F[Either[Throwable, Unit]] = LiftIO[F].liftIO {
     parameters.as[Map[String, String]] traverse { params =>
       val jobRequest = new SubmitJobRequest()
         .withJobName(jobName)
@@ -30,11 +30,15 @@ object AWSBatch {
 
       val runJob = Config.environment != "development"
 
-      if (runJob) {
-        IO {
-          batchClient.submitJob(jobRequest)
-        }
-      } else Logger[IO].info("Not running job because in development")
+      (if (runJob) {
+         IO {
+           batchClient.submitJob(jobRequest)
+         }
+       } else Logger[IO].info("Not running job because in development")).attempt
+    } map {
+      case Left(e)         => Left(e)
+      case Right(Left(e))  => Left(e)
+      case Right(Right(r)) => Right(r)
     }
   }
 }

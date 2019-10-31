@@ -5,10 +5,12 @@ import com.rasterfoundry.granary.datamodel._
 import cats.data.{NonEmptyList, OptionT}
 import cats.data.Validated.{Invalid, Valid}
 import cats.implicits._
+import com.amazonaws.services.batch.model.ClientException
 import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
 import doobie.postgres.circe.jsonb.implicits._
+import io.circe.DecodingFailure
 import io.circe.schema.ValidationError
 
 import java.util.UUID
@@ -20,6 +22,10 @@ object PredictionDao {
 
   case class ArgumentsValidationFailed(underlying: NonEmptyList[ValidationError])
       extends PredictionDaoError
+  case class BatchSubmissionFailed(msg: String) extends PredictionDaoError
+
+  @inline def batchSafeJobName(s: String): String =
+    s.replace(" ", "-")
 
   val selectF =
     fr"""
@@ -49,16 +55,35 @@ object PredictionDao {
 
   def kickOffPredictionJob(prediction: Prediction, model: Model): ConnectionIO[Prediction] = {
 
-    for {
-      _ <- AWSBatch.submitJobRequest[ConnectionIO](
-        model.jobDefinition,
-        model.jobQueue,
-        prediction.arguments,
-        s"${model.name} -- ${prediction.id}"
-      )
-      // TODO -- update to failed if job could not be kicked off
-      newStatus: JobStatus = JobStatus.Started
-      updated <- (fr"update predictions set status = $newStatus" ++ Fragments.whereOr(
+    def updateFailed(
+        prediction: Prediction
+    ): Throwable => ConnectionIO[Either[PredictionDaoError, Prediction]] =
+      (e: Throwable) => {
+        val resultErr = e match {
+          case err: DecodingFailure =>
+            PredictionDao.BatchSubmissionFailed(
+              s"Could not decode arguments to Map[String, String]: ${err.getMessage}"
+            )
+          case err: ClientException =>
+            PredictionDao.BatchSubmissionFailed(
+              s"Client exception with AWS batch: ${err.getMessage}"
+            )
+        }
+        val newPrediction =
+          prediction.copy(status = JobStatus.Failed, statusReason = Some(e.getMessage))
+        (fr"""
+          update predictions
+          set status = ${newPrediction.status}, statusReason=${newPrediction.statusReason}
+        """ ++ Fragments.whereOr(fr"id = ${prediction.id}")).update.run map { _ =>
+          Left(resultErr)
+        }
+      }
+
+    def updateSuccess(
+        prediction: Prediction
+    )(u: => Unit): ConnectionIO[Either[PredictionDaoError, Prediction]] = {
+      val newStatus: JobStatus = JobStatus.Started
+      (fr"update predictions set status = $newStatus" ++ Fragments.whereOr(
         fr"id = ${prediction.id}"
       )).update
         .withUniqueGeneratedKeys[Prediction](
@@ -70,8 +95,21 @@ object PredictionDao {
           "status_reason",
           "output_location",
           "webhook_id"
-        )
-    } yield updated
+        ) map { Right(_) }
+    }
+
+    for {
+      submitResult <- AWSBatch.submitJobRequest[ConnectionIO](
+        model.jobDefinition,
+        model.jobQueue,
+        prediction.arguments,
+        batchSafeJobName(s"${model.name}-${prediction.id}")
+      )
+      updated <- submitResult flatMap { result =>
+        result.bimap(updateFailure(prediction), updateSuccess(prediction))
+      }
+      result <- updated.sequence
+    } yield result
   }
 
   def insertPrediction(
