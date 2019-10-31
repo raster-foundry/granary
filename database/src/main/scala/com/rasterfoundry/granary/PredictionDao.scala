@@ -2,7 +2,7 @@ package com.rasterfoundry.granary.database
 
 import com.rasterfoundry.granary.datamodel._
 
-import cats.data.{NonEmptyList, OptionT}
+import cats.data.{EitherT, NonEmptyList, OptionT}
 import cats.data.Validated.{Invalid, Valid}
 import cats.implicits._
 import com.amazonaws.services.batch.model.ClientException
@@ -53,11 +53,14 @@ object PredictionDao {
   def unsafeGetPrediction(id: UUID): ConnectionIO[Prediction] =
     (selectF ++ Fragments.whereOr(fr"id = $id")).query[Prediction].unique
 
-  def kickOffPredictionJob(prediction: Prediction, model: Model): ConnectionIO[Prediction] = {
+  def kickOffPredictionJob(
+      prediction: Prediction,
+      model: Model
+  ): EitherT[ConnectionIO, PredictionDaoError, Prediction] = {
 
-    def updateFailed(
+    def updateFailure(
         prediction: Prediction
-    ): Throwable => ConnectionIO[Either[PredictionDaoError, Prediction]] =
+    ): Throwable => EitherT[ConnectionIO, PredictionDaoError, Prediction] =
       (e: Throwable) => {
         val resultErr = e match {
           case err: DecodingFailure =>
@@ -71,45 +74,48 @@ object PredictionDao {
         }
         val newPrediction =
           prediction.copy(status = JobStatus.Failed, statusReason = Some(e.getMessage))
-        (fr"""
+        EitherT {
+          (fr"""
           update predictions
-          set status = ${newPrediction.status}, statusReason=${newPrediction.statusReason}
+          set status = ${newPrediction.status}, status_reason=${newPrediction.statusReason}
         """ ++ Fragments.whereOr(fr"id = ${prediction.id}")).update.run map { _ =>
-          Left(resultErr)
+            Left(resultErr)
+          }
         }
       }
 
     def updateSuccess(
         prediction: Prediction
-    )(u: => Unit): ConnectionIO[Either[PredictionDaoError, Prediction]] = {
+    )(u: Unit): EitherT[ConnectionIO, PredictionDaoError, Prediction] = {
+      // trick to suppress "pure expression in statement position" warning
+      locally(u)
       val newStatus: JobStatus = JobStatus.Started
-      (fr"update predictions set status = $newStatus" ++ Fragments.whereOr(
-        fr"id = ${prediction.id}"
-      )).update
-        .withUniqueGeneratedKeys[Prediction](
-          "id",
-          "model_id",
-          "invoked_at",
-          "arguments",
-          "status",
-          "status_reason",
-          "output_location",
-          "webhook_id"
-        ) map { Right(_) }
+      EitherT {
+        (fr"update predictions set status = $newStatus" ++ Fragments.whereOr(
+          fr"id = ${prediction.id}"
+        )).update
+          .withUniqueGeneratedKeys[Prediction](
+            "id",
+            "model_id",
+            "invoked_at",
+            "arguments",
+            "status",
+            "status_reason",
+            "output_location",
+            "webhook_id"
+          ) map { Right(_) }
+      }
     }
 
-    for {
-      submitResult <- AWSBatch.submitJobRequest[ConnectionIO](
-        model.jobDefinition,
-        model.jobQueue,
-        prediction.arguments,
-        batchSafeJobName(s"${model.name}-${prediction.id}")
-      )
-      updated <- submitResult flatMap { result =>
-        result.bimap(updateFailure(prediction), updateSuccess(prediction))
-      }
-      result <- updated.sequence
-    } yield result
+    EitherT(
+      AWSBatch
+        .submitJobRequest[ConnectionIO](
+          model.jobDefinition,
+          model.jobQueue,
+          prediction.arguments,
+          batchSafeJobName(s"${model.name}-${prediction.id}")
+        )
+    ).biflatMap(updateFailure(prediction), updateSuccess(prediction))
   }
 
   def insertPrediction(
@@ -127,7 +133,8 @@ object PredictionDao {
       argCheck = model.validator.validate(prediction.arguments)
       insert <- OptionT.liftF {
         argCheck match {
-          case Invalid(errs) => Left(ArgumentsValidationFailed(errs)).pure[ConnectionIO]
+          case Invalid(errs) =>
+            Left(ArgumentsValidationFailed(errs): PredictionDaoError).pure[ConnectionIO]
           case Valid(()) =>
             fragment.update.withUniqueGeneratedKeys[Prediction](
               "id",
@@ -141,7 +148,9 @@ object PredictionDao {
             ) map { Right(_) }
         }
       }
-      updated <- OptionT.liftF { insert traverse { kickOffPredictionJob(_, model) } }
+      updated <- OptionT.liftF {
+        (EitherT.fromEither[ConnectionIO](insert) flatMap { kickOffPredictionJob(_, model) }).value
+      }
     } yield updated
 
     insertIO.value map {
