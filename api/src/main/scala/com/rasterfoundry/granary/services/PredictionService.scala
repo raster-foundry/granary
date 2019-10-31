@@ -50,7 +50,9 @@ class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa
           )
         case Left(PredictionDao.BatchSubmissionFailed(msg)) =>
           Left(
-            ValidationError(s"Batch resources for your model may be misconfigured: $msg")
+            ValidationError(
+              s"Batch resources for model ${prediction.modelId} may be misconfigured: $msg"
+            )
           )
       })
     }
