@@ -71,9 +71,6 @@ services:
       - jaeger:jaeger.service.internal
     environment:
       - AWS_PROFILE
-      - AWS_ACCESS_KEY
-      - AWS_SECRET_ACCESS_KEY
-      - AWS_DEFAULT_REGION
       - POSTGRES_URL=jdbc:postgresql://database.service.internal/
       - POSTGRES_NAME=granary
       - POSTGRES_USER=granary
