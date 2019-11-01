@@ -43,7 +43,7 @@ jobs:
 
       - run:
           name: cibuild
-          command: echo $AWS_DEFAULT_REGION && ./scripts/cibuild
+          command: ./scripts/cibuild
 
       - run:
           name: cipublish
