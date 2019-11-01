@@ -14,10 +14,7 @@ import scala.util.Properties
 
 object AWSBatch {
 
-  val region = Properties.envOrElse("AWS_DEFAULT_REGION", {
-    println("NO REGION AVAILABLE FOR MYSTERIOUS REASONS")
-    "us-east-1"
-  })
+  val region = Properties.envOrElse("AWS_DEFAULT_REGION", "us-east-1")
 
   val batchClient = AWSBatchClientBuilder
     .standard()
