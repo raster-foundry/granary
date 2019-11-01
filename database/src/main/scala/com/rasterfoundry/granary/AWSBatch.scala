@@ -19,16 +19,6 @@ object AWSBatch {
     "us-east-1"
   })
 
-  val accessKeyId = Properties.envOrElse("AWS_ACCESS_KEY_ID", {
-    println("NO ACCESS KEY AVAILABLE FOR MYSTERIOUS REASONS")
-    "BOGUS"
-  })
-
-  val secretKey = Properties.envOrElse("AWS_SECRET_ACCESS_KEY", {
-    println("NO SECRET KEY AVAILABLE FOR MYSTERIOUS REASONS")
-    "BOGUS"
-  })
-
   val batchClient = AWSBatchClientBuilder
     .standard()
     .withRegion(region)
@@ -56,7 +46,7 @@ object AWSBatch {
          IO {
            batchClient.submitJob(jobRequest)
          }
-       } else Logger[IO].info("Not running job because in development")).attempt
+       } else Logger[IO].debug("Not running job because in development")).attempt
     } map {
       case Left(e)         => Left(e)
       case Right(Left(e))  => Left(e)
