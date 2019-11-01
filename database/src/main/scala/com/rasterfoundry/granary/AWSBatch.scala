@@ -2,7 +2,6 @@ package com.rasterfoundry.granary.database
 
 import cats.effect._
 import cats.implicits._
-import com.amazonaws.auth.EnvironmentVariableCredentialsProvider
 import com.amazonaws.services.batch.AWSBatchClientBuilder
 import com.amazonaws.services.batch.model.SubmitJobRequest
 import io.chrisdavenport.log4cats.Logger
@@ -10,17 +9,10 @@ import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import io.circe.{Json}
 
 import scala.collection.JavaConverters._
-import scala.util.Properties
 
 object AWSBatch {
 
-  val region = Properties.envOrElse("AWS_DEFAULT_REGION", "us-east-1")
-
-  val batchClient = AWSBatchClientBuilder
-    .standard()
-    .withRegion(region)
-    .withCredentials(new EnvironmentVariableCredentialsProvider())
-    .build()
+  val batchClient = AWSBatchClientBuilder.defaultClient()
 
   implicit def unsafeLogger = Slf4jLogger.getLogger[IO]
 
