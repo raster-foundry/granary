@@ -13,11 +13,6 @@ import scala.util.Properties
 
 object AWSBatch {
 
-  Properties.envOrElse("AWS_DEFAULT_REGION", {
-    println("REGION NOT AVAILABLE FOR MYSTERIOUS REASONS")
-    "bogus"
-  })
-
   val batchClient = AWSBatchClientBuilder.defaultClient()
 
   implicit def unsafeLogger = Slf4jLogger.getLogger[IO]

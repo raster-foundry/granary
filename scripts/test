@@ -40,11 +40,9 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
 
         echo "Executing Scala tests"
         if [[ $CI ]]; then
-	    echo "${AWS_DEFAULT_REGION}"
             pushd "${DIR}"
 
-            ./sbt "scalafix --check"
-	    ./sbt "test"
+            ./sbt "; scalafix --check; test"
 
             popd
         else
