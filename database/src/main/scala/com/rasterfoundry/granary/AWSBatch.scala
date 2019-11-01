@@ -9,7 +9,6 @@ import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import io.circe.{Json}
 
 import scala.collection.JavaConverters._
-import scala.util.Properties
 
 object AWSBatch {
 
