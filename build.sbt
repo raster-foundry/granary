@@ -69,7 +69,8 @@ lazy val datamodel = (project in file("datamodel"))
 //////////////
 lazy val databaseSettings = commonSettings ++ Seq(
   name := "database",
-  fork in run := true
+  fork in run := true ,
+  envVars in Test := Map("AWS_DEFAULT_REGION" -> "us-east-1")
 )
 
 lazy val databaseDependencies = commonDependencies ++ Seq(
@@ -107,8 +108,7 @@ lazy val apiSettings = commonSettings ++ Seq(
       MergeStrategy.discard
     case "META-INF/MANIFEST.MF" => MergeStrategy.discard
     case _                      => MergeStrategy.first
-  },
-  envVars in Test := Map("AWS_DEFAULT_REGION" -> "us-east-1")
+  }
 )
 
 lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
