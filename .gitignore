@@ -36,13 +36,6 @@ coverage.xml
 # Django stuff:
 *.log
 
-# Ansible
-deployment/ansible/roles/azavea.*
-*.retry
-
-# Vagrant
-.vagrant
-
 # NodeJS / Browserify stuff
 node_modules/
 npm-debug.log
@@ -72,12 +65,12 @@ dist/*
 target/
 lib_managed/
 src_managed/
-project/boot/
-project/plugins/project/
-/app-backend/project/.sbtboot
-/app-backend/project/.boot/
-/app-backend/project/.ivy/
-/app-backend/.sbtopts
+boot/
+plugins/project/
+project/.sbtboot
+project/.boot/
+project/.ivy/
+.sbtopts
 
 # Molecule
 .molecule/
@@ -90,9 +83,6 @@ project/plugins/project/
 .ensime
 .metals/*
 .metals
-api-server/.ensime
-api-server/.ensime_cache/*
-/deployment/ansible/raster-foundry.retry
 /.ivy2/*
 .sbt/
 metals.lock.db
@@ -109,7 +99,6 @@ dist/
 /data
 .idea
 .ensime_cache
-/app-tasks/jars/rf-batch.jar
 /data
 
 .vscode
@@ -119,5 +108,35 @@ dist/
 scratch/
 
 stats.json
-app-lambda/opt/*
-/app-lambda/package.sh
+
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+
+# Ignore any .tfvars files that are generated automatically for each Terraform run. Most
+# .tfvars files are managed as part of configuration and so should be included in
+# version control.
+#
+# example.tfvars
+*tfvars*
+
+# Ignore override files as they are usually used to override resources locally and so
+# are not checked in
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Include override files you do wish to add to version control using negated pattern
+#
+# !example_override.tf
+
+# Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
+# example: *tfplan*
+*tfplan*

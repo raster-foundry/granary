@@ -1,4 +1,4 @@
-version: "2.3"
+version: "2.4"
 services:
   api:
     image: "granary-api:${GIT_COMMIT}"
@@ -20,3 +20,16 @@ services:
     volumes:
       - ./:/usr/local/src
     working_dir: /usr/local/src
+
+  terraform:
+    image: quay.io/azavea/terraform:0.12.13
+    volumes:
+      - ./:/usr/local/src
+      - $HOME/.aws:/root/.aws:ro
+    environment:
+      - AWS_PROFILE=${AWS_PROFILE:-raster-foundry}
+      - GIT_COMMIT=${GIT_COMMIT:-latest}
+      - GRANARY_DEBUG=1
+      - GRANARY_SETTINGS_BUCKET=${OAR_SETTINGS_BUCKET:-rasterfoundry-production-config-us-east-1}
+    working_dir: /usr/local/src
+    entrypoint: bash

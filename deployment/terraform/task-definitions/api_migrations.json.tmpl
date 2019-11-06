@@ -1,0 +1,47 @@
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "${image}",
+    "memory": 512,
+    "name": "api-migrations",
+    "environment": [
+      {
+        "name": "FLYWAY_DRIVER",
+        "value": "org.postgresql.Driver"
+      },
+      {
+        "name": "FLYWAY_URL",
+        "value": "${flyway_url}"
+      },
+      {
+        "name": "FLYWAY_USER",
+        "value": "${flyway_user}"
+      },
+      {
+        "name": "FLYWAY_PASSWORD",
+        "value": "${flyway_password}"
+      },
+      {
+        "name": "FLYWAY_LOCATIONS",
+        "value": "filesystem:/opt/migrations"
+      },
+      {
+        "name": "FLYWAY_SCHEMAS",
+        "value": "public"
+      },
+      {
+        "name": "FLYWAY_BASELINE_ON_MIGRATE",
+        "value": "true"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "syslog",
+      "options": {
+        "syslog-address": "${papertrail_endpoint}",
+        "syslog-tls-ca-cert": "/etc/papertrail-bundle.pem",
+        "tag": "granary-api-migrations"
+      }
+    }
+  }
+]

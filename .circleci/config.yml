@@ -53,6 +53,14 @@ jobs:
             fi
 
       - run:
+          name: infra
+          command: |
+            if [[ "${CIRCLE_BRANCH}" =~ ^master|^release/.*$|^hotfix/.*$ ]]; then
+              docker-compose -f docker-compose.ci.yml run --rm terraform ./scripts/infra plan
+              docker-compose -f docker-compose.ci.yml run --rm terraform ./scripts/infra apply
+            fi
+
+      - run:
           name: Slack notification
           command: |
             if [[ ! "${CIRCLE_BRANCH}" =~ ^master|^release/.*$|^hotfix/.*$ && ! -v CIRCLE_PULL_REQUEST ]]; then

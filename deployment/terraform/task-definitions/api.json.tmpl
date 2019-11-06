@@ -1,0 +1,49 @@
+[
+  {
+    "cpu": 512,
+    "essential": true,
+    "image": "${image}",
+    "memory": 1024,
+    "name": "api",
+    "portMappings": [
+      {
+        "containerPort": 8080,
+        "hostPort": 0
+      }
+    ],
+    "environment": [
+      {
+        "name": "POSTGRES_URL",
+        "value": "${postgres_url}"
+      },
+      {
+        "name": "POSTGRES_NAME",
+        "value": "${postgres_name}"
+      },
+      {
+        "name": "POSTGRES_USER",
+        "value": "${postgres_user}"
+      },
+      {
+        "name": "POSTGRES_PASSWORD",
+        "value": "${postgres_password}"
+      },
+      {
+        "name": "GRANARY_LOG_LEVEL",
+        "value": "${granary_log_level}"
+      },
+      {
+        "name": "GRANARY_TRACING_SINK",
+        "value": "${granary_tracing_sink}"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "syslog",
+      "options": {
+        "syslog-address": "${papertrail_endpoint}",
+        "syslog-tls-ca-cert": "/etc/papertrail-bundle.pem",
+        "tag": "granary-api"
+      }
+    }
+  }
+]
