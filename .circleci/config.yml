@@ -1,12 +1,6 @@
-version: 2.0
+version: 2
 jobs:
   build:
-    # CircleCI does not run workflows for tags unless you explicitly specify tag filters
-    filters:
-      tags:
-        only:
-          - /^(.*)$/
-
     docker:
       - image: circleci/openjdk:11-jdk
         environment:
@@ -48,16 +42,8 @@ jobs:
       - run:
           name: cipublish
           command: |
-            if [[ "${CIRCLE_BRANCH}" =~ ^master|^release/.*$|^hotfix/.*$ ]]; then
+            if [[ "${CIRCLE_BRANCH}" =~ ^master|^release/.*$|^hotfix/.*$|^jrb/ecs ]]; then
               ./scripts/cipublish
-            fi
-
-      - run:
-          name: infra
-          command: |
-            if [[ "${CIRCLE_BRANCH}" =~ ^master|^release/.*$|^hotfix/.*$ ]]; then
-              docker-compose -f docker-compose.ci.yml run --rm terraform ./scripts/infra plan
-              docker-compose -f docker-compose.ci.yml run --rm terraform ./scripts/infra apply
             fi
 
       - run:
@@ -112,3 +98,43 @@ jobs:
               --data-urlencode "payload={\"attachments\":[{\"color\":\"good\",\"fields\":[{\"value\":\"${slackMessage}\", \"short\":false}]}]}" \
               "${SLACK_WEBHOOK_URL}"
           when: on_success
+
+  deploy:
+    docker:
+      - image: quay.io/azavea/terraform:0.12.13
+
+    steps:
+      - checkout
+
+      - run:
+          name: infra
+          command: |
+            ./scripts/infra plan
+            ./scripts/infra apply
+          environment:
+            GRANARY_DEBUG: 1
+            GRANARY_SETTINGS_BUCKET: rasterfoundry-production-config-us-east-1
+
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only:
+                - /^(.*)$/
+      - deploy:
+          requires:
+            - build
+          context: terraform
+          filters:
+            tags:
+              only:
+                - /^(.*)$/
+            branches:
+              only:
+                - master
+                - /release\/.*/
+                - /hotfix\/.*/
+                - jrb/ecs

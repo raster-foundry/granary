@@ -27,7 +27,9 @@ services:
       - ./:/usr/local/src
       - $HOME/.aws:/root/.aws:ro
     environment:
-      - AWS_PROFILE=${AWS_PROFILE:-raster-foundry}
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_REGION=${AWS_REGION:-us-east-1}
       - GIT_COMMIT=${GIT_COMMIT:-latest}
       - GRANARY_DEBUG=1
       - GRANARY_SETTINGS_BUCKET=${OAR_SETTINGS_BUCKET:-rasterfoundry-production-config-us-east-1}
