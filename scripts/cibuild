@@ -12,8 +12,6 @@ else
     GIT_COMMIT="$(git rev-parse --short HEAD)"
 fi
 
-DIR="$(dirname "$0")/../"
-
 function usage() {
     echo -n \
         "Usage: $(basename "$0")
