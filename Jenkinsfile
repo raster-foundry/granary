@@ -45,7 +45,8 @@ node {
 					sh 'docker-compose -f docker-compose.ci.yml run --rm terraform ./scripts/infra apply'
 				}
 
-                def slackMessage = ":jenkins: deployed revision <https://github.com/raster-foundry/granary/tree/${env.GIT_COMMIT}|${env.GIT_COMMIT}>"
+                def slackMessage = ":jenkins: *Granary (${env.BRANCH_NAME}) #${env.BUILD_NUMBER}*"
+                slackMessage += "deployed revision <https://github.com/raster-foundry/granary/tree/${env.GIT_COMMIT}|${env.GIT_COMMIT}>"
                 slackMessage += "\n<${env.BUILD_URL}|View Build>"
                 slackSend channel: '#granary', color: 'good', message: slackMessage
 			}
