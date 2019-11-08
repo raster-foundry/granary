@@ -20,7 +20,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         usage
     else
         echo "Linting Bash scripts"
-        if [[ $CI ]]; then
+        if [[ "$(whoami)" == "jenkins" ]]; then
             # create a dummy container which will hold a volume with our sources
             docker create -v /usr/local/src --name sources alpine:latest /bin/true
             # copy sources into this volume
@@ -39,7 +39,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         fi
 
         echo "Executing Scala tests"
-        if [[ $CI ]]; then
+        if [[ "$(whoami)" == "jenkins" ]]; then
             pushd "${DIR}"
 
             ./sbt "; scalafix --check; test"
