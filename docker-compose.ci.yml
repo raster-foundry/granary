@@ -27,7 +27,7 @@ services:
       - ./:/usr/local/src
       - $HOME/.aws:/root/.aws:ro
     environment:
-      - AWS_PROFILE=${AWS_PROFILE:-raster-foundry}
+      - AWS_PROFILE
       - GIT_COMMIT=${GIT_COMMIT:-latest}
       - GRANARY_DEBUG=1
       - GRANARY_SETTINGS_BUCKET=${GRANARY_SETTINGS_BUCKET:-rasterfoundry-production-config-us-east-1}
