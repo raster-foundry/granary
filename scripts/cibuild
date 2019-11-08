@@ -29,12 +29,10 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
 
         ./scripts/test
 
-        pushd "${DIR}"
-
         echo "Building JAR for API subproject"
-        ./sbt api/assembly
-
-        popd
+        docker-compose \
+            run --rm sbt \
+            "api/assembly"
 
         echo "Building Scala container images"
         GIT_COMMIT="${GIT_COMMIT}" docker-compose \
