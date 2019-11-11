@@ -2,13 +2,15 @@ package com.rasterfoundry.granary.database
 
 import com.rasterfoundry.granary.datamodel._
 
-import cats.data.{NonEmptyList, OptionT}
+import cats.data.{EitherT, NonEmptyList, OptionT}
 import cats.data.Validated.{Invalid, Valid}
 import cats.implicits._
+import com.amazonaws.services.batch.model.ClientException
 import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
 import doobie.postgres.circe.jsonb.implicits._
+import io.circe.DecodingFailure
 import io.circe.schema.ValidationError
 
 import java.util.UUID
@@ -20,6 +22,10 @@ object PredictionDao {
 
   case class ArgumentsValidationFailed(underlying: NonEmptyList[ValidationError])
       extends PredictionDaoError
+  case class BatchSubmissionFailed(msg: String) extends PredictionDaoError
+
+  @inline def batchSafeJobName(s: String): String =
+    s.replace(" ", "-")
 
   val selectF =
     fr"""
@@ -47,6 +53,71 @@ object PredictionDao {
   def unsafeGetPrediction(id: UUID): ConnectionIO[Prediction] =
     (selectF ++ Fragments.whereOr(fr"id = $id")).query[Prediction].unique
 
+  def kickOffPredictionJob(
+      prediction: Prediction,
+      model: Model
+  ): EitherT[ConnectionIO, PredictionDaoError, Prediction] = {
+
+    def updateFailure(
+        prediction: Prediction
+    ): Throwable => EitherT[ConnectionIO, PredictionDaoError, Prediction] =
+      (e: Throwable) => {
+        val resultErr = e match {
+          case err: DecodingFailure =>
+            PredictionDao.BatchSubmissionFailed(
+              s"Could not decode arguments to Map[String, String] for prediction ${prediction.id}: ${err.getMessage}"
+            )
+          case err: ClientException =>
+            PredictionDao.BatchSubmissionFailed(
+              s"Client exception with AWS batch for prediction ${prediction.id}: ${err.getMessage}"
+            )
+        }
+        val newPrediction =
+          prediction.copy(status = JobStatus.Failed, statusReason = Some(e.getMessage))
+        EitherT {
+          (fr"""
+          update predictions
+          set status = ${newPrediction.status}, status_reason=${newPrediction.statusReason}
+        """ ++ Fragments.whereOr(fr"id = ${prediction.id}")).update.run map { _ =>
+            Left(resultErr)
+          }
+        }
+      }
+
+    def updateSuccess(
+        prediction: Prediction
+    )(u: Unit): EitherT[ConnectionIO, PredictionDaoError, Prediction] = {
+      // trick to suppress "pure expression in statement position" warning
+      locally(u)
+      val newStatus: JobStatus = JobStatus.Started
+      EitherT {
+        (fr"update predictions set status = $newStatus" ++ Fragments.whereOr(
+          fr"id = ${prediction.id}"
+        )).update
+          .withUniqueGeneratedKeys[Prediction](
+            "id",
+            "model_id",
+            "invoked_at",
+            "arguments",
+            "status",
+            "status_reason",
+            "output_location",
+            "webhook_id"
+          ) map { Right(_) }
+      }
+    }
+
+    EitherT(
+      AWSBatch
+        .submitJobRequest[ConnectionIO](
+          model.jobDefinition,
+          model.jobQueue,
+          prediction.arguments,
+          batchSafeJobName(s"${model.name}-${prediction.id}")
+        )
+    ).biflatMap(updateFailure(prediction), updateSuccess(prediction))
+  }
+
   def insertPrediction(
       prediction: Prediction.Create
   ): ConnectionIO[Either[PredictionDaoError, Prediction]] = {
@@ -62,7 +133,8 @@ object PredictionDao {
       argCheck = model.validator.validate(prediction.arguments)
       insert <- OptionT.liftF {
         argCheck match {
-          case Invalid(errs) => Left(ArgumentsValidationFailed(errs)).pure[ConnectionIO]
+          case Invalid(errs) =>
+            Left(ArgumentsValidationFailed(errs): PredictionDaoError).pure[ConnectionIO]
           case Valid(()) =>
             fragment.update.withUniqueGeneratedKeys[Prediction](
               "id",
@@ -76,7 +148,10 @@ object PredictionDao {
             ) map { Right(_) }
         }
       }
-    } yield insert
+      updated <- OptionT.liftF {
+        (EitherT.fromEither[ConnectionIO](insert) flatMap { kickOffPredictionJob(_, model) }).value
+      }
+    } yield updated
 
     insertIO.value map {
       case Some(res) => res

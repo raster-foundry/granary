@@ -40,4 +40,7 @@ object ModelDao {
       case 0 => None
       case n => Some(n)
     }
+
+  def kickOffBatchJob(model: Model): ConnectionIO[Unit] =
+    ???
 }

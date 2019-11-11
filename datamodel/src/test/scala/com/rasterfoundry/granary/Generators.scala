@@ -22,7 +22,7 @@ trait Generators {
     }
 
   val predictionGen: Gen[Prediction.Create] =
-    (Gen.delay(UUID.randomUUID), Gen.const(().asJson)).tupled map {
+    (Gen.delay(UUID.randomUUID), Gen.const(Map.empty[String, String].asJson)).tupled map {
       Function.tupled(Prediction.Create.apply)
     }
 

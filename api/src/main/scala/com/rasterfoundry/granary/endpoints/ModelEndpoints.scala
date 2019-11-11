@@ -16,7 +16,13 @@ object ModelEndpoints {
     .out(jsonBody[Model])
     .errorOut(oneOf(statusMapping(404, jsonBody[NotFound].description("not found"))))
 
-  val create = base.post.in(jsonBody[Model.Create]).out(jsonBody[Model])
+  val create = base.post
+    .in(
+      jsonBody[Model.Create].description(
+        "A name, a Json Schema and some AWS batch metadata for running a this model. The Schema should specify arguments as string -> string, even if they'll be parsed as ints or bools or whatever by the eventual model run"
+      )
+    )
+    .out(jsonBody[Model])
 
   val list = base.get.out(jsonBody[List[Model]])
 
