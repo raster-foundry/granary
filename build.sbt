@@ -74,6 +74,7 @@ lazy val databaseSettings = commonSettings ++ Seq(
 
 lazy val databaseDependencies = commonDependencies ++ Seq(
   Dependencies.awsBatch,
+  Dependencies.awsS3,
   Dependencies.doobie,
   Dependencies.doobieHikari,
   Dependencies.doobiePostgres,
@@ -81,6 +82,7 @@ lazy val databaseDependencies = commonDependencies ++ Seq(
   Dependencies.doobieSpecs2,
   Dependencies.doobieScalatest,
   Dependencies.flyway,
+  Dependencies.pureConfig,
   Dependencies.log4cats
 )
 

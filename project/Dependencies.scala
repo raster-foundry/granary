@@ -23,6 +23,7 @@ object Versions {
 
 object Dependencies {
   val awsBatch              = "com.amazonaws"          % "aws-java-sdk-batch"        % Versions.awsSDK
+  val awsS3                 = "com.amazonaws"          % "aws-java-sdk-s3"           % Versions.awsSDK
   val catsScalacheck        = "io.chrisdavenport"      %% "cats-scalacheck"          % Versions.CatsScalacheckVersion % "test"
   val circeCore             = "io.circe"               %% "circe-core"               % Versions.CirceVersion
   val circeGeneric          = "io.circe"               %% "circe-generic"            % Versions.CirceVersion

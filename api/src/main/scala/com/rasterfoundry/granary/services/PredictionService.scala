@@ -16,7 +16,9 @@ import tapir.server.http4s._
 
 import java.util.UUID
 
-class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa: Transactor[F])(
+class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F],
+                                    xa: Transactor[F],
+                                    dataBucket: String)(
     implicit contextShift: ContextShift[F]
 ) extends GranaryService {
 
@@ -40,7 +42,7 @@ class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa
       prediction: Prediction.Create
   ): F[Either[CrudError, Prediction]] =
     mkContext("createPrediction", Map.empty, contextBuilder) use { _ =>
-      Functor[F].map(PredictionDao.insertPrediction(prediction).transact(xa))({
+      Functor[F].map(PredictionDao.insertPrediction(prediction, dataBucket).transact(xa))({
         case Right(created) => Right(created)
         case Left(PredictionDao.ModelNotFound) =>
           Left(NotFound())
