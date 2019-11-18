@@ -11,6 +11,8 @@ import org.http4s.circe.CirceEntityEncoder._
 
 trait Setup {
 
+  lazy val dataBucket = "raster-foundry-development-data-us-east-1"
+
   def createModel(model: Model.Create, service: ModelService[IO]): OptionT[IO, Model] = {
     val request =
       Request[IO](method = Method.POST, uri = Uri.uri("/models")).withEntity(model)

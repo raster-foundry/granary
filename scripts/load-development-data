@@ -52,6 +52,7 @@ function load_database_backup() {
     # Command to create database backup
     # docker-compose \
     #    exec -T database pg_dump -U granary -Fc granary > /tmp/data/database.pgdump
+    # aws s3 cp data/database.pgdump s3://rasterfoundry-development-data-us-east-1/granary/database.pgdump
     docker-compose \
         exec -T database pg_restore -U granary -Fc -d granary /tmp/data/database.pgdump
     ./scripts/migrate migrate

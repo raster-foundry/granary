@@ -43,7 +43,7 @@ class PredictionServiceSpec
     new ModelService[IO](tracingContextBuilder, transactor)
 
   val predictionService: PredictionService[IO] =
-    new PredictionService[IO](tracingContextBuilder, transactor)
+    new PredictionService[IO](tracingContextBuilder, transactor, dataBucket)
 
   def updatePredictionRaw(
       message: PredictionStatusUpdate,
