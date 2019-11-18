@@ -21,11 +21,18 @@ and overwrites the existing dump.
 }
 
 function download_database_backup() {
-
     pushd "${DIR}/.."
     echo "Downloading database from s3"
     mkdir -p data
     aws s3 cp s3://rasterfoundry-development-data-us-east-1/granary/database.pgdump data/database.pgdump
+    popd
+}
+
+function download_data {
+    pushd "${DIR}/.."
+    echo "Downloading data from s3"
+    mkdir -p data
+    aws s3 sync s3://rasterfoundry-development-data-us-east-1/granary/data/ data/
     popd
 }
 
@@ -43,9 +50,10 @@ function load_database_backup() {
 
     echo "Restore database from backup"
     # Command to create database backup
-    # gosu postgres pg_dump -Fc granary > database.pgdump
+    # docker-compose \
+    #    exec -T database pg_dump -U granary -Fc granary > /tmp/data/database.pgdump
     docker-compose \
-        exec -T database psql -U granary -d granary -f /tmp/data/database.pgdump
+        exec -T database pg_restore -U granary -Fc -d granary /tmp/data/database.pgdump
     ./scripts/migrate migrate
 }
 
@@ -57,6 +65,7 @@ then
     else
         if [ "${1:-}" = "--download" ] || [ ! -f data/database.pgdump ]; then
             download_database_backup
+            download_data
         fi
         load_database_backup
     fi
