@@ -11,7 +11,7 @@ import com.rasterfoundry.granary.datamodel.Model
 import doobie._
 import doobie.implicits._
 import org.http4s._
-import tapir.server.http4s._
+import sttp.tapir.server.http4s._
 
 import java.util.UUID
 

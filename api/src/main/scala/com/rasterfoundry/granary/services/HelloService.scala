@@ -8,7 +8,7 @@ import com.colisweb.tracing.TracingContextBuilder
 import io.circe._
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
-import tapir.server.http4s._
+import sttp.tapir.server.http4s._
 
 class HelloService[F[_]: Sync](contextBuilder: TracingContextBuilder[F])(
     implicit contextShift: ContextShift[F]

@@ -17,9 +17,9 @@ import org.http4s.server._
 import pureconfig.ConfigSource
 import pureconfig.error.ConfigReaderFailures
 import pureconfig.generic.auto._
-import tapir.openapi.circe.yaml._
-import tapir.docs.openapi._
-import tapir.swagger.http4s.SwaggerHttp4s
+import sttp.tapir.openapi.circe.yaml._
+import sttp.tapir.docs.openapi._
+import sttp.tapir.swagger.http4s.SwaggerHttp4s
 
 object ApiServer extends IOApp {
 

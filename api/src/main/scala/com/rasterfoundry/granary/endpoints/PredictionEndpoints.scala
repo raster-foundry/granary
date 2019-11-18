@@ -3,11 +3,11 @@ package com.rasterfoundry.granary.api.endpoints
 import com.rasterfoundry.granary.api._
 import com.rasterfoundry.granary.api.error._
 import com.rasterfoundry.granary.datamodel._
-
-import tapir.{ValidationError => _, _}
-import tapir.json.circe._
-
+import sttp.tapir.{ValidationError => _, _}
+import sttp.tapir.json.circe._
 import java.util.UUID
+
+import sttp.model.StatusCode
 
 object PredictionEndpoints {
 
@@ -16,7 +16,8 @@ object PredictionEndpoints {
   val idLookup = base.get
     .in(path[UUID])
     .out(jsonBody[Prediction])
-    .errorOut(oneOf(statusMapping(404, jsonBody[NotFound].description("not found"))))
+    .errorOut(
+      oneOf(statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found"))))
 
   val create = base.post
     .in(
@@ -27,9 +28,9 @@ object PredictionEndpoints {
     .out(jsonBody[Prediction])
     .errorOut(
       oneOf[CrudError](
-        statusMapping(404, jsonBody[NotFound].description("not found")),
+        statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found")),
         statusMapping(
-          400,
+          StatusCode.BadRequest,
           jsonBody[ValidationError]
             .description("prediction arguments insufficient for running model")
         )
@@ -51,7 +52,7 @@ object PredictionEndpoints {
       .out(jsonBody[Prediction])
       .errorOut(
         oneOf[CrudError](
-          statusMapping(404, jsonBody[NotFound].description("not found"))
+          statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found"))
         )
       )
 
