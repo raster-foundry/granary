@@ -1,10 +1,7 @@
 [
   {
-    "cpu": 256,
-    "essential": true,
-    "image": "${image}",
-    "memory": 512,
     "name": "api-migrations",
+    "image": "${image}",
     "environment": [
       {
         "name": "FLYWAY_DRIVER",
@@ -36,11 +33,11 @@
       }
     ],
     "logConfiguration": {
-      "logDriver": "syslog",
+      "logDriver": "awslogs",
       "options": {
-        "syslog-address": "${papertrail_endpoint}",
-        "syslog-tls-ca-cert": "/etc/papertrail-bundle.pem",
-        "tag": "granary-api-migrations"
+        "awslogs-group": "logGranaryAPIMigrations",
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "granary-api-migrations"
       }
     }
   }

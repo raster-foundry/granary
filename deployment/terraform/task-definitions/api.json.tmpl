@@ -1,16 +1,7 @@
 [
   {
-    "cpu": 512,
-    "essential": true,
-    "image": "${image}",
-    "memory": 1024,
     "name": "api",
-    "portMappings": [
-      {
-        "containerPort": 8080,
-        "hostPort": 0
-      }
-    ],
+    "image": "${image}",
     "environment": [
       {
         "name": "POSTGRES_URL",
@@ -37,12 +28,17 @@
         "value": "${granary_tracing_sink}"
       }
     ],
+    "portMappings": [
+      {
+        "containerPort": 8080
+      }
+    ],
     "logConfiguration": {
-      "logDriver": "syslog",
+      "logDriver": "awslogs",
       "options": {
-        "syslog-address": "${papertrail_endpoint}",
-        "syslog-tls-ca-cert": "/etc/papertrail-bundle.pem",
-        "tag": "granary-api"
+        "awslogs-group": "logGranaryAPI",
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "granary-api"
       }
     }
   }

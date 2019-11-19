@@ -1,9 +1,13 @@
 #
 # Public DNS resources
 #
+data "aws_route53_zone" "external" {
+  name = var.r53_public_hosted_zone
+}
+
 resource "aws_route53_record" "api" {
-  zone_id = data.terraform_remote_state.core.outputs.route53_public_hosted_zone_id
-  name    = "granary.${data.terraform_remote_state.core.outputs.route53_public_hosted_zone_name}"
+  zone_id = data.aws_route53_zone.external.zone_id
+  name    = "granary.${var.r53_public_hosted_zone}"
   type    = "A"
 
   alias {
