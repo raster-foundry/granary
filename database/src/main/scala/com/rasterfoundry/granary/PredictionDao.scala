@@ -55,7 +55,8 @@ object PredictionDao {
 
   def kickOffPredictionJob(
       prediction: Prediction,
-      model: Model
+      model: Model,
+      dataBucket: String
   ): EitherT[ConnectionIO, PredictionDaoError, Prediction] = {
 
     def updateFailure(
@@ -113,13 +114,15 @@ object PredictionDao {
           model.jobDefinition,
           model.jobQueue,
           prediction.arguments,
-          batchSafeJobName(s"${model.name}-${prediction.id}")
+          batchSafeJobName(s"${model.name}-${prediction.id}"),
+          dataBucket
         )
     ).biflatMap(updateFailure(prediction), updateSuccess(prediction))
   }
 
   def insertPrediction(
-      prediction: Prediction.Create
+      prediction: Prediction.Create,
+      dataBucket: String
   ): ConnectionIO[Either[PredictionDaoError, Prediction]] = {
     val fragment = fr"""
       INSERT INTO predictions
@@ -149,7 +152,9 @@ object PredictionDao {
         }
       }
       updated <- OptionT.liftF {
-        (EitherT.fromEither[ConnectionIO](insert) flatMap { kickOffPredictionJob(_, model) }).value
+        (EitherT.fromEither[ConnectionIO](insert) flatMap {
+          kickOffPredictionJob(_, model, dataBucket)
+        }).value
       }
     } yield updated
 

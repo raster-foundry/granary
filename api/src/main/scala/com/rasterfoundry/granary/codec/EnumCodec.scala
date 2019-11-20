@@ -1,8 +1,8 @@
 package com.rasterfoundry.granary.api.codec
 
 import com.rasterfoundry.granary.datamodel._
-
-import tapir._
+import sttp.tapir.CodecFormat.TextPlain
+import sttp.tapir._
 
 import scala.util.{Failure, Success, Try}
 
@@ -13,6 +13,6 @@ trait EnumCodec {
       case Failure(err)    => DecodeResult.Error(err.getMessage(), err)
     }
 
-  implicit val jobStatusCodec: Codec[JobStatus, MediaType.TextPlain, String] =
+  implicit val jobStatusCodec: Codec[JobStatus, TextPlain, String] =
     Codec.stringPlainCodecUtf8.mapDecode(decJobStatus)(_.toString)
 }

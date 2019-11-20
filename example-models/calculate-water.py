@@ -15,7 +15,8 @@ import rasterio
 import numpy
 from rasterio import features
 import shapely.geometry
-import geopandas
+from shapely.geometry import shape
+import geopandas as gpd
 import subprocess
 from typing import List
 
@@ -78,12 +79,33 @@ def get_water_polygons(nir_tif: str, green_tif: str, threshold: float = 0.3) -> 
     return [shapely.geometry.shape(p) for p, v in shapes if v == 1.0]
 
 
-def copy_results(polygons: List[shapely.geometry.Polygon], local_temp_path: str, remote_path: str) -> None:
+def update_task_grid(task_grid_path: str, local_temp_path: str, polygons: List[shapely.geometry.Polygon]) -> dict:
+    """Loads the task grid, counts the number of polygons that intersect with each grid"""
+    parsed_task_grid_path = urlparse(task_grid_path)
+    if parsed_task_grid_path.scheme == 's3':
+        download_s3_file(task_grid_path, local_temp_path)
+    else:
+        shutil.copyfile(task_grid_path, local_temp_path)
+
+    with open(local_temp_path) as fh:
+        task_grid = json.load(fh)
+
+    water_dataframe = gpd.GeoDataFrame(gpd.GeoSeries(polygons), columns=['geometry'])
+
+    for feature in task_grid['features']:
+        geom = shape(feature['geometry'])
+        num_water_polys = len([i for i in water_dataframe.intersects(geom).to_list() if i])
+        feature['properties']['numberWaterPolygons'] = num_water_polys
+
+    return task_grid
+
+
+def copy_results(task_grid: dict, local_temp_path: str, remote_path: str) -> None:
     """Copies results to local or remote S3 location as geojson"""
     click.echo(click.style(f'Copying results to {remote_path}', fg='green'))
 
     with open(local_temp_path, 'w') as fh:
-        json.dump(geopandas.GeoSeries(polygons).__geo_interface__, fh)
+        json.dump(task_grid, fh)
 
     parsed_remote_path = urlparse(remote_path)
     if parsed_remote_path.scheme == 's3':
@@ -96,8 +118,9 @@ def copy_results(polygons: List[shapely.geometry.Polygon], local_temp_path: str,
 @click.argument("nir_band")
 @click.argument("green_band")
 @click.argument("output_location")
+@click.argument("task_grid")
 @click.option("--webhook")
-def run(nir_band: str, green_band: str, output_location: str, webhook: str):
+def run(nir_band: str, green_band: str, output_location: str, task_grid: str, webhook: str):
     click.echo(click.style(f'Generating Water Polygons with Red {nir_band} and Green {green_band}', fg='green'))
 
     with tempfile.TemporaryDirectory() as dirname:
@@ -105,7 +128,8 @@ def run(nir_band: str, green_band: str, output_location: str, webhook: str):
         warped_nir_path = preprocess_band(nir_band, dirname)
         warped_green_path = preprocess_band(green_band, dirname)
         polygons = get_water_polygons(warped_nir_path, warped_green_path)
-        copy_results(polygons, os.path.join(dirname, 'output.geojson'), output_location)
+        updated_task_grid = update_task_grid(task_grid, f'{dirname}/taskgrid.json', polygons)
+        copy_results(updated_task_grid, os.path.join(dirname, 'output.geojson'), output_location)
 
 
 if __name__ == '__main__':

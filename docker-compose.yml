@@ -58,6 +58,7 @@ services:
       - AWS_PROFILE
     volumes:
       - ./example-models/:/opt/granary/
+      - ./data/:/opt/data/
       - $HOME/.aws:/root/.aws:ro
     working_dir: /opt/granary/
 

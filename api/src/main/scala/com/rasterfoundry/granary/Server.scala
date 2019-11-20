@@ -17,9 +17,9 @@ import org.http4s.server._
 import pureconfig.ConfigSource
 import pureconfig.error.ConfigReaderFailures
 import pureconfig.generic.auto._
-import tapir.openapi.circe.yaml._
-import tapir.docs.openapi._
-import tapir.swagger.http4s.SwaggerHttp4s
+import sttp.tapir.openapi.circe.yaml._
+import sttp.tapir.docs.openapi._
+import sttp.tapir.swagger.http4s.SwaggerHttp4s
 
 object ApiServer extends IOApp {
 
@@ -43,6 +43,13 @@ object ApiServer extends IOApp {
           case Right(builder) => IO.pure(builder)
         }
       }
+      s3Config <- Resource.liftF {
+        ConfigSource.default.at("s3").load[S3Config] match {
+          case Left(e) =>
+            IO.raiseError(throw new Exception(e.toList.map(_.toString).mkString("\n")))
+          case Right(config) => IO.pure(config)
+        }
+      }
       connectionEc <- ExecutionContexts.fixedThreadPool[IO](2)
       blocker      <- Blocker[IO]
       transactor <- HikariTransactor
@@ -50,11 +57,13 @@ object ApiServer extends IOApp {
       allEndpoints = {
         HelloEndpoints.endpoints ++ ModelEndpoints.endpoints ++ PredictionEndpoints.endpoints
       }
-      docs             = allEndpoints.toOpenAPI("Granary", "0.0.1")
-      docRoutes        = new SwaggerHttp4s(docs.toYaml).routes
-      helloRoutes      = new HelloService(tracingContextBuilder).routes
-      modelRoutes      = new ModelService(tracingContextBuilder, transactor).routes
-      predictionRoutes = new PredictionService(tracingContextBuilder, transactor).routes
+      docs        = allEndpoints.toOpenAPI("Granary", "0.0.1")
+      docRoutes   = new SwaggerHttp4s(docs.toYaml).routes
+      helloRoutes = new HelloService(tracingContextBuilder).routes
+      modelRoutes = new ModelService(tracingContextBuilder, transactor).routes
+      predictionRoutes = new PredictionService(tracingContextBuilder,
+                                               transactor,
+                                               s3Config.dataBucket).routes
       router = CORS(
         Router(
           "/api" -> (helloRoutes <+> modelRoutes <+> predictionRoutes <+> docRoutes)
