@@ -2,7 +2,7 @@
 # ACM resources
 #
 module "cert" {
-  source = "github.com/azavea/terraform-aws-acm-certificate?ref=marioapbrito"
+  source = "github.com/azavea/terraform-aws-acm-certificate?ref=2.0.0"
 
   domain_name               = aws_route53_record.api.name
   subject_alternative_names = ["*.${aws_route53_record.api.name}"]
