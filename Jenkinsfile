@@ -16,7 +16,7 @@ node {
 
         env.GRANARY_SETTINGS_BUCKET = 'rasterfoundry-production-config-us-east-1'
 
-        if (env.BRANCH_NAME == 'master' || env.BRANCH_NAME.startsWith('test/') || env.BRANCH_NAME.startsWith('release/') || env.BRANCH_NAME.startsWith('hotfix/') || env.BRANCH_NAME == 'jrb/ecs') {
+        if (env.BRANCH_NAME == 'master' || env.BRANCH_NAME.startsWith('test/') || env.BRANCH_NAME.startsWith('release/') || env.BRANCH_NAME.startsWith('hotfix/')) {
             stage('cipublish') {
                 // Decode the Quay credentials stored within Jenkins.
                 withCredentials([[$class: 'StringBinding',
