@@ -7,7 +7,7 @@ data "aws_route53_zone" "external" {
 
 resource "aws_route53_record" "api" {
   zone_id = data.aws_route53_zone.external.zone_id
-  name    = "granary.${var.r53_public_hosted_zone}"
+  name    = "${var.r53_public_hosted_zone_record}"
   type    = "A"
 
   alias {

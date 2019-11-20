@@ -27,6 +27,10 @@ variable "r53_public_hosted_zone" {
   type = string
 }
 
+variable "r53_public_hosted_zone_record" {
+  type = string
+}
+
 variable "vpc_id" {
   type = string
 }
