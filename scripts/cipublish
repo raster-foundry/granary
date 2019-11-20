@@ -34,8 +34,8 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
             "quay.io/raster-foundry/granary-api-migrations:${GIT_COMMIT}"
         docker push "quay.io/raster-foundry/granary-api-migrations:${GIT_COMMIT}"
 
-        docker tag "granary-calculate-water:${GIT_COMMIT}" \
-            "quay.io/raster-foundry/granary-calculate-water:${GIT_COMMIT}"
-        docker push "quay.io/raster-foundry/granary-calculate-water:${GIT_COMMIT}"
+        # docker tag "granary-calculate-water:${GIT_COMMIT}" \
+        #     "quay.io/raster-foundry/granary-calculate-water:${GIT_COMMIT}"
+        # docker push "quay.io/raster-foundry/granary-calculate-water:${GIT_COMMIT}"
     fi
 fi

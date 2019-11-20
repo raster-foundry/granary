@@ -12,8 +12,6 @@ else
     GIT_COMMIT="$(git rev-parse --short HEAD)"
 fi
 
-DIR="$(dirname "$0")/../"
-
 function usage() {
     echo -n \
         "Usage: $(basename "$0")
@@ -25,14 +23,14 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     if [ "${1:-}" = "--help" ]; then
         usage
     else
+        docker-compose up -d database
+
         ./scripts/test
 
-        pushd "${DIR}"
-
         echo "Building JAR for API subproject"
-        ./sbt api/assembly
-
-        popd
+        docker-compose \
+            run --rm sbt \
+            "api/assembly"
 
         echo "Building Scala container images"
         GIT_COMMIT="${GIT_COMMIT}" docker-compose \

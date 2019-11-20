@@ -1,0 +1,44 @@
+[
+  {
+    "name": "api-migrations",
+    "image": "${image}",
+    "environment": [
+      {
+        "name": "FLYWAY_DRIVER",
+        "value": "org.postgresql.Driver"
+      },
+      {
+        "name": "FLYWAY_URL",
+        "value": "${flyway_url}"
+      },
+      {
+        "name": "FLYWAY_USER",
+        "value": "${flyway_user}"
+      },
+      {
+        "name": "FLYWAY_PASSWORD",
+        "value": "${flyway_password}"
+      },
+      {
+        "name": "FLYWAY_LOCATIONS",
+        "value": "filesystem:/opt/migrations"
+      },
+      {
+        "name": "FLYWAY_SCHEMAS",
+        "value": "public"
+      },
+      {
+        "name": "FLYWAY_BASELINE_ON_MIGRATE",
+        "value": "true"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "logGranaryAPIMigrations",
+        "awslogs-region": "${aws_region}",
+        "awslogs-stream-prefix": "granary-api-migrations"
+      }
+    }
+  }
+]
