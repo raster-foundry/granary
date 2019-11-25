@@ -16,9 +16,12 @@ import sttp.tapir.server.http4s._
 
 import java.util.UUID
 
-class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F],
-                                    xa: Transactor[F],
-                                    dataBucket: String)(
+class PredictionService[F[_]: Sync](
+    contextBuilder: TracingContextBuilder[F],
+    xa: Transactor[F],
+    dataBucket: String,
+    apiHost: String
+)(
     implicit contextShift: ContextShift[F]
 ) extends GranaryService {
 
@@ -42,7 +45,7 @@ class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F],
       prediction: Prediction.Create
   ): F[Either[CrudError, Prediction]] =
     mkContext("createPrediction", Map.empty, contextBuilder) use { _ =>
-      Functor[F].map(PredictionDao.insertPrediction(prediction, dataBucket).transact(xa))({
+      Functor[F].map(PredictionDao.insertPrediction(prediction, dataBucket, apiHost).transact(xa))({
         case Right(created) => Right(created)
         case Left(PredictionDao.ModelNotFound) =>
           Left(NotFound())
@@ -51,7 +54,6 @@ class PredictionService[F[_]: Sync](contextBuilder: TracingContextBuilder[F],
             ValidationError(errs map { _.getMessage } reduce)
           )
         case Left(PredictionDao.BatchSubmissionFailed(msg)) =>
-          println(s"Arguments are: ${prediction.arguments}")
           Left(
             ValidationError(
               s"Batch resources for model ${prediction.modelId} may be misconfigured: $msg"

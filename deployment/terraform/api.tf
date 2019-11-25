@@ -109,6 +109,8 @@ resource "aws_ecs_task_definition" "api" {
   container_definitions = templatefile("${path.module}/task-definitions/api.json.tmpl", {
     image = "quay.io/raster-foundry/granary-api:${var.image_tag}"
 
+    api_host = "https://${var.r53_public_hosted_zone_record}/api"
+
     postgres_url      = "jdbc:postgresql://${var.rds_database_hostname}/"
     postgres_name     = var.rds_database_name
     postgres_user     = var.rds_database_username

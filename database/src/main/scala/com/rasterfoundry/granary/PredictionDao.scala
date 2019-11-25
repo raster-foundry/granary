@@ -12,6 +12,7 @@ import doobie.postgres.implicits._
 import doobie.postgres.circe.jsonb.implicits._
 import io.circe.DecodingFailure
 import io.circe.schema.ValidationError
+import io.circe.syntax._
 
 import java.util.UUID
 
@@ -56,7 +57,8 @@ object PredictionDao {
   def kickOffPredictionJob(
       prediction: Prediction,
       model: Model,
-      dataBucket: String
+      dataBucket: String,
+      apiHost: String
   ): EitherT[ConnectionIO, PredictionDaoError, Prediction] = {
 
     def updateFailure(
@@ -113,7 +115,9 @@ object PredictionDao {
         .submitJobRequest[ConnectionIO](
           model.jobDefinition,
           model.jobQueue,
-          prediction.arguments,
+          prediction.arguments.deepMerge(prediction.webhookId map { webhookId =>
+            Map("webhookUrl" -> s"${apiHost}/predictions/${prediction.id}/results/${webhookId}").asJson
+          } getOrElse { ().asJson }),
           batchSafeJobName(s"${model.name}-${prediction.id}"),
           dataBucket
         )
@@ -122,7 +126,8 @@ object PredictionDao {
 
   def insertPrediction(
       prediction: Prediction.Create,
-      dataBucket: String
+      dataBucket: String,
+      apiHost: String
   ): ConnectionIO[Either[PredictionDaoError, Prediction]] = {
     val fragment = fr"""
       INSERT INTO predictions
@@ -153,7 +158,7 @@ object PredictionDao {
       }
       updated <- OptionT.liftF {
         (EitherT.fromEither[ConnectionIO](insert) flatMap {
-          kickOffPredictionJob(_, model, dataBucket)
+          kickOffPredictionJob(_, model, dataBucket, apiHost)
         }).value
       }
     } yield updated
