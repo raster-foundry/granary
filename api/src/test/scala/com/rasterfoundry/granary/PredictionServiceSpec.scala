@@ -43,7 +43,12 @@ class PredictionServiceSpec
     new ModelService[IO](tracingContextBuilder, transactor)
 
   val predictionService =
-    new PredictionService[IO](tracingContextBuilder, transactor, dataBucket)
+    new PredictionService[IO](
+      tracingContextBuilder,
+      transactor,
+      dataBucket,
+      "http://localhost:8080/api"
+    )
 
   def updatePredictionRaw(
       message: PredictionStatusUpdate,

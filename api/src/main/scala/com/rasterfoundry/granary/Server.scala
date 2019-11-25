@@ -39,14 +39,21 @@ object ApiServer extends IOApp {
     for {
       tracingContextBuilder <- Resource.liftF {
         getTracingContextBuilder flatMap {
-          case Left(e)        => IO.raiseError(throw new Exception(e.toString))
+          case Left(e)        => IO.raiseError(new Exception(e.toString))
           case Right(builder) => IO.pure(builder)
         }
       }
       s3Config <- Resource.liftF {
         ConfigSource.default.at("s3").load[S3Config] match {
           case Left(e) =>
-            IO.raiseError(throw new Exception(e.toList.map(_.toString).mkString("\n")))
+            IO.raiseError(new Exception(e.toList.map(_.toString).mkString("\n")))
+          case Right(config) => IO.pure(config)
+        }
+      }
+      metaConfig <- Resource.liftF {
+        ConfigSource.default.at("meta").load[MetaConfig] match {
+          case Left(e) =>
+            IO.raiseError(new Exception(e.toList.map(_.toString).mkString("\n")))
           case Right(config) => IO.pure(config)
         }
       }
@@ -61,9 +68,12 @@ object ApiServer extends IOApp {
       docRoutes   = new SwaggerHttp4s(docs.toYaml).routes
       helloRoutes = new HelloService(tracingContextBuilder).routes
       modelRoutes = new ModelService(tracingContextBuilder, transactor).routes
-      predictionRoutes = new PredictionService(tracingContextBuilder,
-                                               transactor,
-                                               s3Config.dataBucket).routes
+      predictionRoutes = new PredictionService(
+        tracingContextBuilder,
+        transactor,
+        s3Config.dataBucket,
+        metaConfig.apiHost
+      ).routes
       router = CORS(
         Router(
           "/api" -> (helloRoutes <+> modelRoutes <+> predictionRoutes <+> docRoutes)
