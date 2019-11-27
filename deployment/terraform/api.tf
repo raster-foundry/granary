@@ -104,7 +104,7 @@ resource "aws_ecs_task_definition" "api" {
   cpu                      = var.fargate_api_cpu
   memory                   = var.fargate_api_memory
 
-  task_role_arn      = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn      = aws_iam_role.ecs_task_role.arn
   execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = templatefile("${path.module}/task-definitions/api.json.tmpl", {
