@@ -99,7 +99,7 @@ locals {
 }
 
 resource "aws_security_group" "alb_whitelist_ec2" {
-  vpc_id = "${module.vpc.id}"
+  vpc_id = "${var.vpc_id}"
 
   egress {
     from_port       = 0
