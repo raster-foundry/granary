@@ -105,13 +105,7 @@ resource "aws_security_group" "alb_whitelist_ec2" {
     from_port       = 0
     to_port         = 65535
     protocol        = "tcp"
-    security_groups = ["${module.container_service_cluster.container_instance_security_group_id}"]
-  }
-
-  tags {
-    Name        = "sgAPIServerLoadBalancer"
-    Project     = "${var.project}"
-    Environment = "${var.environment}"
+    security_groups = ["${aws_security_group.api.id}"]
   }
 }
 
@@ -133,5 +127,5 @@ resource "aws_security_group_rule" "alb_api_server_container_instance_all_egress
   protocol  = "tcp"
 
   security_group_id        = "${aws_security_group.alb.id}"
-  source_security_group_id = "${module.container_service_cluster.container_instance_security_group_id}"
+  source_security_group_id = "${aws_security_gorup.api.id}"
 }
