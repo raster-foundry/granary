@@ -26,7 +26,10 @@ resource "aws_security_group" "api" {
 #
 resource "aws_lb" "api" {
   name            = "alb${var.project}API"
-  security_groups = [aws_security_group.alb.id]
+  security_groups = flatten([
+      aws_security_group.alb.id,
+      aws_security_group.alb_whitelist_ec2.*.id,
+  ])
   subnets         = var.vpc_public_subnet_ids
 
   enable_http2 = true

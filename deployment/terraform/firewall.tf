@@ -99,6 +99,7 @@ locals {
 }
 
 resource "aws_security_group" "alb_whitelist_ec2" {
+  count = "${length(local.ec2_cidr_block_chunks)}"
   vpc_id = "${var.vpc_id}"
 
   egress {
@@ -116,16 +117,6 @@ resource "aws_security_group_rule" "alb_api_server_ec2_https_ingress" {
   from_port         = 443
   to_port           = 443
   protocol          = "tcp"
-  cidr_blocks       = ["${local.ec2_cidr_block_chunks[count.index]}"]
+  cidr_blocks       = local.ec2_cidr_block_chunks[count.index]
   security_group_id = "${aws_security_group.alb_whitelist_ec2.*.id[count.index]}"
-}
-
-resource "aws_security_group_rule" "alb_api_server_container_instance_all_egress" {
-  type      = "egress"
-  from_port = 0
-  to_port   = 65535
-  protocol  = "tcp"
-
-  security_group_id        = "${aws_security_group.alb.id}"
-  source_security_group_id = "${aws_security_gorup.api.id}"
 }
