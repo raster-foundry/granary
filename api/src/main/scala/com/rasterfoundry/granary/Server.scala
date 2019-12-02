@@ -12,7 +12,7 @@ import io.chrisdavenport.log4cats.Logger
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import org.http4s.implicits._
 import org.http4s.server.blaze._
-import org.http4s.server.middleware._
+import org.http4s.server.middleware.{Logger => RequestResponseLogger, _}
 import org.http4s.server._
 import pureconfig.ConfigSource
 import pureconfig.error.ConfigReaderFailures
@@ -74,11 +74,15 @@ object ApiServer extends IOApp {
         s3Config.dataBucket,
         metaConfig.apiHost
       ).routes
-      router = CORS(
-        Router(
-          "/api" -> (helloRoutes <+> modelRoutes <+> predictionRoutes <+> docRoutes)
-        )
-      ).orNotFound
+      router = RequestResponseLogger
+        .httpRoutes(false, false) {
+          CORS(
+            Router(
+              "/api" -> (helloRoutes <+> modelRoutes <+> predictionRoutes <+> docRoutes)
+            )
+          )
+        }
+        .orNotFound
       server <- BlazeServerBuilder[IO]
         .bindHttp(8080, "0.0.0.0")
         .withHttpApp(router)

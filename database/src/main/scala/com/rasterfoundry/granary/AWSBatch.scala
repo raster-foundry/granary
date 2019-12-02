@@ -32,10 +32,10 @@ object AWSBatch {
             val key = s"prediction-task-grids/$jobName/taskGrid.json"
             s3Client.putObject(dataBucket, key, v.noSpaces)
             val updated =
-              params.mapValues(_.noSpaces).updated("TASK_GRID", s"s3://${dataBucket}/$key")
+              params.mapValues(_.noSpaces.replace("\"", "")).updated("TASK_GRID", s"s3://${dataBucket}/$key")
             updated
           }
-        case _ => IO.pure(params.mapValues(_.noSpaces))
+        case _ => IO.pure(params.mapValues(_.noSpaces.replace("\"", "")))
       }
 
       val jobRequestIO = updatedParametersIO map { updatedParameters =>

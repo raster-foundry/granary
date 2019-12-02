@@ -26,7 +26,10 @@ resource "aws_security_group" "api" {
 #
 resource "aws_lb" "api" {
   name            = "alb${var.project}API"
-  security_groups = [aws_security_group.alb.id]
+  security_groups = flatten([
+      aws_security_group.alb.id,
+      aws_security_group.alb_whitelist_ec2.*.id,
+  ])
   subnets         = var.vpc_public_subnet_ids
 
   enable_http2 = true
@@ -104,6 +107,7 @@ resource "aws_ecs_task_definition" "api" {
   cpu                      = var.fargate_api_cpu
   memory                   = var.fargate_api_memory
 
+  task_role_arn      = aws_iam_role.ecs_task_role.arn
   execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = templatefile("${path.module}/task-definitions/api.json.tmpl", {

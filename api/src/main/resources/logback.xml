@@ -5,6 +5,7 @@
     </encoder>
   </appender>
   <logger name="com.rasterfoundry.granary" level="${GRANARY_LOG_LEVEL:-INFO}"/>
+  <logger name="org.http4s.blaze.channel.nio1" level="WARN"/>
   <root level="INFO">
     <appender-ref ref="STDOUT" />
   </root>
