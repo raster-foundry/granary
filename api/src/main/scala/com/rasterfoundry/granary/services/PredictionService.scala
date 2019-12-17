@@ -1,8 +1,11 @@
 package com.rasterfoundry.granary.api.services
 
+import java.util.UUID
+
 import cats._
 import cats.effect._
 import cats.implicits._
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.colisweb.tracing.TracingContextBuilder
 import com.rasterfoundry.granary.api.endpoints._
 import com.rasterfoundry.granary.api.error._
@@ -14,8 +17,6 @@ import io.circe.syntax._
 import org.http4s._
 import sttp.tapir.server.http4s._
 
-import java.util.UUID
-
 class PredictionService[F[_]: Sync](
     contextBuilder: TracingContextBuilder[F],
     xa: Transactor[F],
@@ -24,21 +25,25 @@ class PredictionService[F[_]: Sync](
 )(
     implicit contextShift: ContextShift[F]
 ) extends GranaryService {
+  private val s3Client = AmazonS3ClientBuilder.defaultClient()
 
   def listPredictions(
       modelId: Option[UUID],
       status: Option[JobStatus]
   ): F[Either[Unit, List[Prediction]]] =
     mkContext("listPredictions", Map.empty, contextBuilder) use { _ =>
-      Functor[F].map(PredictionDao.listPredictions(modelId, status).transact(xa))(Right(_))
+      Functor[F].map(PredictionDao.listPredictions(modelId, status).transact(xa)) { predictions =>
+        val updatedPredictions = predictions.map(_.signS3OutputLocation(s3Client))
+        Right(updatedPredictions)
+      }
     }
 
   def getById(id: UUID): F[Either[NotFound, Prediction]] =
     mkContext("lookupPredictionById", Map("predictionId" -> s"$id"), contextBuilder) use { _ =>
-      Functor[F].map(PredictionDao.getPrediction(id).transact(xa))({
-        case Some(prediction) => Right(prediction)
+      Functor[F].map(PredictionDao.getPrediction(id).transact(xa)) {
+        case Some(prediction) => Right(prediction.signS3OutputLocation(s3Client))
         case None             => Left(NotFound())
-      })
+      }
     }
 
   def createPrediction(
@@ -81,7 +86,7 @@ class PredictionService[F[_]: Sync](
         case None =>
           Left(NotFound())
         case Some(p) =>
-          Right(p)
+          Right(p.signS3OutputLocation(s3Client))
       })
     }
 

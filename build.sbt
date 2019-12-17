@@ -51,6 +51,7 @@ lazy val datamodelSettings = commonSettings ++ Seq(
 )
 
 lazy val datamodelDependencies = commonDependencies ++ Seq(
+  Dependencies.awsS3,
   Dependencies.catsScalacheck,
   Dependencies.circeCore,
   Dependencies.circeGeneric,
