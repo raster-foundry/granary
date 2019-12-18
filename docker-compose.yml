@@ -14,6 +14,8 @@ services:
       timeout: 3s
       retries: 3
       start_period: 5s
+    ports:
+      - "5432:5432"
 
   api:
     image: openjdk:11-jdk
@@ -36,6 +38,7 @@ services:
       - POSTGRES_USER=granary
       - POSTGRES_PASSWORD=granary
       - GRANARY_TRACING_SINK=jaeger
+      - AUTH_ENABLED=true
     links:
       - database:database.service.internal
       - jaeger:jaeger.service.internal

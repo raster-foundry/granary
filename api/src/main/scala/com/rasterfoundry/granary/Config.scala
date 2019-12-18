@@ -7,3 +7,5 @@ case class TracingConfig(
 case class S3Config(dataBucket: String)
 
 case class MetaConfig(apiHost: String)
+
+case class AuthConfig(enabled: Boolean)

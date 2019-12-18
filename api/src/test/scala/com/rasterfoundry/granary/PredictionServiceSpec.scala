@@ -47,7 +47,8 @@ class PredictionServiceSpec
       tracingContextBuilder,
       transactor,
       dataBucket,
-      "http://localhost:8080/api"
+      "http://localhost:8080/api",
+      true
     )
 
   def updatePredictionRaw(

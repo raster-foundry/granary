@@ -15,9 +15,17 @@ object PredictionEndpoints {
 
   val idLookup = base.get
     .in(path[UUID])
+    .in(header[Option[String]]("Authorization"))
     .out(jsonBody[Prediction])
     .errorOut(
-      oneOf(statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found"))))
+      oneOf[CrudError](
+        statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("Not found")),
+        statusMapping(
+          StatusCode.Forbidden,
+          jsonBody[Forbidden].description("Invalid token")
+        )
+      )
+    )
 
   val create = base.post
     .in(
@@ -25,10 +33,11 @@ object PredictionEndpoints {
         "A model ID and arguments to use to run a prediction. Arguments must conform to the schema on the associated model"
       )
     )
+    .in(header[Option[String]]("Authorization"))
     .out(jsonBody[Prediction])
     .errorOut(
       oneOf[CrudError](
-        statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found")),
+        statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("Not found")),
         statusMapping(
           StatusCode.BadRequest,
           jsonBody[ValidationError]
@@ -41,7 +50,21 @@ object PredictionEndpoints {
     base.get
       .in(query[Option[UUID]]("modelId"))
       .in(query[Option[JobStatus]]("status"))
+      .in(header[Option[String]]("Authorization"))
       .out(jsonBody[List[Prediction]])
+      .errorOut(
+        oneOf[CrudError](
+          statusMapping(
+            StatusCode.BadRequest,
+            jsonBody[ValidationError]
+              .description("prediction arguments insufficient for running model")
+          ),
+          statusMapping(
+            StatusCode.Forbidden,
+            jsonBody[Forbidden].description("Invalid token")
+          )
+        )
+      )
 
   val addResults =
     base.post
@@ -49,10 +72,15 @@ object PredictionEndpoints {
       .in("results")
       .in(path[UUID])
       .in(jsonBody[PredictionStatusUpdate])
+      .in(header[Option[String]]("Authorization"))
       .out(jsonBody[Prediction])
       .errorOut(
         oneOf[CrudError](
-          statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found"))
+          statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found")),
+          statusMapping(
+            StatusCode.Forbidden,
+            jsonBody[Forbidden].description("Invalid token")
+          )
         )
       )
 

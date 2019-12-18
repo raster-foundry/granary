@@ -57,6 +57,13 @@ object ApiServer extends IOApp {
           case Right(config) => IO.pure(config)
         }
       }
+      authConfig <- Resource.liftF {
+        ConfigSource.default.at("auth").load[AuthConfig] match {
+          case Left(e) =>
+            IO.raiseError(new Exception(e.toList.map(_.toString).mkString("\n")))
+          case Right(config) => IO.pure(config)
+        }
+      }
       connectionEc <- ExecutionContexts.fixedThreadPool[IO](2)
       blocker      <- Blocker[IO]
       transactor <- HikariTransactor
@@ -72,7 +79,8 @@ object ApiServer extends IOApp {
         tracingContextBuilder,
         transactor,
         s3Config.dataBucket,
-        metaConfig.apiHost
+        metaConfig.apiHost,
+        authConfig.enabled
       ).routes
       router = RequestResponseLogger
         .httpRoutes(false, false) {
