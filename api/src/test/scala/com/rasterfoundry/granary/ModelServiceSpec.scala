@@ -35,7 +35,7 @@ class ModelServiceSpec
 
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
 
-  def service: ModelService[IO] = new ModelService[IO](tracingContextBuilder, transactor)
+  def service: ModelService[IO] = new ModelService[IO](tracingContextBuilder, transactor, false)
 
   def createExpectation = prop { (model: Model.Create) =>
     {

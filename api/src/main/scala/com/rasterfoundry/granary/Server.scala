@@ -74,7 +74,7 @@ object ApiServer extends IOApp {
       docs        = allEndpoints.toOpenAPI("Granary", "0.0.1")
       docRoutes   = new SwaggerHttp4s(docs.toYaml).routes
       helloRoutes = new HelloService(tracingContextBuilder).routes
-      modelRoutes = new ModelService(tracingContextBuilder, transactor).routes
+      modelRoutes = new ModelService(tracingContextBuilder, transactor, authConfig.enabled).routes
       predictionRoutes = new PredictionService(
         tracingContextBuilder,
         transactor,
