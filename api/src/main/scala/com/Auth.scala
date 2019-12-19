@@ -19,7 +19,6 @@ object Auth {
   ): ConnectionIO[Either[CrudError, A]] = {
     (tokenO.map(cleanToken(_)), authEnabled) match {
       case (Some(token), true) =>
-        println(s"Auth with token: $token")
         TokenDao
           .validateToken(token, authEnabled)
           .flatMap {
