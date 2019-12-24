@@ -1,5 +1,6 @@
 package com.rasterfoundry.granary.api
 
+import com.rasterfoundry.granary.api.middleware._
 import com.rasterfoundry.granary.api.endpoints._
 import com.rasterfoundry.granary.api.services._
 import com.rasterfoundry.granary.database.{Config => DBConfig}
@@ -74,19 +75,24 @@ object ApiServer extends IOApp {
       docs        = allEndpoints.toOpenAPI("Granary", "0.0.1")
       docRoutes   = new SwaggerHttp4s(docs.toYaml).routes
       helloRoutes = new HelloService(tracingContextBuilder).routes
-      modelRoutes = new ModelService(tracingContextBuilder, transactor, authConfig.enabled).routes
+      modelRoutes = new ModelService(tracingContextBuilder, transactor).routes
       predictionRoutes = new PredictionService(
         tracingContextBuilder,
         transactor,
         s3Config.dataBucket,
-        metaConfig.apiHost,
-        authConfig.enabled
+        metaConfig.apiHost
       ).routes
       router = RequestResponseLogger
         .httpRoutes(false, false) {
           CORS(
             Router(
-              "/api" -> (helloRoutes <+> modelRoutes <+> predictionRoutes <+> docRoutes)
+              "/api" -> (
+                Auth.customAuthMiddleware(
+                  helloRoutes <+> modelRoutes <+> predictionRoutes <+> docRoutes,
+                  authConfig,
+                  transactor
+                )
+              )
             )
           )
         }

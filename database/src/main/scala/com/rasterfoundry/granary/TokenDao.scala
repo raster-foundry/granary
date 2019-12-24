@@ -18,27 +18,22 @@ object TokenDao {
   """
 
   def validateToken(
-      id: String,
-      authEnabled: Boolean
+      id: String
   ): ConnectionIO[Either[TokenDaoError, Boolean]] =
-    authEnabled match {
-      case true =>
-        try {
-          val uuid = UUID.fromString(id)
-          (
-            fr"SELECT EXISTS(" ++
-              selectF ++
-              Fragments.whereAnd(fr"id = $uuid") ++ fr")"
-          ).query[Boolean].unique.map { exists =>
-            exists match {
-              case true  => Right(true)
-              case false => Left(InvalidToken)
-            }
-          }
-        } catch {
-          case _: IllegalArgumentException =>
-            Either.left[TokenDaoError, Boolean](InvalidToken).pure[ConnectionIO]
+    try {
+      val uuid = UUID.fromString(id)
+      (
+        fr"SELECT EXISTS(" ++
+          selectF ++
+          Fragments.whereAnd(fr"id = $uuid") ++ fr")"
+      ).query[Boolean].unique.map { exists =>
+        exists match {
+          case true  => Right(true)
+          case false => Left(InvalidToken)
         }
-      case _ => Either.right[TokenDaoError, Boolean](true).pure[ConnectionIO]
+      }
+    } catch {
+      case _: IllegalArgumentException =>
+        Either.left[TokenDaoError, Boolean](InvalidToken).pure[ConnectionIO]
     }
 }

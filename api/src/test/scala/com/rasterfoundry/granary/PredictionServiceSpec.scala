@@ -40,15 +40,14 @@ class PredictionServiceSpec
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
 
   val modelService: ModelService[IO] =
-    new ModelService[IO](tracingContextBuilder, transactor, false)
+    new ModelService[IO](tracingContextBuilder, transactor)
 
   val predictionService =
     new PredictionService[IO](
       tracingContextBuilder,
       transactor,
       dataBucket,
-      "http://localhost:8080/api",
-      false
+      "http://localhost:8080/api"
     )
 
   def updatePredictionRaw(

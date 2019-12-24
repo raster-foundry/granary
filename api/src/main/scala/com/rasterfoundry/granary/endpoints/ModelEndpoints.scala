@@ -13,7 +13,6 @@ object ModelEndpoints {
 
   val idLookup = base.get
     .in(path[UUID])
-    .in(header[Option[String]]("Authorization"))
     .out(jsonBody[Model])
     .errorOut(
       oneOf[CrudError](
@@ -31,7 +30,6 @@ object ModelEndpoints {
         "A name, a Json Schema and some AWS batch metadata for running a this model. The Schema should specify arguments as string -> string, even if they'll be parsed as ints or bools or whatever by the eventual model run"
       )
     )
-    .in(header[Option[String]]("Authorization"))
     .out(jsonBody[Model])
     .errorOut(
       oneOf[CrudError](
@@ -43,7 +41,6 @@ object ModelEndpoints {
     )
 
   val list = base.get
-    .in(header[Option[String]]("Authorization"))
     .out(jsonBody[List[Model]])
     .errorOut(
       oneOf[CrudError](
@@ -57,7 +54,6 @@ object ModelEndpoints {
 
   val delete = base.delete
     .in(path[UUID])
-    .in(header[Option[String]]("Authorization"))
     .out(jsonBody[DeleteMessage])
     .errorOut(
       oneOf[CrudError](

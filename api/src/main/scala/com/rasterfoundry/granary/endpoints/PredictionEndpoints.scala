@@ -15,7 +15,6 @@ object PredictionEndpoints {
 
   val idLookup = base.get
     .in(path[UUID])
-    .in(header[Option[String]]("Authorization"))
     .out(jsonBody[Prediction])
     .errorOut(
       oneOf[CrudError](
@@ -33,7 +32,6 @@ object PredictionEndpoints {
         "A model ID and arguments to use to run a prediction. Arguments must conform to the schema on the associated model"
       )
     )
-    .in(header[Option[String]]("Authorization"))
     .out(jsonBody[Prediction])
     .errorOut(
       oneOf[CrudError](
@@ -50,7 +48,6 @@ object PredictionEndpoints {
     base.get
       .in(query[Option[UUID]]("modelId"))
       .in(query[Option[JobStatus]]("status"))
-      .in(header[Option[String]]("Authorization"))
       .out(jsonBody[List[Prediction]])
       .errorOut(
         oneOf[CrudError](
@@ -72,7 +69,6 @@ object PredictionEndpoints {
       .in("results")
       .in(path[UUID])
       .in(jsonBody[PredictionStatusUpdate])
-      .in(header[Option[String]]("Authorization"))
       .out(jsonBody[Prediction])
       .errorOut(
         oneOf[CrudError](
