@@ -25,8 +25,6 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
 
         echo "Executing Scala tests"
         docker-compose \
-            -f docker-compose.yml \
-            -f docker-compose.ci.yml \
             run --rm sbt \
             "; scalafix --check; test"
     fi

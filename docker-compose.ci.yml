@@ -2,8 +2,6 @@ version: "2.4"
 services:
   api:
     image: "granary-api:${GIT_COMMIT}"
-    links:
-      - database:database.service.internal
     build:
       context: ./api
       dockerfile: Dockerfile
