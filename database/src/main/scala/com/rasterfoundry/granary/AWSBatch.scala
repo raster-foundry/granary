@@ -62,9 +62,8 @@ object AWSBatch {
     } map {
       case Left(e)         => Left(e)
       case Right(Left(e))  => Left(e)
-      case Right(Right(r)) =>
-        // trick to suppress "pure expression in statement position" warning
-        Right(locally(r))
+      case Right(Right(_)) =>
+        Right(())
     }
   }
 }
