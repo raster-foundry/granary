@@ -22,15 +22,15 @@ object TokenDao {
   def validateToken(
       id: String
   ): ConnectionIO[Boolean] =
-    for {
+    (for {
       uuid <- LiftIO[ConnectionIO].liftIO(IO { UUID.fromString(id) })
       exists <- (
         fr"SELECT EXISTS(" ++
           selectF ++
           Fragments.whereAnd(fr"id = $uuid") ++ fr")"
-      ).query[Boolean].unique.attempt.map {
-        case Right(true) => true
-        case _ => false
-      }
-    } yield exists
+      ).query[Boolean].unique
+    } yield exists).attempt.map {
+      case Right(true) => true
+      case _           => false
+    }
 }
