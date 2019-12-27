@@ -30,7 +30,7 @@ class PredictionService[F[_]: Sync](
   def listPredictions(
       modelId: Option[UUID],
       status: Option[JobStatus]
-  ): F[Either[CrudError, List[Prediction]]] =
+  ): F[Either[Unit, List[Prediction]]] =
     mkContext("listPredictions", Map.empty, contextBuilder) use { _ =>
       Functor[F].map(
         PredictionDao

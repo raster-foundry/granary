@@ -49,19 +49,6 @@ object PredictionEndpoints {
       .in(query[Option[UUID]]("modelId"))
       .in(query[Option[JobStatus]]("status"))
       .out(jsonBody[List[Prediction]])
-      .errorOut(
-        oneOf[CrudError](
-          statusMapping(
-            StatusCode.BadRequest,
-            jsonBody[ValidationError]
-              .description("prediction arguments insufficient for running model")
-          ),
-          statusMapping(
-            StatusCode.Forbidden,
-            jsonBody[Forbidden].description("Invalid token")
-          )
-        )
-      )
 
   val addResults =
     base.post
