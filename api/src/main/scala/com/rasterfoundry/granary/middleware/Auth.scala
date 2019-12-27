@@ -60,6 +60,5 @@ object Auth {
           }
         }
       }
-
     }
 }

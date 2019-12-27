@@ -31,26 +31,9 @@ object ModelEndpoints {
       )
     )
     .out(jsonBody[Model])
-    .errorOut(
-      oneOf[CrudError](
-        statusMapping(
-          StatusCode.Forbidden,
-          jsonBody[Forbidden].description("Invalid token")
-        )
-      )
-    )
 
   val list = base.get
     .out(jsonBody[List[Model]])
-    .errorOut(
-      oneOf[CrudError](
-        statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found")),
-        statusMapping(
-          StatusCode.Forbidden,
-          jsonBody[Forbidden].description("Invalid token")
-        )
-      )
-    )
 
   val delete = base.delete
     .in(path[UUID])

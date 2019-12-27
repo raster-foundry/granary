@@ -22,14 +22,14 @@ class ModelService[F[_]: Sync](
     implicit contextShift: ContextShift[F]
 ) extends GranaryService {
 
-  def createModel(model: Model.Create): F[Either[CrudError, Model]] =
+  def createModel(model: Model.Create): F[Either[Unit, Model]] =
     mkContext("createModel", Map.empty, contextBuilder) use { _ =>
       Functor[F].map(
         ModelDao.insertModel(model).transact(xa)
       )(Right(_))
     }
 
-  def listModels: Unit => F[Either[CrudError, List[Model]]] =
+  def listModels: Unit => F[Either[Unit, List[Model]]] =
     _ =>
       mkContext("listModels", Map.empty, contextBuilder) use { _ =>
         Functor[F].map(
