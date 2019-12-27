@@ -22,6 +22,9 @@ It's easier to test changes with the API with [HTTPie](https://httpie.org/) and 
 authentication with APIs as seamless as possible. All following commands assume
 you have those available.
 
+To add a token for use with HTTPie, use `./scripts/dbshell` to insert a token like this:
+`insert into tokens (id) values (uuid_generate_v4());`
+
 ### Nexus Repository Manager
 
 When developing at the Azavea office, strongly consider use of the Nexus proxy. This is automatically configured in project setup. If you are not connected to the `vpn` you will need to disable it by deleting or moving `.sbtopts`.

@@ -17,7 +17,14 @@ object PredictionEndpoints {
     .in(path[UUID])
     .out(jsonBody[Prediction])
     .errorOut(
-      oneOf(statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found"))))
+      oneOf[CrudError](
+        statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("Not found")),
+        statusMapping(
+          StatusCode.Forbidden,
+          jsonBody[Forbidden].description("Invalid token")
+        )
+      )
+    )
 
   val create = base.post
     .in(
@@ -28,7 +35,7 @@ object PredictionEndpoints {
     .out(jsonBody[Prediction])
     .errorOut(
       oneOf[CrudError](
-        statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found")),
+        statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("Not found")),
         statusMapping(
           StatusCode.BadRequest,
           jsonBody[ValidationError]
@@ -52,7 +59,11 @@ object PredictionEndpoints {
       .out(jsonBody[Prediction])
       .errorOut(
         oneOf[CrudError](
-          statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found"))
+          statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found")),
+          statusMapping(
+            StatusCode.Forbidden,
+            jsonBody[Forbidden].description("Invalid token")
+          )
         )
       )
 

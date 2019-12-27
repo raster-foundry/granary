@@ -15,7 +15,14 @@ object ModelEndpoints {
     .in(path[UUID])
     .out(jsonBody[Model])
     .errorOut(
-      oneOf(statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found"))))
+      oneOf[CrudError](
+        statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found")),
+        statusMapping(
+          StatusCode.Forbidden,
+          jsonBody[Forbidden].description("Invalid token")
+        )
+      )
+    )
 
   val create = base.post
     .in(
@@ -25,12 +32,21 @@ object ModelEndpoints {
     )
     .out(jsonBody[Model])
 
-  val list = base.get.out(jsonBody[List[Model]])
+  val list = base.get
+    .out(jsonBody[List[Model]])
 
   val delete = base.delete
     .in(path[UUID])
     .out(jsonBody[DeleteMessage])
-    .errorOut(oneOf(statusMapping(StatusCode.NotFound, jsonBody[NotFound])))
+    .errorOut(
+      oneOf[CrudError](
+        statusMapping(StatusCode.NotFound, jsonBody[NotFound]),
+        statusMapping(
+          StatusCode.Forbidden,
+          jsonBody[Forbidden].description("Invalid token")
+        )
+      )
+    )
 
   val endpoints = List(idLookup, create, list, delete)
 }

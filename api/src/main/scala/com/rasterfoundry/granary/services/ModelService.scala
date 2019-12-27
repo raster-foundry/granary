@@ -15,30 +15,39 @@ import sttp.tapir.server.http4s._
 
 import java.util.UUID
 
-class ModelService[F[_]: Sync](contextBuilder: TracingContextBuilder[F], xa: Transactor[F])(
+class ModelService[F[_]: Sync](
+    contextBuilder: TracingContextBuilder[F],
+    xa: Transactor[F]
+)(
     implicit contextShift: ContextShift[F]
 ) extends GranaryService {
 
   def createModel(model: Model.Create): F[Either[Unit, Model]] =
     mkContext("createModel", Map.empty, contextBuilder) use { _ =>
-      Functor[F].map(ModelDao.insertModel(model).transact(xa))(Right(_))
+      Functor[F].map(
+        ModelDao.insertModel(model).transact(xa)
+      )(Right(_))
     }
 
-  val listModels: Unit => F[Either[Unit, List[Model]]] =
+  def listModels: Unit => F[Either[Unit, List[Model]]] =
     _ =>
       mkContext("listModels", Map.empty, contextBuilder) use { _ =>
-        Functor[F].map(ModelDao.listModels.transact(xa))(Right(_))
+        Functor[F].map(
+          ModelDao.listModels.transact(xa)
+        )(Right(_))
     }
 
-  def getById(id: UUID): F[Either[NotFound, Model]] =
+  def getById(id: UUID): F[Either[CrudError, Model]] =
     mkContext("lookupModelById", Map("modelId" -> s"$id"), contextBuilder) use { _ =>
-      Functor[F].map(ModelDao.getModel(id).transact(xa))({
+      Functor[F].map(
+        ModelDao.getModel(id).transact(xa)
+      )({
         case Some(model) => Right(model)
         case None        => Left(NotFound())
       })
     }
 
-  def deleteById(id: UUID): F[Either[NotFound, DeleteMessage]] =
+  def deleteById(id: UUID): F[Either[CrudError, DeleteMessage]] =
     mkContext("deleteModelById", Map("modelId" -> s"$id"), contextBuilder) use { _ =>
       Functor[F].map(ModelDao.deleteModel(id).transact(xa))({
         case Some(n) => Right(DeleteMessage(n))

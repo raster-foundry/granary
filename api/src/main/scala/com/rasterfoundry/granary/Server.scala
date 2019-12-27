@@ -1,5 +1,6 @@
 package com.rasterfoundry.granary.api
 
+import com.rasterfoundry.granary.api.middleware._
 import com.rasterfoundry.granary.api.endpoints._
 import com.rasterfoundry.granary.api.services._
 import com.rasterfoundry.granary.database.{Config => DBConfig}
@@ -57,6 +58,13 @@ object ApiServer extends IOApp {
           case Right(config) => IO.pure(config)
         }
       }
+      authConfig <- Resource.liftF {
+        ConfigSource.default.at("auth").load[AuthConfig] match {
+          case Left(e) =>
+            IO.raiseError(new Exception(e.toList.map(_.toString).mkString("\n")))
+          case Right(config) => IO.pure(config)
+        }
+      }
       connectionEc <- ExecutionContexts.fixedThreadPool[IO](2)
       blocker      <- Blocker[IO]
       transactor <- HikariTransactor
@@ -78,7 +86,14 @@ object ApiServer extends IOApp {
         .httpRoutes(false, false) {
           CORS(
             Router(
-              "/api" -> (helloRoutes <+> modelRoutes <+> predictionRoutes <+> docRoutes)
+              "/api" -> (
+                Auth.customAuthMiddleware(
+                  modelRoutes <+> predictionRoutes,
+                  helloRoutes <+> docRoutes,
+                  authConfig,
+                  transactor
+                )
+              )
             )
           )
         }

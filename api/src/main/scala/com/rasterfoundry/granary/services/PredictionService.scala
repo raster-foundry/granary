@@ -32,17 +32,24 @@ class PredictionService[F[_]: Sync](
       status: Option[JobStatus]
   ): F[Either[Unit, List[Prediction]]] =
     mkContext("listPredictions", Map.empty, contextBuilder) use { _ =>
-      Functor[F].map(PredictionDao.listPredictions(modelId, status).transact(xa)) { predictions =>
+      Functor[F].map(
+        PredictionDao
+          .listPredictions(modelId, status)
+          .transact(xa)
+      ) { predictions =>
         val updatedPredictions = predictions.map(_.signS3OutputLocation(s3Client))
         Right(updatedPredictions)
       }
     }
 
-  def getById(id: UUID): F[Either[NotFound, Prediction]] =
+  def getById(id: UUID): F[Either[CrudError, Prediction]] =
     mkContext("lookupPredictionById", Map("predictionId" -> s"$id"), contextBuilder) use { _ =>
-      Functor[F].map(PredictionDao.getPrediction(id).transact(xa)) {
-        case Some(prediction) => Right(prediction.signS3OutputLocation(s3Client))
-        case None             => Left(NotFound())
+      Functor[F].map(
+        PredictionDao.getPrediction(id).transact(xa)
+      ) {
+        case Some(prediction) =>
+          Right(prediction.signS3OutputLocation(s3Client))
+        case None => Left(NotFound())
       }
     }
 
@@ -50,14 +57,15 @@ class PredictionService[F[_]: Sync](
       prediction: Prediction.Create
   ): F[Either[CrudError, Prediction]] =
     mkContext("createPrediction", Map.empty, contextBuilder) use { _ =>
-      Functor[F].map(PredictionDao.insertPrediction(prediction, dataBucket, apiHost).transact(xa))({
-        case Right(created) => Right(created)
-        case Left(PredictionDao.ModelNotFound) =>
-          Left(NotFound())
+      Functor[F].map(
+        PredictionDao
+          .insertPrediction(prediction, dataBucket, apiHost)
+          .transact(xa)
+      )({
+        case Right(created)                    => Right(created)
+        case Left(PredictionDao.ModelNotFound) => Left(NotFound())
         case Left(PredictionDao.ArgumentsValidationFailed(errs)) =>
-          Left(
-            ValidationError(errs map { _.getMessage } reduce)
-          )
+          Left(ValidationError(errs map { _.getMessage } reduce))
         case Left(PredictionDao.BatchSubmissionFailed(msg)) =>
           Left(
             ValidationError(
