@@ -28,7 +28,7 @@ object Auth {
     TokenDao
       .validateToken(token)
       .flatMap {
-        case Right(true) =>
+        case true =>
           Either.right[CrudError, Unit](()).pure[ConnectionIO]
         case _ => Either.left[CrudError, Unit](Forbidden()).pure[ConnectionIO]
       }

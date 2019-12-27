@@ -6,6 +6,8 @@ import doobie.implicits._
 import doobie.postgres.implicits._
 
 import java.util.UUID
+import cats.effect.LiftIO
+import cats.effect.IO
 
 object TokenDao {
   sealed abstract class TokenDaoError extends Throwable
@@ -19,21 +21,16 @@ object TokenDao {
 
   def validateToken(
       id: String
-  ): ConnectionIO[Either[TokenDaoError, Boolean]] =
-    try {
-      val uuid = UUID.fromString(id)
-      (
+  ): ConnectionIO[Boolean] =
+    for {
+      uuid <- LiftIO[ConnectionIO].liftIO(IO { UUID.fromString(id) })
+      exists <- (
         fr"SELECT EXISTS(" ++
           selectF ++
           Fragments.whereAnd(fr"id = $uuid") ++ fr")"
-      ).query[Boolean].unique.map { exists =>
-        exists match {
-          case true  => Right(true)
-          case false => Left(InvalidToken)
-        }
+      ).query[Boolean].unique.attempt.map {
+        case Right(true) => true
+        case _ => false
       }
-    } catch {
-      case _: IllegalArgumentException =>
-        Either.left[TokenDaoError, Boolean](InvalidToken).pure[ConnectionIO]
-    }
+    } yield exists
 }
