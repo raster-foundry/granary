@@ -36,27 +36,40 @@ object Auth {
 
   def customAuthMiddleware[F[_]: Sync](
       service: HttpRoutes[F],
+      unauthedService: HttpRoutes[F],
       authConfig: AuthConfig,
       xa: Transactor[F]
   ): HttpRoutes[F] =
     Kleisli { req: Request[F] =>
       {
         (authConfig.enabled, req.headers.get(CaseInsensitiveString("Authorization"))) match {
-          case (false, _) => service(req)
+          case (false, _) => (service <+> unauthedService)(req)
           case (_, Some(header: Header)) => {
             val token = cleanToken(header.value)
-            print(token)
             for {
               authed <- OptionT.liftF(authorized(token).transact(xa))
               resp <- authed match {
-                case Right(_) => service(req)
-                case Left(_)  => OptionT.some[F](Response[F](Status.Forbidden))
+                case Right(_) => (service <+> unauthedService)(req)
+                case Left(_) =>
+                  unauthedService(req).map(
+                    res =>
+                      res.status match {
+                        case Status.NotFound => Response[F](Status.Forbidden)
+                        case _               => res
+                    }
+                  )
               }
             } yield resp
           }
           case _ => {
             // auth enabled, no header provided
-            OptionT.some[F](Response[F](Status.Forbidden))
+            unauthedService(req).map(
+              res =>
+                res.status match {
+                  case Status.NotFound => Response[F](Status.Forbidden)
+                  case _               => res
+              }
+            )
           }
         }
       }
