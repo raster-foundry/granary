@@ -8,6 +8,7 @@ import cats.implicits._
 import com.amazonaws.services.batch.model.ClientException
 import doobie._
 import doobie.implicits._
+import doobie.implicits.legacy.instant._
 import doobie.postgres.implicits._
 import doobie.postgres.circe.jsonb.implicits._
 import io.circe.DecodingFailure
