@@ -73,7 +73,6 @@ services:
         condition: service_healthy
     links:
       - database:database.service.internal
-      - jaeger:jaeger.service.internal
     environment:
       - AWS_PROFILE
       - POSTGRES_URL=jdbc:postgresql://database.service.internal/

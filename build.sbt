@@ -13,16 +13,6 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.12.10",
   scalafmtOnCompile := true,
   scapegoatVersion in ThisBuild := Versions.ScapegoatVersion,
-  scalacOptions := Seq(
-    "-Ypartial-unification",
-    // Required by ScalaFix
-    "-Yrangepos",
-    "-language:higherKinds",
-    "-Ywarn-unused",
-    "-Ywarn-unused-import",
-    "-deprecation",
-    "-feature"
-  ),
   externalResolvers := Seq(
     DefaultMavenRepository,
     Resolver.sonatypeRepo("snapshots"),
@@ -32,9 +22,9 @@ lazy val commonSettings = Seq(
     "jitpack".at("https://jitpack.io")
   ),
   autoCompilerPlugins := true,
-  addCompilerPlugin("org.spire-math"  %% "kind-projector"     % "0.9.6"),
-  addCompilerPlugin("com.olegpy"      %% "better-monadic-for" % "0.2.4"),
-  addCompilerPlugin("org.scalamacros" % "paradise"            % "2.1.0" cross CrossVersion.full),
+  addCompilerPlugin("org.spire-math"  %% "kind-projector"     % "0.9.10"),
+  addCompilerPlugin("com.olegpy"      %% "better-monadic-for" % "0.3.1"),
+  addCompilerPlugin("org.scalamacros" % "paradise"            % "2.1.1" cross CrossVersion.full),
   addCompilerPlugin(scalafixSemanticdb)
 )
 
@@ -100,7 +90,7 @@ lazy val database = (project in file("database"))
 lazy val apiSettings = commonSettings ++ Seq(
   name := "api",
   fork in run := true,
-  test in assembly := false,
+  test in assembly := {},
   assemblyJarName in assembly := "granary-api-assembly.jar",
   assemblyMergeStrategy in assembly := {
     case "reference.conf"                       => MergeStrategy.concat
