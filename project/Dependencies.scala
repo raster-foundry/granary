@@ -16,7 +16,7 @@ object Versions {
   val OpenTracingVersion     = "0.1.0"
   val PureConfig             = "0.12.2"
   val ScapegoatVersion       = "1.3.8"
-  val ScalacheckVersion      = "1.14.2"
+  val ScalacheckVersion      = "1.14.3"
   val Specs2Version          = "4.8.1"
   val TapirVersion           = "0.12.12"
 }
