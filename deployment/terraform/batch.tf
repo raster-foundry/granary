@@ -12,7 +12,7 @@ resource "aws_launch_template" "batch_gpu_container_instance" {
     device_name = "/dev/xvda"
 
     ebs {
-      volume_size = 64
+      volume_size = var.batch_gpu_container_instance_volume_size
       volume_type = "gp2"
     }
   }

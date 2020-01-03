@@ -112,6 +112,11 @@ variable "image_tag" {
   type = string
 }
 
+variable "batch_gpu_container_instance_volume_size" {
+  type    = number
+  default = 30
+}
+
 variable "batch_gpu_ce_min_vcpus" {
   type = number
 }
