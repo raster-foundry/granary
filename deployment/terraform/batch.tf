@@ -1,6 +1,12 @@
 #
 # Batch resources
 #
+# Pull the image ID for the latest Amazon ECS GPU-optimized AMI
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#w520aac22c15c31b5
+data "aws_ssm_parameter" batch_gpu_container_instance_image_id {
+  name = "/aws/service/ecs/optimized-ami/amazon-linux-2/gpu/recommended/image_id"
+}
+
 resource "aws_launch_template" "batch_gpu_container_instance" {
   block_device_mappings {
     device_name = "/dev/xvda"
@@ -10,12 +16,8 @@ resource "aws_launch_template" "batch_gpu_container_instance" {
       volume_type = "gp2"
     }
   }
-}
 
-# Pull the AMI ID for the latest Amazon ECS GPU-optimized AMI
-# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html#w520aac22c15c31b5
-data "aws_ssm_parameter" batch_gpu_ami_id {
-  name = "/aws/service/ecs/optimized-ami/amazon-linux-2/gpu/recommended/image_id"
+  image_id = data.aws_ssm_parameter.batch_gpu_container_instance_image_id.value
 }
 
 resource "aws_batch_compute_environment" "gpu" {
@@ -30,7 +32,6 @@ resource "aws_batch_compute_environment" "gpu" {
     type           = "SPOT"
     bid_percentage = var.batch_gpu_ce_spot_fleet_bid_precentage
     ec2_key_pair   = var.aws_key_name
-    image_id       = data.aws_ssm_parameter.batch_gpu_ami_id.value
 
     min_vcpus     = var.batch_gpu_ce_min_vcpus
     desired_vcpus = var.batch_gpu_ce_desired_vcpus
