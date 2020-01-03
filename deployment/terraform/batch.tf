@@ -69,8 +69,8 @@ resource "aws_batch_job_queue" "gpu" {
 }
 
 resource "aws_batch_job_definition" "test_gpu" {
-  name = "test_gpu_job_definition"
+  name = "job${var.project}TestGPU"
   type = "container"
 
-  container_properties = file("job-definitions/test-gpu.json")
+  container_properties = templatefile("${path.module}/job-definitions/test-gpu.json.tmpl", {})
 }
