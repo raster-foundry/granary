@@ -18,7 +18,7 @@ object AWSBatch {
 
   implicit def unsafeLogger: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLogger[IO]
 
-  def submitJobRequest[F[_]: LiftIO: Sync](
+  def submitJobRequest[F[_]: LiftIO](
       jobDefinition: String,
       jobQueueName: String,
       parameters: Json,
