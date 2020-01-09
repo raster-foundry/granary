@@ -57,11 +57,12 @@ object AWSBatch {
            }
          } else
            Logger[IO].debug(
-             s"Not running job because in development. Parameters to be sent: ${jobRequest.getParameters}")).attempt
+             s"Not running job because in development. Parameters to be sent: ${jobRequest.getParameters}"
+           )).attempt
       }
     } map {
-      case Left(e)         => Left(e)
-      case Right(Left(e))  => Left(e)
+      case Left(e)        => Left(e)
+      case Right(Left(e)) => Left(e)
       case Right(Right(_)) =>
         Right(())
     }

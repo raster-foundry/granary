@@ -116,9 +116,14 @@ object PredictionDao {
         .submitJobRequest[ConnectionIO](
           model.jobDefinition,
           model.jobQueue,
-          prediction.arguments.deepMerge(prediction.webhookId map { webhookId =>
-            Map("WEBHOOK_URL" -> s"${apiHost}/predictions/${prediction.id}/results/${webhookId}").asJson
-          } getOrElse { ().asJson }),
+          prediction.arguments
+            .deepMerge(
+              prediction.webhookId map { webhookId =>
+                Map(
+                  "WEBHOOK_URL" -> s"${apiHost}/predictions/${prediction.id}/results/${webhookId}"
+                ).asJson
+              } getOrElse { ().asJson }
+            ),
           batchSafeJobName(s"${model.name}-${prediction.id}"),
           dataBucket
         )
