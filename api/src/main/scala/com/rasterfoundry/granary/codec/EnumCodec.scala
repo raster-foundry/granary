@@ -7,6 +7,7 @@ import sttp.tapir._
 import scala.util.{Failure, Success, Try}
 
 trait EnumCodec {
+
   private def decJobStatus(s: String): DecodeResult[JobStatus] =
     Try { JobStatus.fromString(s) } match {
       case Success(status) => DecodeResult.Value(status)

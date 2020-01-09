@@ -35,7 +35,7 @@ class ModelService[F[_]: Sync](
         Functor[F].map(
           ModelDao.listModels.transact(xa)
         )(Right(_))
-    }
+      }
 
   def getById(id: UUID): F[Either[CrudError, Model]] =
     mkContext("lookupModelById", Map("modelId" -> s"$id"), contextBuilder) use { _ =>

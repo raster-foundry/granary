@@ -51,11 +51,10 @@ object Auth {
               resp <- authed match {
                 case Right(_) => (service <+> unauthedService)(req)
                 case Left(_) =>
-                  unauthedService(req).map(
-                    res =>
-                      res.status match {
-                        case Status.NotFound => Response[F](Status.Forbidden)
-                        case _               => res
+                  unauthedService(req).map(res =>
+                    res.status match {
+                      case Status.NotFound => Response[F](Status.Forbidden)
+                      case _               => res
                     }
                   )
               }
@@ -63,11 +62,10 @@ object Auth {
           }
           case _ => {
             // auth enabled, no header provided
-            unauthedService(req).map(
-              res =>
-                res.status match {
-                  case Status.NotFound => Response[F](Status.Forbidden)
-                  case _               => res
+            unauthedService(req).map(res =>
+              res.status match {
+                case Status.NotFound => Response[F](Status.Forbidden)
+                case _               => res
               }
             )
           }
