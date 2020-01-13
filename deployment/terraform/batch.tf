@@ -29,9 +29,10 @@ resource "aws_batch_compute_environment" "gpu" {
   service_role                    = aws_iam_role.container_instance_batch.arn
 
   compute_resources {
-    type           = "SPOT"
-    bid_percentage = var.batch_gpu_ce_spot_fleet_bid_precentage
-    ec2_key_pair   = var.aws_key_name
+    type                = "SPOT"
+    allocation_strategy = "SPOT_CAPACITY_OPTIMIZED"
+    bid_percentage      = var.batch_gpu_ce_spot_fleet_bid_precentage
+    ec2_key_pair        = var.aws_key_name
 
     min_vcpus     = var.batch_gpu_ce_min_vcpus
     desired_vcpus = var.batch_gpu_ce_desired_vcpus
