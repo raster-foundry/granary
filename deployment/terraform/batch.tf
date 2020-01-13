@@ -23,10 +23,10 @@ resource "aws_launch_template" "batch_gpu_container_instance" {
 resource "aws_batch_compute_environment" "gpu" {
   depends_on = [aws_iam_role_policy_attachment.batch_policy]
 
-  compute_environment_name = "batch${var.project}GPUComputeEnvironment"
-  type                     = "MANAGED"
-  state                    = "ENABLED"
-  service_role             = aws_iam_role.container_instance_batch.arn
+  compute_environment_name_prefix = "batch${var.project}GPUComputeEnvironment"
+  type                            = "MANAGED"
+  state                           = "ENABLED"
+  service_role                    = aws_iam_role.container_instance_batch.arn
 
   compute_resources {
     type           = "SPOT"
@@ -44,6 +44,7 @@ resource "aws_batch_compute_environment" "gpu" {
 
     launch_template {
       launch_template_id = aws_launch_template.batch_gpu_container_instance.id
+      version            = aws_launch_template.batch_gpu_container_instance.latest_version
     }
 
     security_group_ids = [
@@ -58,6 +59,10 @@ resource "aws_batch_compute_environment" "gpu" {
       Project            = var.project
       Environment        = var.environment
     }
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
