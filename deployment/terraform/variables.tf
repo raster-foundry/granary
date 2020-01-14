@@ -144,8 +144,10 @@ variable "aws_ecs_task_execution_role_policy_arn" {
 
 variable "aws_spot_fleet_service_role_policy_arn" {
   default = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
+  type    = string
 }
 
 variable "aws_batch_service_role_policy_arn" {
   default = "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
+  type    = string
 }
