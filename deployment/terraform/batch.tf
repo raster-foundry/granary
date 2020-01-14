@@ -16,8 +16,6 @@ resource "aws_launch_template" "batch_gpu_container_instance" {
       volume_type = "gp2"
     }
   }
-
-  image_id = data.aws_ssm_parameter.batch_gpu_container_instance_image_id.value
 }
 
 resource "aws_batch_compute_environment" "gpu" {
@@ -33,6 +31,7 @@ resource "aws_batch_compute_environment" "gpu" {
     allocation_strategy = "SPOT_CAPACITY_OPTIMIZED"
     bid_percentage      = var.batch_gpu_ce_spot_fleet_bid_precentage
     ec2_key_pair        = var.aws_key_name
+    image_id            = data.aws_ssm_parameter.batch_gpu_container_instance_image_id.value
 
     min_vcpus     = var.batch_gpu_ce_min_vcpus
     desired_vcpus = var.batch_gpu_ce_desired_vcpus
