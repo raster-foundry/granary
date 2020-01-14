@@ -13,6 +13,10 @@ variable "aws_region" {
   type    = string
 }
 
+variable "aws_key_name" {
+  type = string
+}
+
 variable "alb_ingress_cidr_blocks" {
   type    = list(string)
   default = ["0.0.0.0/0"]
@@ -108,7 +112,40 @@ variable "image_tag" {
   type = string
 }
 
+variable "batch_gpu_container_instance_volume_size" {
+  type    = number
+  default = 30
+}
+
+variable "batch_gpu_ce_min_vcpus" {
+  type = number
+}
+
+variable "batch_gpu_ce_desired_vcpus" {
+  type = number
+}
+
+variable "batch_gpu_ce_max_vcpus" {
+  type = number
+}
+
+variable "batch_gpu_ce_instance_types" {
+  type = list(string)
+}
+
+variable "batch_gpu_ce_spot_fleet_bid_precentage" {
+  type = number
+}
+
 variable "aws_ecs_task_execution_role_policy_arn" {
   default = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
   type    = string
+}
+
+variable "aws_spot_fleet_service_role_policy_arn" {
+  default = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
+}
+
+variable "aws_batch_service_role_policy_arn" {
+  default = "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
 }
