@@ -76,24 +76,25 @@ object ApiServer extends IOApp {
       docRoutes   = new SwaggerHttp4s(docs.toYaml).routes
       helloRoutes = new HelloService(tracingContextBuilder).routes
       modelRoutes = new ModelService(tracingContextBuilder, transactor).routes
-      predictionRoutes = new PredictionService(
+      predictionService = new PredictionService(
         tracingContextBuilder,
         transactor,
         s3Config.dataBucket,
         metaConfig.apiHost
-      ).routes
+      )
+      predictionRoutes = predictionService.routes
       router = RequestResponseLogger
         .httpRoutes(false, false) {
           CORS(
             Router(
-              "/api" -> (
+              "/api" -> ((
                 Auth.customAuthMiddleware(
                   modelRoutes <+> predictionRoutes,
                   helloRoutes <+> docRoutes,
                   authConfig,
                   transactor
                 )
-              )
+              ) <+> predictionService.addResultsRoutes)
             )
           )
         }

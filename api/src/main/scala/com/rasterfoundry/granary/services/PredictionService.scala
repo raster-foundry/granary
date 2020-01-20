@@ -98,11 +98,13 @@ class PredictionService[F[_]: Sync](
       })
     }
 
-  val list       = PredictionEndpoints.list.toRoutes(Function.tupled(listPredictions))
-  val detail     = PredictionEndpoints.idLookup.toRoutes(getById)
-  val create     = PredictionEndpoints.create.toRoutes(createPrediction)
-  val addResults = PredictionEndpoints.addResults.toRoutes(Function.tupled(addPredictionResults))
+  val list   = PredictionEndpoints.list.toRoutes(Function.tupled(listPredictions))
+  val detail = PredictionEndpoints.idLookup.toRoutes(getById)
+  val create = PredictionEndpoints.create.toRoutes(createPrediction)
 
-  val routes: HttpRoutes[F] = detail <+> create <+> list <+> addResults
+  val addResultsRoutes =
+    PredictionEndpoints.addResults.toRoutes(Function.tupled(addPredictionResults))
+
+  val routes: HttpRoutes[F] = detail <+> create <+> list
 
 }
