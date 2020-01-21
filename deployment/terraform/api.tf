@@ -122,6 +122,7 @@ resource "aws_ecs_task_definition" "api" {
 
     granary_log_level    = var.api_log_level
     granary_tracing_sink = var.api_tracing_sink
+    granary_auth_enabled = var.granary_auth_enabled
 
     project = var.project
     aws_region = var.aws_region

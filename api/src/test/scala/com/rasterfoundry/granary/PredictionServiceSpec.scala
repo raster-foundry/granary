@@ -55,7 +55,7 @@ class PredictionServiceSpec
       prediction: Prediction,
       webhookId: UUID
   ): OptionT[IO, Response[IO]] =
-    predictionService.routes.run(
+    predictionService.addResultsRoutes.run(
       Request[IO](
         method = Method.POST,
         uri = Uri

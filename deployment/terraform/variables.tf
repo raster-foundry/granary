@@ -151,3 +151,8 @@ variable "aws_batch_service_role_policy_arn" {
   default = "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
   type    = string
 }
+
+variable "granary_auth_enabled" {
+  default = "true"
+  type = string
+}
