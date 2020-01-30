@@ -32,5 +32,6 @@ services:
       - GIT_COMMIT=${GIT_COMMIT:-latest}
       - GRANARY_DEBUG=1
       - GRANARY_SETTINGS_BUCKET=${GRANARY_SETTINGS_BUCKET:-rasterfoundry-production-config-us-east-1}
+      - GRANARY_SETTINGS_BUCKET_KEY=${GRANARY_SETTINGS_BUCKET_KEY:-terraform/granary}
     working_dir: /usr/local/src
     entrypoint: bash

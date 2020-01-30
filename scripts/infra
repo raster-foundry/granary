@@ -33,7 +33,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     if [[ -n "${GRANARY_SETTINGS_BUCKET}" ]]; then
         pushd "${TERRAFORM_DIR}"
 
-        aws s3 cp "s3://${GRANARY_SETTINGS_BUCKET}/terraform/granary/terraform.tfvars" "${GRANARY_SETTINGS_BUCKET}.tfvars"
+        aws s3 cp "s3://${GRANARY_SETTINGS_BUCKET}/${GRANARY_SETTINGS_BUCKET_KEY}/terraform.tfvars" "${GRANARY_SETTINGS_BUCKET}.tfvars"
 
         case "${1}" in
         plan)
@@ -41,7 +41,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
             rm -rf .terraform terraform.tfstate*
             terraform init \
                 -backend-config="bucket=${GRANARY_SETTINGS_BUCKET}" \
-                -backend-config="key=terraform/granary/state"
+                -backend-config="key=${GRANARY_SETTINGS_BUCKET_KEY}/state"
 
             terraform plan \
                 -var="image_tag=${GIT_COMMIT}" \
