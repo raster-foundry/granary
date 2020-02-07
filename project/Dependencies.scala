@@ -4,12 +4,12 @@ import sbt._
 
 // Versions
 object Versions {
-  val awsSDK                 = "1.11.707"
+  val awsSDK                 = "1.11.717"
   val CatsScalacheckVersion  = "0.2.0"
   val CirceVersion           = "0.12.3"
   val CirceJsonSchemaVersion = "0.1.0"
   val DoobieVersion          = "0.8.8"
-  val Flyway                 = "6.1.4"
+  val Flyway                 = "6.2.2"
   val Http4sVersion          = "0.21.0-M6"
   val LogbackVersion         = "1.2.3"
   val Log4CatsVersion        = "1.0.1"
@@ -18,7 +18,7 @@ object Versions {
   val ScapegoatVersion       = "1.3.11"
   val ScalacheckVersion      = "1.14.3"
   val Specs2Version          = "4.8.3"
-  val TapirVersion           = "0.12.15"
+  val TapirVersion           = "0.12.20"
 }
 
 object Dependencies {
