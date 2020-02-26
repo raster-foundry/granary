@@ -1,10 +1,9 @@
 {
   "docs": {
-    "Docusaurus": ["doc1"],
-    "First Category": ["doc2"],
-    "Second Category": ["doc3"]
-  },
-  "docs-other": {
-    "First Category": ["doc4", "doc5"]
+      "Overview": ["introduction"],
+      "ADRs": [
+	  "architecture/adr-0001-app-setup-and-goals",
+	  "architecture/adr-0002-api-documentation"
+      ]
   }
 }

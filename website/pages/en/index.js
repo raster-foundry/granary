@@ -108,12 +108,12 @@ class Index extends React.Component {
         {[
           {
             content:
-              "Designed to be simple to use while easy to extend, you can choose how to get started. Use " +
-              "our published `docker` images to get a server running and deployed quickly or hack on the " +
-              "[source](https://github.com/azavea/franklin/) and use it directly in your own application.",
+              "Granary associates prediction runs with your models and keeps track " +
+              "of where their results are stored. With signed urls, Granary makes " +
+              "serving predictions stored on S3 to client applications easy.",
             image: `${baseUrl}img/franklin-startup.png`,
             imageAlign: "left",
-            title: "Create a Web Service with a Single Command"
+            title: "Keep track of your predictions and their results"
           }
         ]}
       </Block>
@@ -124,12 +124,13 @@ class Index extends React.Component {
         {[
           {
             content:
-              "Franklin is built on top of powerful libraries like [**GeoTrellis**]() and **PostGIS**. With these libraries your " +
-              "catalogs and features can be exposed as vector and raster tile services. Combined with the API, Franklin allows you to build " +
-              "quickly so you can spend more time on what's really important: the data",
+              "Granary puts some guardrails in front of your interaction with Batch " +
+              "so you don't fall in to common mistakes, like mis-formatted arguments," +
+              "missing arguments, and bad string values for important AWS resources.",
             image: `${baseUrl}img/annotation-tool.png`,
             imageAlign: "right",
-            title: "Visualize Your Catalog and Features"
+            title:
+              "Bring some sanity to your day-to-day modeling work in AWS Batch"
           }
         ]}
       </Block>
@@ -140,12 +141,13 @@ class Index extends React.Component {
         {[
           {
             content:
-              "Libraries like [**PySTAC**](https://pystac.readthedocs.io/en/latest/) allow you to create and manipulate static STAC datasets. **Franklin** " +
-              "complements these libraries by allowing you to create a dynamic STAC/OGC API Features web service from " +
-              "these those static datasets.",
+              "Create a model with AWS resources configured once, then " +
+              "never worry about remembering the job definition or job queue names " +
+              "again for the rest of your life.",
             image: `${baseUrl}img/undraw_server_q2pb.svg`,
             imageAlign: "right",
-            title: "Import Existing Static STAC Catalogs"
+            title:
+              "Run models in AWS Batch without worrying about infrastructure more than once"
           }
         ]}
       </Block>

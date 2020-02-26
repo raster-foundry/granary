@@ -22,9 +22,9 @@ const users = [
 
 const siteConfig = {
   title: "Granary", // Title for your website.
-  tagline: "A configurable job runner for geospatial machine learning",
+  tagline: "A job runner for geospatial machine learning",
   url: "https://rasterfoundry.github.io/granary",
-  baseUrl: "/docs", // Base URL for your project */
+  baseUrl: "/docs/", // Base URL for your project */
   // For github.io type URLs, you would set the url and baseUrl like:
   //   url: 'https://facebook.github.io',
   //   baseUrl: '/test-site/',
@@ -37,7 +37,7 @@ const siteConfig = {
   //   organizationName: 'JoelMarcey'
 
   // For no header links in the top nav bar -> headerLinks: [],
-  headerLinks: [{ doc: "readme", label: "Docs" }],
+  headerLinks: [{ doc: "introduction", label: "Getting started" }],
 
   // If you have users set above, you add it here:
   users,

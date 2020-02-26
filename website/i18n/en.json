@@ -3,25 +3,27 @@
   "localized-strings": {
     "next": "Next",
     "previous": "Previous",
-    "tagline": "A configurable job runner for geospatial machine learning",
+    "tagline": "A job runner for geospatial machine learning",
     "docs": {
       "architecture/adr-0001-app-setup-and-goals": {
-        "title": "architecture/adr-0001-app-setup-and-goals"
+        "title": "1 - Application Setup and Goals"
       },
       "architecture/adr-0002-api-documentation": {
-        "title": "architecture/adr-0002-api-documentation"
+        "title": "2 - API Documentation"
+      },
+      "introduction": {
+        "title": "introduction"
       },
       "readme": {
         "title": "readme"
       }
     },
     "links": {
-      "Docs": "Docs"
+      "Getting started": "Getting started"
     },
     "categories": {
-      "Docusaurus": "Docusaurus",
-      "First Category": "First Category",
-      "Second Category": "Second Category"
+      "Overview": "Overview",
+      "ADRs": "ADRs"
     }
   },
   "pages-strings": {
