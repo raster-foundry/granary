@@ -125,3 +125,8 @@ lazy val api = (project in file("api"))
   .settings({
     libraryDependencies ++= apiDependencies
   })
+
+lazy val docs = project       // new documentation project
+  .in(file("granary-docs")) // important: it must not be docs/
+  .dependsOn(datamodel)
+  .enablePlugins(MdocPlugin, DocusaurusPlugin)

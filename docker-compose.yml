@@ -79,7 +79,7 @@ services:
       - POSTGRES_NAME=granary
       - POSTGRES_USER=granary
       - POSTGRES_PASSWORD=granary
-      - COURSIER_CACHE=/root/.coursier
+      - COURSIER_CACHE=$HOME/.coursier
     volumes:
       - ./:/opt/granary
       - $HOME/.sbt:/root/.sbt
