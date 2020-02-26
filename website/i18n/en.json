@@ -11,8 +11,11 @@
       "architecture/adr-0002-api-documentation": {
         "title": "2 - API Documentation"
       },
+      "development": {
+        "title": "Development"
+      },
       "introduction": {
-        "title": "introduction"
+        "title": "Introduction"
       },
       "readme": {
         "title": "readme"
