@@ -68,7 +68,7 @@ and an argument validator.</p>
 <span class="hljs-keyword">import</span> java.util.<span class="hljs-type">UUID</span>
 
 <span class="hljs-keyword">val</span> modelID = <span class="hljs-type">UUID</span>.randomUUID
-<span class="hljs-comment">// modelID: UUID = 8ab5b946-e2d4-4283-94e0-61d3ea7ff9f7</span>
+<span class="hljs-comment">// modelID: UUID = 0186f043-9085-4e92-93df-91054bf3e85a</span>
 <span class="hljs-keyword">val</span> model = <span class="hljs-type">Model</span>(
   modelID, <span class="hljs-comment">// a model ID</span>
   <span class="hljs-string">"A descriptive model name"</span>,
@@ -77,7 +77,7 @@ and an argument validator.</p>
   <span class="hljs-string">"veryExpensiveOnDemandQueue"</span> <span class="hljs-comment">// an AWS Batch job queue</span>
 )
 <span class="hljs-comment">// model: Model = Model(</span>
-<span class="hljs-comment">//   8ab5b946-e2d4-4283-94e0-61d3ea7ff9f7,</span>
+<span class="hljs-comment">//   0186f043-9085-4e92-93df-91054bf3e85a,</span>
 <span class="hljs-comment">//   "A descriptive model name",</span>
 <span class="hljs-comment">//   Validator(JObject(object[])),</span>
 <span class="hljs-comment">//   "perfectAccuracyModel:1",</span>
@@ -146,14 +146,14 @@ to generate schemas from examples, then edit those to match your needs.</p>
 <p>A <code>Prediction</code> is a single run of a model with specific inputs. Predictions are
 created when you <code>POST</code> a model id and arguments to <code>/api/predictions</code>.</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">val</span> modelId = <span class="hljs-type">UUID</span>.randomUUID
-<span class="hljs-comment">// modelId: UUID = cda31302-600a-4aa2-acf7-3d67771c05e6</span>
+<span class="hljs-comment">// modelId: UUID = d1b15f15-30e1-48ca-8187-0015776775ad</span>
 
 <span class="hljs-keyword">val</span> prediction = <span class="hljs-type">Prediction</span>.<span class="hljs-type">Create</span>(
   modelId, <span class="hljs-comment">// the modelId to associate with this prediction</span>
   ().asJson <span class="hljs-comment">// the arguments to pass to the model</span>
 )
 <span class="hljs-comment">// prediction: Prediction.Create = Create(</span>
-<span class="hljs-comment">//   cda31302-600a-4aa2-acf7-3d67771c05e6,</span>
+<span class="hljs-comment">//   d1b15f15-30e1-48ca-8187-0015776775ad,</span>
 <span class="hljs-comment">//   JObject(object[])</span>
 <span class="hljs-comment">// )</span>
 </code></pre>
