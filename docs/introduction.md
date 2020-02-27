@@ -118,9 +118,9 @@ will be at `/api/predictions/{predictionId}/results/{webhookId}` and accepts two
 kinds of messages:
 
 ```scala mdoc
-PredictionFailure("everything went wrong").asJson
+PredictionFailure("everything went wrong").asJson.noSpaces
 
-PredictionSuccess("s3://where/the/results/live.json").asJson
+PredictionSuccess("s3://where/the/results/live.json").asJson.noSpaces
 ```
 
 If your model has retrying logic, it's your responsibility to make sure that it
