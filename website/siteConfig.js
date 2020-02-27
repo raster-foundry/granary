@@ -23,8 +23,8 @@ const users = [
 const siteConfig = {
   title: "Granary", // Title for your website.
   tagline: "A job runner for geospatial machine learning",
-  url: "https://rasterfoundry.github.io/granary",
-  baseUrl: "/docs/", // Base URL for your project */
+  url: "https://rasterfoundry.github.io",
+  baseUrl: "/granary/", // Base URL for your project */
   // For github.io type URLs, you would set the url and baseUrl like:
   //   url: 'https://facebook.github.io',
   //   baseUrl: '/test-site/',
