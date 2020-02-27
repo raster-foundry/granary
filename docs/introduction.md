@@ -7,7 +7,9 @@ id: introduction
 
 Granary is a job runner for cloud-based geospatial machine learning.
 Its goal is to simplify running models and to track and serve
-the results of predictions.
+the results of predictions. It puts a REST API between you and AWS Batch
+to simplify interactions that otherwise involve repeatedly checking AWS SDK
+documentation.
 
 ## What's a `Model`?
 
@@ -21,19 +23,20 @@ import io.circe.syntax._
 
 import java.util.UUID
 
-val modelID = UUID.randomUUID
-val model = Model(
-  modelID, // a model ID
+val model = Model.Create(
   "A descriptive model name",
   Validator(().asJson), // a Validator -- more on this below
   "perfectAccuracyModel:1", // an AWS Batch job definition
   "veryExpensiveOnDemandQueue" // an AWS Batch job queue
 )
+// What you'll POST to the API to create a model
+model.asJson.spaces2
 ```
 
 `model`s in Granary correspond to containers that have been configured to
 run via AWS Batch job definitions. The major difference between using Granary
-and hand rolling `SubmitJob` requests is the `Validator`.
+and hand rolling `SubmitJob` requests is the `Validator`. To create a model,
+post JSON like what's shown above to `/api/models`.
 
 ## What's a `Validator`?
 
@@ -108,6 +111,9 @@ val prediction = Prediction.Create(
   modelId, // the modelId to associate with this prediction
   ().asJson // the arguments to pass to the model
 )
+
+// What you'll POST to the API to create a prediction
+prediction.asJson.spaces2
 ```
 
 The model's JSON schema is used to validate the prediction's arguments.
@@ -118,9 +124,11 @@ will be at `/api/predictions/{predictionId}/results/{webhookId}` and accepts two
 kinds of messages:
 
 ```scala mdoc
-PredictionFailure("everything went wrong").asJson.noSpaces
+// JSON of what you should send to the webhook if the prediction failed
+PredictionFailure("everything went wrong").asJson.spaces2
 
-PredictionSuccess("s3://where/the/results/live.json").asJson.noSpaces
+// JSON of what you should send to the webhook if the prediction succeeded
+PredictionSuccess("s3://where/the/results/live.json").asJson.spaces2
 ```
 
 If your model has retrying logic, it's your responsibility to make sure that it
