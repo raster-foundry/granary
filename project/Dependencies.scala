@@ -14,7 +14,7 @@ object Versions {
   val LogbackVersion         = "1.2.3"
   val Log4CatsVersion        = "1.0.1"
   val OpenTracingVersion     = "0.1.0"
-  val PureConfig             = "0.12.2"
+  val PureConfig             = "0.12.3"
   val ScapegoatVersion       = "1.3.11"
   val ScalacheckVersion      = "1.14.3"
   val Specs2Version          = "4.8.3"
