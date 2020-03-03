@@ -37,7 +37,11 @@ documentation compile. You can ignore them.
 ## What's a `Model`?
 
 A model is a bundle of a human-readable name, some AWS Batch configuration,
-and an argument validator.
+and an argument validator. `model`s in Granary correspond to containers that
+have been configured to run via AWS Batch job definitions. The major difference
+between using Granary and hand rolling `SubmitJob` requests is the `Validator`.
+
+To create a model, `POST` JSON like this to `/api/models`:
 
 ```scala mdoc
 Model.Create(
@@ -48,12 +52,7 @@ Model.Create(
 ).asJson.spaces2
 ```
 
-`model`s in Granary correspond to containers that have been configured to
-run via AWS Batch job definitions. The major difference between using Granary
-and hand rolling `SubmitJob` requests is the `Validator`. To create a model,
-post JSON like what's shown above to `/api/models`.
-
-If that's succesful, you'll get a fully saturated model back from the API:
+If that's successful, here's what the response will look like:
 
 ```scala mdoc
 Model(
@@ -67,11 +66,12 @@ Model(
 
 ## What's a `Validator`?
 
-A `Validator` uses [JSON Schema](http://json-schema.org/) Draft 7 to ensure that when you try to run your job,
-you have the correct arguments. For example, in the example above the
-`Validator` is the empty json object `{}`. This means that providing any arguments
-will fail. That model is not a very useful model. We could instead require a green
-band, a red band, and a GeoTIFF location with the following JSON schema:
+A `Validator` uses [JSON Schema](http://json-schema.org/) Draft 7 to ensure that
+when you try to run your job, you have the correct arguments. For example, in the
+example above the `Validator` is the empty json object `{}`. This means that
+providing any arguments will fail. That model is not a very useful model. We could
+instead require a green band, a red band, and a GeoTIFF location with the following
+JSON schema:
 
 ```json
 {
@@ -118,8 +118,8 @@ band, a red band, and a GeoTIFF location with the following JSON schema:
 }
 ```
 
-With this JSON schema attached to our model, it's impossible to submit
-improperly formatted arguments.
+With this JSON schema attached to our model, it's impossible to create model runs
+with improper or improperly formatted arguments.
 
 Over time, your model's input requirements may change. In that case it makes
 sense to make a new model with a different validator. Since writing JSON schema
@@ -141,7 +141,7 @@ Prediction.Create(
 The model's JSON schema is used to validate the prediction's arguments.
 If validation passes, Granary will insert a record for this prediction and submit
 a job to AWS Batch with the resources configured on the model. If that was successful,
-you'll receive a response that looks like:
+you'll receive a response that looks like this:
 
 ```scala mdoc
 Prediction(
@@ -157,8 +157,8 @@ Prediction(
 ```
 
 The `webhookId` in the response points to a single-use webhook for updating the prediction.
-This webhook can be accessed at `/api/predictions/{predictionId}/results/{webhookId}` and accepts two
-kinds of messages:
+This webhook can be accessed at `/api/predictions/{predictionId}/results/{webhookId}` and
+accepts two kinds of messages:
 
 ```scala mdoc
 // JSON of the message to send if the prediction failed
@@ -168,15 +168,15 @@ PredictionFailure("everything went wrong").asJson.spaces2
 PredictionSuccess("s3://where/the/results/live.json").asJson.spaces2
 ```
 
-In the ideal case, the model running in a container in batch submits results when it
+In the ideal case, the container for running the model in batch will submit results when it
 is done or fails. This strategy will not cover cases in which the model cannot perform
 error-handling though, for instance, `OutOfMemory` errors and cases in which a spot
 instance gets cycled out from under your running model. Because the space of things that
 can go wrong is nearly infinite, Granary itself doesn't provide any facilities for handling
-those sorts of errors or retries. Additionally, if your model has retrying logic, it's
-your responsibility to make sure that it doesn't `POST` to the results webhook until it
-has exhausted its retries, since the first `POST` to the webhook will make it inaccessible
-for the rest of time.
+those sorts of errors or for retrying predictions. Additionally, if your model has retrying
+logic, it's your responsibility to make sure that it doesn't `POST` to the results webhook
+until it has exhausted its retries, since the first `POST` to the webhook will make it
+inaccessible for the rest of time.
 
 # Can I just see some API docs?
 
