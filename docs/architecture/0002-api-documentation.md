@@ -1,3 +1,8 @@
+---
+id: adr-0002-api-documentation
+title: 2 - API Documentation
+---
+
 # Context
 
 Granary will be a standalone deployable open source application. Users' primary

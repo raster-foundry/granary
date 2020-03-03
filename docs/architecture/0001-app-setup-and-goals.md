@@ -1,3 +1,8 @@
+---
+id: adr-0001-app-setup-and-goals
+title: 1 - Application Setup and Goals
+---
+
 # Context
 
 We need to create an application without a dependency on Raster Foundry that has

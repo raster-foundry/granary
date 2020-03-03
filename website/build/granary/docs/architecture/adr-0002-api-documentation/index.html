@@ -1,0 +1,207 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>2 - API Documentation · Granary</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="# Context"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="2 - API Documentation · Granary"/><meta property="og:type" content="website"/><meta property="og:url" content="https://rasterfoundry.github.io/granary/"/><meta property="og:description" content="# Context"/><meta property="og:image" content="https://rasterfoundry.github.io/granary/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://rasterfoundry.github.io/granary/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/granary/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/granary/js/scrollSpy.js"></script><link rel="stylesheet" href="/granary/css/main.css"/><script src="/granary/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/granary/"><img class="logo" src="/granary/img/favicon.ico" alt="Granary"/><h2 class="headerTitleWithLogo">Granary</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/granary/docs/introduction" target="_self">Getting started</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>ADRs</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Overview</h3><ul class=""><li class="navListItem"><a class="navItem" href="/granary/docs/introduction">Introduction</a></li><li class="navListItem"><a class="navItem" href="/granary/docs/development">Development</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">ADRs</h3><ul class=""><li class="navListItem"><a class="navItem" href="/granary/docs/architecture/adr-0001-app-setup-and-goals">1 - Application Setup and Goals</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/granary/docs/architecture/adr-0002-api-documentation">2 - API Documentation</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">2 - API Documentation</h1></header><article><div><span><h1><a class="anchor" aria-hidden="true" id="context"></a><a href="#context" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Context</h1>
+<p>Granary will be a standalone deployable open source application. Users' primary
+way of interacting with Granary will be through its REST API, rather than
+through a UI, at least for the foreseeable future. This focus puts a larger
+burden than usual on the quality of our API documentation.</p>
+<p>We'd like to evaluate different ways to keep API documentation up-to-date. For
+each strategy, we want to know:</p>
+<ul>
+<li>What are the general pros and cons?</li>
+<li>How do we find out that our docs have drifted from the API?</li>
+<li>How can we document different versions of the API at the same time?</li>
+</ul>
+<h2><a class="anchor" aria-hidden="true" id="the-contenders"></a><a href="#the-contenders" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>The contenders</h2>
+<p>I evaluated three software solutions that rely on code/documentation generation
+and also a process solution. The three libraries I considered were
+<a href="https://github.com/http4s/rho"><code>rho</code></a>,
+<a href="https://github.com/softwaremill/tapir"><code>tapir</code></a>, and
+<a href="https://github.com/twilio/guardrail"><code>guardrail</code></a>. For the software solutions,
+I created a small repository <a href="https://github.com/jisantuc/scala-api-doc/">here</a>.</p>
+<h2><a class="anchor" aria-hidden="true" id="manual-api-spec-maintenance"></a><a href="#manual-api-spec-maintenance" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Manual API spec maintenance</h2>
+<p>The most successful way we've done this in the past was a spec-first
+development pattern. In this pattern, we added endpoints to the API spec, then
+implemented them only after the spec changes were merged. We drifted away from
+this over time, and eventually wound up with a checklist item in our pull
+request template that specified that the API spec had been updated. For a long
+time, our spec wasn't valid Swagger, which we found out about when we tried to
+create a docs site. For a while after that, parts of our spec were
+incorrect, which we found out about when users attempted to use the spec for
+API interaction (though there were other problems as well).</p>
+<h5><a class="anchor" aria-hidden="true" id="how-do-we-find-out-that-our-docs-have-drifted-from-the-api"></a><a href="#how-do-we-find-out-that-our-docs-have-drifted-from-the-api" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>How do we find out that our docs have drifted from the API?</h5>
+<p>The way we answered this question before was to go through the spec and make
+sure that the happy path at least is correctly documented, i.e., that a
+generated python client using Yelp's
+<a href="https://github.com/Yelp/bravado"><code>bravado</code></a> library can interact with the API
+without errors. It was a manual process that relied heavily on our python
+client repository. A different strategy we could consider would be to generate
+a scala client using the hosted version of a spec on Swaggerhub and ensure that
+we can drop in the data model in the generated client in place of the existing
+data model. Testing this would require investing some software development time
+in tooling. Another option is to rely on upcoming
+<a href="https://github.com/jisantuc/panrec"><code>panrec</code></a> features to parse the generated
+client's datamodel and the existing datamodel to ensure that they agree.</p>
+<p>Both of these strategies will ensure only that the data models are correct
+without detecting, e.g., whether we've moved a route. That's a consistency
+check beyond what we've done before, but it still leaves a lot of room for us
+not to get the spec exactly right in a way that makes us spend potential
+support time (triaging issues, responding to help requests) on spec maintenance.</p>
+<h5><a class="anchor" aria-hidden="true" id="how-can-we-document-different-versions-of-the-api-at-the-same-time"></a><a href="#how-can-we-document-different-versions-of-the-api-at-the-same-time" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>How can we document different versions of the API at the same time?</h5>
+<p>The only strategy I've come up with for the manual maintenance version is a lot
+of copying and pasting. Supposing some route exists <code>/v1/models</code> and another
+route exists <code>/v2/models</code>, I don't know how to use OpenAPI to share things
+between those two endpoints. Later changes, like adding a new response type to
+both, I think would need to be manually written into both places. This sounds
+like a headache.</p>
+<h2><a class="anchor" aria-hidden="true" id="tapir"></a><a href="#tapir" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>tapir</code></h2>
+<p>Changes to generate docs with <code>tapir</code> are
+<a href="https://github.com/jisantuc/scala-api-doc/compare/master..feature/js/tapir-auto-doc">here</a>.
+Docs are served on <code>localhost:8080/api/hello/docs.yaml</code> (you can
+put that directly into swagger editor).</p>
+<p><code>tapir</code> is a library for separating the description of APIs from their
+implementation and interpreting those descriptions into different outputs. For
+example, an endpoint description can be interpreted into
+<a href="https://github.com/jisantuc/scala-api-doc/blob/feature/js/tapir-auto-doc/app-backend/api/src/main/scala/com/jisantuc/apidoc/HelloService.scala#L52">documentation</a>
+(a YAML string) or into
+<a href="https://github.com/jisantuc/scala-api-doc/blob/feature/js/tapir-auto-doc/app-backend/api/src/main/scala/com/jisantuc/apidoc/HelloService.scala#L49-L51">a server</a>,
+given a function that maps the inputs described in the endpoint into the
+outputs described in the endpoint.</p>
+<p><code>Endpoint</code>s in <code>tapir</code> explicitly encode input types, output types, and errors.
+An <code>Endpoint[I, E, O, S]</code> maps inputs of of type <code>I</code> to outputs of type <code>O</code>,
+returning errors of type <code>E</code>, in streams of type <code>S</code>. So far I have not needed
+the stream type for anything. <code>tapir</code> makes it easy to add inputs to an
+endpoint (chain <code>.in</code> calls on the endpoint), to add outputs (<code>.out</code>), and to
+add metadata (<code>.name</code> and <code>.description</code>).</p>
+<p>The worst thing that happened to me while using <code>tapir</code> was that I accidentally
+wound up with unreachable routes. It seems like <code>tapir</code>'s http4s interface
+wants us not to mount services onto paths (e.g. <code>Router(&quot;/v1&quot; -&gt; new V1API, &quot;/v2&quot; -&gt; new V2API)</code>),
+but instead to include all path components in the endpoint descriptions.</p>
+<p>I tested out serving the docs with an algebraic data type and adding an
+authenticated route to make sure that I understood how both of those paths
+work. Both were straightforward and the ADT response was correctly encoded as a
+<code>oneOf</code>. While the default response from a <code>Left</code> in my authentication function
+was a 400 instead of a 401, that's primarily a consequence of my extremely
+simplified endpoints that don't know how to encode specific errors, so can't do
+anything to
+<a href="https://tapir-scala.readthedocs.io/en/latest/endpoint/statuscodes.html#dynamic-status-codes">discriminate the response to return</a>.</p>
+<p><code>tapir</code> endpoints can also be interpreted as clients, but I did not test this
+feature.</p>
+<h5><a class="anchor" aria-hidden="true" id="how-do-we-find-out-that-our-docs-have-drifted-from-the-api-1"></a><a href="#how-do-we-find-out-that-our-docs-have-drifted-from-the-api-1" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>How do we find out that our docs have drifted from the API?</h5>
+<p>Our docs cannot drift from the API, because the docs and the server are
+interpretations of the same endpoints.</p>
+<h5><a class="anchor" aria-hidden="true" id="how-can-we-document-different-versions-of-the-api-at-the-same-time-1"></a><a href="#how-can-we-document-different-versions-of-the-api-at-the-same-time-1" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>How can we document different versions of the API at the same time?</h5>
+<p>I think we can do this by separating endpoint components. The
+<a href="https://tapir-scala.readthedocs.io/en/latest/endpoint/auth.html#authentication">authentication docs</a>
+mention defining the <code>auth</code> input first, so that it can be shared by many
+endpoints, and I believe we could do something similar with version inputs,
+e.g.,</p>
+<pre><code class="hljs css language-scala"><span class="hljs-class"><span class="hljs-keyword">object</span> <span class="hljs-title">Endpoints</span> </span>{
+  <span class="hljs-keyword">val</span> v1 = endpoint.in(<span class="hljs-string">"/v1"</span>)
+  <span class="hljs-keyword">val</span> v2 = endpoint.in(<span class="hljs-string">"/v2"</span>)
+  <span class="hljs-keyword">val</span> scenesEndpointV1 = v1.in(<span class="hljs-string">"/scenes"</span>)...
+  <span class="hljs-keyword">val</span> scenesEndpointV2 = v2.in(<span class="hljs-string">"/scenes"</span>)...
+}
+</code></pre>
+<p>Then each versioned collection of endpoints could be served off of its version
+prefix.</p>
+<h2><a class="anchor" aria-hidden="true" id="rho"></a><a href="#rho" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>rho</code></h2>
+<p>Changes to generate docs with <code>rho</code> are
+<a href="https://github.com/jisantuc/scala-api-doc/compare/master..feature/js/rho-auto-doc">here</a>.
+Docs are served on <code>localhost:8080/api/hello/swagger.json</code> (you can
+put that directly into swagger editor).</p>
+<p><code>rho</code> is a library in the http4s ecosystem for automatically generating Swagger
+documentation with an alternative routing DSL. Route and parameter descriptions
+are combined with the routing logic to create <code>RhoRoutes[F]</code>, which can be
+transformed into normal <code>HttpRoutes[F]</code> with a <code>RhoMiddleware</code> that also serves
+the API documentation as <code>json</code> on a configurable endpoint.</p>
+<p>The worst part about <code>rho</code> is having to keep a number of odd operators in your
+head. For example, capturing query parameters is <code>&gt;&gt;&gt;</code>, specifying response
+types is <code>^</code>, adding descriptions is <code>**</code>, and binding the route to a function
+for business logic is <code>|&gt;&gt;</code>. It's possible these are something we'd get used to
+over time, but I had to look each of them up again to write what they were.</p>
+<p><code>rho</code> generates Swagger (OpenAPI 2.0) specifications as json. Because of this,
+it does not have access to the <code>oneOf</code> keyword for describing responses that
+might have one of several different schemas. The generated json included one
+error, which was that the <code>Json</code> schema (generated from an endpoint returning
+<code>circe</code>'s <code>Json</code> type) was missing but referred to in a route.</p>
+<h5><a class="anchor" aria-hidden="true" id="how-do-we-find-out-that-our-docs-have-drifted-from-the-api-2"></a><a href="#how-do-we-find-out-that-our-docs-have-drifted-from-the-api-2" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>How do we find out that our docs have drifted from the API?</h5>
+<p>Our docs cannot drift from the API, because the <code>RhoMiddleware</code> creates docs
+for what our routes are actually doing.</p>
+<h5><a class="anchor" aria-hidden="true" id="how-can-we-document-different-versions-of-the-api-at-the-same-time-2"></a><a href="#how-can-we-document-different-versions-of-the-api-at-the-same-time-2" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>How can we document different versions of the API at the same time?</h5>
+<p>Each service can serve its own docs, so mounting a service in the http4s
+<code>Router</code> will also mount documentation for that service.</p>
+<h2><a class="anchor" aria-hidden="true" id="guardrail"></a><a href="#guardrail" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>guardrail</code></h2>
+<p><code>guardrail</code> http4s support is <a href="https://guardrail.dev/scala/http4s/">not currently
+documented</a>, so I did not investigate this
+library further.</p>
+<h1><a class="anchor" aria-hidden="true" id="decision"></a><a href="#decision" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Decision</h1>
+<p>We should use <code>tapir</code> for automatically generating API documentation. The ADT
+support and straightforward API (inputs use <code>.in</code>, outputs use <code>.out</code>, auth
+extractors use <code>auth</code>) will flatten out the learning curve, and we'll have a
+stable and correct reference point for API documentation that users setting up
+their own deployments can refer to. We can call this out at the beginning of
+the README and hopefully save ourselves from having to answer an entire
+category of questions.</p>
+<h1><a class="anchor" aria-hidden="true" id="consequences"></a><a href="#consequences" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Consequences</h1>
+<ul>
+<li>The first routes added to the API will be slightly more difficult, because
+they'll include writing API routes with a new library for the first time.</li>
+<li>The README should be updated to point to the location of the API
+documentation.</li>
+</ul>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/granary/docs/architecture/adr-0001-app-setup-and-goals"><span class="arrow-prev">← </span><span>1 - Application Setup and Goals</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#the-contenders">The contenders</a></li><li><a href="#manual-api-spec-maintenance">Manual API spec maintenance</a></li><li><a href="#tapir"><code>tapir</code></a></li><li><a href="#rho"><code>rho</code></a></li><li><a href="#guardrail"><code>guardrail</code></a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/granary/" class="nav-home"><img src="/granary/img/favicon.ico" alt="Granary" width="66" height="58"/></a><div><h5>Docs</h5><a href="/granary/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/granary/docs/en/doc2.html">Guides (or other categories)</a><a href="/granary/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/granary/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/granary/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/granary/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2020 Your Name or Your Company Name</section></footer></div></body></html>

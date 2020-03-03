@@ -125,3 +125,17 @@ lazy val api = (project in file("api"))
   .settings({
     libraryDependencies ++= apiDependencies
   })
+
+lazy val docs = project // new documentation project
+  .in(file("granary-docs")) // important: it must not be docs/
+  .dependsOn(datamodel)
+  .enablePlugins(MdocPlugin, DocusaurusPlugin)
+  .settings(
+    mdocVariables := Map(
+      "MODEL_ID" -> "1d99bab2-1470-46c8-aa00-a8a2ced5c60c",
+      "PREDICTION_ID" -> "78d4345a-5c22-43ec-8a9a-fe354915c3eb",
+      "WEBHOOK_ID" -> "f0ff558a-f989-4648-b606-abcf8b977e6c",
+      "INVOCATION_TIME" -> "1583248611188"
+    ),
+    libraryDependencies ++= Seq(Dependencies.circeLiteral)
+  )

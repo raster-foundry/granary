@@ -9,10 +9,10 @@ sealed abstract class PredictionStatusUpdate
 
 object PredictionStatusUpdate {
 
-  implicit val decStatusUpdate
-      : Decoder[PredictionStatusUpdate] = Decoder[PredictionFailure].widen or Decoder[
-    PredictionSuccess
-  ].widen
+  implicit val decStatusUpdate: Decoder[PredictionStatusUpdate] =
+    Decoder[PredictionFailure].widen or Decoder[
+      PredictionSuccess
+    ].widen
 
   implicit val encStatusUpdate: Encoder[PredictionStatusUpdate] =
     new Encoder[PredictionStatusUpdate] {
