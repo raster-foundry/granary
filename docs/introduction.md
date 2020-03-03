@@ -48,7 +48,9 @@ Granary is a job runner for cloud-based geospatial machine learning.
 Its goal is to simplify running models and to track and serve
 the results of predictions. It puts a REST API between you and AWS Batch
 to simplify interactions that otherwise involve repeatedly checking AWS SDK
-documentation.
+documentation. You can see an
+[OpenAPI Spec](https://swagger.io/docs/specification/about/)
+for Granary [here](https://granary.rasterfoundry.com/api/docs/docs.yaml).
 
 ## What's a `Model`?
 
