@@ -236,7 +236,3 @@ those sorts of errors or for retrying predictions. Additionally, if your model h
 logic, it's your responsibility to make sure that it doesn't `POST` to the results webhook
 until it has exhausted its retries, since the first `POST` to the webhook will make it
 inaccessible for the rest of time.
-
-## Can I just see some API docs?
-
-Sure! Bring up the [dev environment](./development.md), then hit `localhost:8080/api/docs/docs.yaml`.
