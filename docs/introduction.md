@@ -11,26 +11,41 @@ the results of predictions. It puts a REST API between you and AWS Batch
 to simplify interactions that otherwise involve repeatedly checking AWS SDK
 documentation.
 
-## What's a `Model`?
+## Background info
 
-A model is a bundle of a human-readable name, some, AWS Batch configuration,
-and an argument validator.
+To begin with, here are some IDs and imports that we'll be using throughout the examples:
 
 ```scala mdoc
 import com.rasterfoundry.granary.datamodel._
-
 import io.circe.syntax._
-
+import java.time.Instant
 import java.util.UUID
 
-val model = Model.Create(
+val modelId = UUID.fromString("@MODEL_ID@")
+val predictionId = UUID.fromString("@PREDICTION_ID@")
+val webhookId = UUID.fromString("@WEBHOOK_ID@")
+val invocationTime = Instant.ofEpochMilli("@INVOCATION_TIME@".toLong)
+```
+
+The `modelId` is a faked ID that you can imagine represents a stored `Model`
+in the database. The same is true for the `predictionId`, but for a `Prediction`.
+The `webhookId` represents a single-use webhook that can be used for status updates
+on a prediction. The `invocationTime` is a pretend time that this prediction was
+kicked off. The imports are collectively present to make the rest of the
+documentation compile. You can ignore them.
+
+## What's a `Model`?
+
+A model is a bundle of a human-readable name, some AWS Batch configuration,
+and an argument validator.
+
+```scala mdoc
+Model.Create(
   "A descriptive model name",
   Validator(().asJson), // a Validator -- more on this below
   "perfectAccuracyModel:1", // an AWS Batch job definition
   "veryExpensiveOnDemandQueue" // an AWS Batch job queue
-)
-// What you'll POST to the API to create a model
-model.asJson.spaces2
+).asJson.spaces2
 ```
 
 `model`s in Granary correspond to containers that have been configured to
@@ -38,9 +53,21 @@ run via AWS Batch job definitions. The major difference between using Granary
 and hand rolling `SubmitJob` requests is the `Validator`. To create a model,
 post JSON like what's shown above to `/api/models`.
 
+If that's succesful, you'll get a fully saturated model back from the API:
+
+```scala mdoc
+Model(
+  modelId,
+  "A descriptive model name",
+  Validator(().asJson),
+  "perfectAccuracyModel:1",
+  "veryExpensiveOnDemandQueue"
+).asJson.spaces2
+```
+
 ## What's a `Validator`?
 
-A `Validator` uses [JSON Schema](http://json-schema.org/) to ensure that when you try to run your job,
+A `Validator` uses [JSON Schema](http://json-schema.org/) Draft 7 to ensure that when you try to run your job,
 you have the correct arguments. For example, in the example above the
 `Validator` is the empty json object `{}`. This means that providing any arguments
 will fail. That model is not a very useful model. We could instead require a green
@@ -105,34 +132,51 @@ A `Prediction` is a single run of a model with specific inputs. Predictions are
 created when you `POST` a model id and arguments to `/api/predictions`.
 
 ```scala mdoc
-val modelId = UUID.randomUUID
-
-val prediction = Prediction.Create(
+Prediction.Create(
   modelId, // the modelId to associate with this prediction
   ().asJson // the arguments to pass to the model
-)
-
-// What you'll POST to the API to create a prediction
-prediction.asJson.spaces2
+).asJson.spaces2
 ```
 
 The model's JSON schema is used to validate the prediction's arguments.
 If validation passes, Granary will insert a record for this prediction and submit
-a job to AWS Batch with the resources configured on the model. At this stage,
-it will also create a single-use webhook for updating the prediction. This webhook
-will be at `/api/predictions/{predictionId}/results/{webhookId}` and accepts two
+a job to AWS Batch with the resources configured on the model. If that was successful,
+you'll receive a response that looks like:
+
+```scala mdoc
+Prediction(
+  predictionId,
+  modelId,
+  invocationTime,
+  ().asJson,
+  JobStatus.Started,
+  None,
+  None,
+  Some(webhookId)
+).asJson.spaces2
+```
+
+The `webhookId` in the response points to a single-use webhook for updating the prediction.
+This webhook can be accessed at `/api/predictions/{predictionId}/results/{webhookId}` and accepts two
 kinds of messages:
 
 ```scala mdoc
-// JSON of what you should send to the webhook if the prediction failed
+// JSON of the message to send if the prediction failed
 PredictionFailure("everything went wrong").asJson.spaces2
 
-// JSON of what you should send to the webhook if the prediction succeeded
+// JSON of the message to send if the prediction succeeded
 PredictionSuccess("s3://where/the/results/live.json").asJson.spaces2
 ```
 
-If your model has retrying logic, it's your responsibility to make sure that it
-doesn't `POST` to the results webhook until it has exhausted its retries.
+In the ideal case, the model running in a container in batch submits results when it
+is done or fails. This strategy will not cover cases in which the model cannot perform
+error-handling though, for instance, `OutOfMemory` errors and cases in which a spot
+instance gets cycled out from under your running model. Because the space of things that
+can go wrong is nearly infinite, Granary itself doesn't provide any facilities for handling
+those sorts of errors or retries. Additionally, if your model has retrying logic, it's
+your responsibility to make sure that it doesn't `POST` to the results webhook until it
+has exhausted its retries, since the first `POST` to the webhook will make it inaccessible
+for the rest of time.
 
 # Can I just see some API docs?
 
