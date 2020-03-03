@@ -62,7 +62,7 @@ between using Granary and hand rolling `SubmitJob` requests is the `Validator`.
 To create a model, `POST` JSON like this to `/api/models`:
 
 <pre>
-<code class="hljs css language-json">
+<code>
 ```scala mdoc:passthrough
 print {
   Model.Create(
@@ -79,7 +79,7 @@ print {
 If that's successful, here's what the response will look like:
 
 <pre>
-<code class="hljs css language-json">
+<code>
 ```scala mdoc:passthrough
 print {
   Model(
@@ -161,7 +161,7 @@ A `Prediction` is a single run of a model with specific inputs. Predictions are
 created when you `POST` a model id and arguments to `/api/predictions`.
 
 <pre>
-<code class="hljs css language-json">
+<code>
 ```scala mdoc:passthrough
 print {
   Prediction.Create(
@@ -179,7 +179,7 @@ a job to AWS Batch with the resources configured on the model. If that was succe
 you'll receive a response that looks like this:
 
 <pre>
-<code class="hljs css language-json">
+<code>
 ```scala mdoc:passthrough
 print {
   Prediction(
@@ -204,7 +204,7 @@ accepts two kinds of messages.
 If the `prediction` failed, clients should send messages like this:
 
 <pre>
-<code class="hljs css language-json">
+<code>
 ```scala mdoc:passthrough
 // JSON of the message to send if the prediction failed
 print {
@@ -217,7 +217,7 @@ print {
 If the `prediction` succeeded, clients should send messages like this:
 
 <pre>
-<code class="hljs css language-json">
+<code>
 ```scala mdoc:passthrough
 // JSON of the message to send if the prediction succeeded
 print {
