@@ -84,10 +84,10 @@ If that's successful, here's what the response will look like:
 print {
   Model(
     modelId,
-	"A descriptive model name",
-	Validator(jsonSchema),
-	"perfectAccuracyModel:1",
-	"veryExpensiveOnDemandQueue"
+    "A descriptive model name",
+    Validator(jsonSchema),
+    "perfectAccuracyModel:1",
+    "veryExpensiveOnDemandQueue"
   ).asJson.spaces2
 }
 ```
@@ -184,13 +184,13 @@ you'll receive a response that looks like this:
 print {
   Prediction(
     predictionId,
-	modelId,
-	invocationTime,
-	jsonPayload,
-	JobStatus.Started,
-	None,
-	None,
-	Some(webhookId)
+    modelId,
+    invocationTime,
+    jsonPayload,
+    JobStatus.Started,
+    None,
+    None,
+    Some(webhookId)
   ).asJson.spaces2
 }
 ```
