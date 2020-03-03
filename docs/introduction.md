@@ -39,7 +39,7 @@ kicked off.
 ## What's a `Model`?
 
 A model is a bundle of a human-readable name, some AWS Batch configuration,
-and an argument validator. `model`s in Granary correspond to containers that
+and an argument validator. `Model`s in Granary correspond to containers that
 have been configured to run via AWS Batch job definitions. The major difference
 between using Granary and hand rolling `SubmitJob` requests is the `Validator`.
 
