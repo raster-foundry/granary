@@ -84,7 +84,10 @@ kicked off. The imports are collectively present to make the rest of the
 documentation compile. You can ignore them.</p>
 <h2><a class="anchor" aria-hidden="true" id="whats-a-model"></a><a href="#whats-a-model" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>What's a <code>Model</code>?</h2>
 <p>A model is a bundle of a human-readable name, some AWS Batch configuration,
-and an argument validator.</p>
+and an argument validator. <code>model</code>s in Granary correspond to containers that
+have been configured to run via AWS Batch job definitions. The major difference
+between using Granary and hand rolling <code>SubmitJob</code> requests is the <code>Validator</code>.</p>
+<p>To create a model, <code>POST</code> JSON like this to <code>/api/models</code>:</p>
 <pre><code class="hljs css language-scala"><span class="hljs-type">Model</span>.<span class="hljs-type">Create</span>(
   <span class="hljs-string">"A descriptive model name"</span>,
   <span class="hljs-type">Validator</span>(().asJson), <span class="hljs-comment">// a Validator -- more on this below</span>
@@ -102,11 +105,7 @@ and an argument validator.</p>
 <span class="hljs-comment">//   "jobQueue" : "veryExpensiveOnDemandQueue"</span>
 <span class="hljs-comment">// }"""</span>
 </code></pre>
-<p><code>model</code>s in Granary correspond to containers that have been configured to
-run via AWS Batch job definitions. The major difference between using Granary
-and hand rolling <code>SubmitJob</code> requests is the <code>Validator</code>. To create a model,
-post JSON like what's shown above to <code>/api/models</code>.</p>
-<p>If that's succesful, you'll get a fully saturated model back from the API:</p>
+<p>If that's successful, here's what the response will look like:</p>
 <pre><code class="hljs css language-scala"><span class="hljs-type">Model</span>(
   modelId,
   <span class="hljs-string">"A descriptive model name"</span>,
@@ -127,11 +126,12 @@ post JSON like what's shown above to <code>/api/models</code>.</p>
 <span class="hljs-comment">// }"""</span>
 </code></pre>
 <h2><a class="anchor" aria-hidden="true" id="whats-a-validator"></a><a href="#whats-a-validator" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>What's a <code>Validator</code>?</h2>
-<p>A <code>Validator</code> uses <a href="http://json-schema.org/">JSON Schema</a> Draft 7 to ensure that when you try to run your job,
-you have the correct arguments. For example, in the example above the
-<code>Validator</code> is the empty json object <code>{}</code>. This means that providing any arguments
-will fail. That model is not a very useful model. We could instead require a green
-band, a red band, and a GeoTIFF location with the following JSON schema:</p>
+<p>A <code>Validator</code> uses <a href="http://json-schema.org/">JSON Schema</a> Draft 7 to ensure that
+when you try to run your job, you have the correct arguments. For example, in the
+example above the <code>Validator</code> is the empty json object <code>{}</code>. This means that
+providing any arguments will fail. That model is not a very useful model. We could
+instead require a green band, a red band, and a GeoTIFF location with the following
+JSON schema:</p>
 <pre><code class="hljs css language-json">{
   <span class="hljs-attr">"definitions"</span>: {},
   <span class="hljs-attr">"$schema"</span>: <span class="hljs-string">"http://json-schema.org/draft-07/schema#"</span>,
@@ -175,8 +175,8 @@ band, a red band, and a GeoTIFF location with the following JSON schema:</p>
   }
 }
 </code></pre>
-<p>With this JSON schema attached to our model, it's impossible to submit
-improperly formatted arguments.</p>
+<p>With this JSON schema attached to our model, it's impossible to create model runs
+with improper or improperly formatted arguments.</p>
 <p>Over time, your model's input requirements may change. In that case it makes
 sense to make a new model with a different validator. Since writing JSON schema
 by hand is tedious, it's helpful to use <a href="https://jsonschema.net/"><code>json-schema.net</code></a>
@@ -198,7 +198,7 @@ created when you <code>POST</code> a model id and arguments to <code>/api/predic
 <p>The model's JSON schema is used to validate the prediction's arguments.
 If validation passes, Granary will insert a record for this prediction and submit
 a job to AWS Batch with the resources configured on the model. If that was successful,
-you'll receive a response that looks like:</p>
+you'll receive a response that looks like this:</p>
 <pre><code class="hljs css language-scala"><span class="hljs-type">Prediction</span>(
   predictionId,
   modelId,
@@ -223,8 +223,8 @@ you'll receive a response that looks like:</p>
 <span class="hljs-comment">// }"""</span>
 </code></pre>
 <p>The <code>webhookId</code> in the response points to a single-use webhook for updating the prediction.
-This webhook can be accessed at <code>/api/predictions/{predictionId}/results/{webhookId}</code> and accepts two
-kinds of messages:</p>
+This webhook can be accessed at <code>/api/predictions/{predictionId}/results/{webhookId}</code> and
+accepts two kinds of messages:</p>
 <pre><code class="hljs css language-scala"><span class="hljs-comment">// JSON of the message to send if the prediction failed</span>
 <span class="hljs-type">PredictionFailure</span>(<span class="hljs-string">"everything went wrong"</span>).asJson.spaces2
 <span class="hljs-comment">// res4: String = """{</span>
@@ -237,15 +237,15 @@ kinds of messages:</p>
 <span class="hljs-comment">//   "outputLocation" : "s3://where/the/results/live.json"</span>
 <span class="hljs-comment">// }"""</span>
 </code></pre>
-<p>In the ideal case, the model running in a container in batch submits results when it
+<p>In the ideal case, the container for running the model in batch will submit results when it
 is done or fails. This strategy will not cover cases in which the model cannot perform
 error-handling though, for instance, <code>OutOfMemory</code> errors and cases in which a spot
 instance gets cycled out from under your running model. Because the space of things that
 can go wrong is nearly infinite, Granary itself doesn't provide any facilities for handling
-those sorts of errors or retries. Additionally, if your model has retrying logic, it's
-your responsibility to make sure that it doesn't <code>POST</code> to the results webhook until it
-has exhausted its retries, since the first <code>POST</code> to the webhook will make it inaccessible
-for the rest of time.</p>
+those sorts of errors or for retrying predictions. Additionally, if your model has retrying
+logic, it's your responsibility to make sure that it doesn't <code>POST</code> to the results webhook
+until it has exhausted its retries, since the first <code>POST</code> to the webhook will make it
+inaccessible for the rest of time.</p>
 <h1><a class="anchor" aria-hidden="true" id="can-i-just-see-some-api-docs"></a><a href="#can-i-just-see-some-api-docs" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Can I just see some API docs?</h1>
 <p>Sure! Bring up the <a href="/granary/docs/development">dev environment</a>, then hit <code>localhost:8080/api/docs/docs.yaml</code>.</p>
 </span></div></article></div><div class="docs-prevnext"><a class="docs-next button" href="/granary/docs/development"><span>Development</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#background-info">Background info</a></li><li><a href="#whats-a-model">What's a <code>Model</code>?</a></li><li><a href="#whats-a-validator">What's a <code>Validator</code>?</a></li><li><a href="#whats-a-prediction">What's a <code>Prediction</code>?</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/granary/" class="nav-home"><img src="/granary/img/favicon.ico" alt="Granary" width="66" height="58"/></a><div><h5>Docs</h5><a href="/granary/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/granary/docs/en/doc2.html">Guides (or other categories)</a><a href="/granary/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/granary/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/granary/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/granary/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2020 Your Name or Your Company Name</section></footer></div></body></html>
