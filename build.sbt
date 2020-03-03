@@ -136,5 +136,6 @@ lazy val docs = project // new documentation project
       "PREDICTION_ID" -> "78d4345a-5c22-43ec-8a9a-fe354915c3eb",
       "WEBHOOK_ID" -> "f0ff558a-f989-4648-b606-abcf8b977e6c",
       "INVOCATION_TIME" -> "1583248611188"
-    )
+    ),
+    libraryDependencies ++= Seq(Dependencies.circeLiteral)
   )
