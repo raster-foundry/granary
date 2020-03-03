@@ -13,7 +13,9 @@ documentation.
 
 ## Background info
 
-To begin with, here are some IDs and imports that we'll be using throughout the examples:
+To begin with, here are some IDs and imports that we'll be using throughout the examples.
+They are present for consistency and compilation throughout the rest of this
+document. You can ignore them.
 
 ```scala mdoc
 import com.rasterfoundry.granary.datamodel._
@@ -29,10 +31,10 @@ val invocationTime = Instant.ofEpochMilli("@INVOCATION_TIME@".toLong)
 
 The `modelId` is a faked ID that you can imagine represents a stored `Model`
 in the database. The same is true for the `predictionId`, but for a `Prediction`.
-The `webhookId` represents a single-use webhook that can be used for status updates
-on a prediction. The `invocationTime` is a pretend time that this prediction was
-kicked off. The imports are collectively present to make the rest of the
-documentation compile. You can ignore them.
+The `webhookId` represents a single-use webhook that can called to indicate
+the success or failure of a prediction.
+The `invocationTime` is a pretend time that this prediction was
+kicked off.
 
 ## What's a `Model`?
 
