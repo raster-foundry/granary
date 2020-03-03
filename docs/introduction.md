@@ -40,7 +40,7 @@ post JSON like what's shown above to `/api/models`.
 
 ## What's a `Validator`?
 
-A `Validator` uses JSON Schema to ensure that when you try to run your job,
+A `Validator` uses [JSON Schema](http://json-schema.org/) to ensure that when you try to run your job,
 you have the correct arguments. For example, in the example above the
 `Validator` is the empty json object `{}`. This means that providing any arguments
 will fail. That model is not a very useful model. We could instead require a green
