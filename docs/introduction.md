@@ -102,7 +102,7 @@ example above the `Validator` expects a JSON object with a key `foo` and some nu
 value. A more realistic (if more verbose) schema for geospatial applications is shown
 below, requiring a green band, a red band, and a GeoTIFF location:
 
-```json
+```
 {
   "definitions": {},
   "$schema": "http://json-schema.org/draft-07/schema#",
