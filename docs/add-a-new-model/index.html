@@ -1,0 +1,151 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Add a new model · Granary</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="This tutorial will guide you through adding Granary to existing infrastructure"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Add a new model · Granary"/><meta property="og:type" content="website"/><meta property="og:url" content="https://rasterfoundry.github.io/granary/"/><meta property="og:description" content="This tutorial will guide you through adding Granary to existing infrastructure"/><meta property="og:image" content="https://rasterfoundry.github.io/granary/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://rasterfoundry.github.io/granary/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/granary/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/granary/js/scrollSpy.js"></script><link rel="stylesheet" href="/granary/css/main.css"/><script src="/granary/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/granary/"><img class="logo" src="/granary/img/favicon.ico" alt="Granary"/><h2 class="headerTitleWithLogo">Granary</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/granary/docs/introduction" target="_self">Getting started</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Add a new model</h1></header><article><div><span><p>This tutorial will guide you through adding Granary to existing infrastructure
+that includes an RDS instance and adding a new model to your deployed Granary
+service.</p>
+<h2><a class="anchor" aria-hidden="true" id="deploying-granary-alongside-an-existing-rds-backed-service"></a><a href="#deploying-granary-alongside-an-existing-rds-backed-service" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Deploying Granary alongside an existing RDS-backed service</h2>
+<h2><a class="anchor" aria-hidden="true" id="adding-a-new-model"></a><a href="#adding-a-new-model" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Adding a new model</h2>
+<h3><a class="anchor" aria-hidden="true" id="create-a-job-definition-for-your-new-model"></a><a href="#create-a-job-definition-for-your-new-model" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Create a job definition for your new model</h3>
+<p>With your running Granary instance now available, we add another model and kick
+off some predictions. We'll use a public container image to create a job definition,
+then create a model in Granary referring to that job definition. For this step, you'll
+need to install the <a href="https://www.terraform.io/downloads.html"><code>terraform</code></a> CLI.</p>
+<p>Create a new directory called <code>granary-models</code> and a directory in that directory
+called <code>job-definitions</code>. In <code>granary-models/batch.tf</code>, add the following Terraform
+configuration to describe the AWS Batch job definition that we'd like to create.</p>
+<pre><code class="hljs css language-terraform">resource <span class="hljs-string">"aws_batch_job_definition"</span> <span class="hljs-string">"calculate_water"</span> {
+  name = <span class="hljs-string">"job<span class="hljs-variable">${var.project}</span>CalculateWater"</span>
+ <span class="hljs-built_in"> type </span>= <span class="hljs-string">"container"</span>
+
+  container_properties = templatefile(<span class="hljs-string">"<span class="hljs-variable">${path.module}</span>/job-definitions/granary-water.json"</span>, {})
+}
+</code></pre>
+<p>In <code>granary-models/config.tf</code>, add the following Terraform configuration that tells Terraform
+what provider (you can mentally substitute &quot;cloud service&quot;) and backend to use.
+&quot;persistenc</p>
+<pre><code class="hljs css language-terraform"><span class="hljs-attribute">provider</span> <span class="hljs-string">"aws"</span> {
+  <span class="hljs-attribute">version</span> = <span class="hljs-string">"~&gt; 2.44.0"</span>
+  region  = var.aws_region
+}
+
+terraform {
+  <span class="hljs-attribute">backend</span> <span class="hljs-string">"s3"</span> {
+    <span class="hljs-attribute">region</span>  = <span class="hljs-string">"us-east-1"</span>
+    encrypt = <span class="hljs-string">"true"</span>
+  }
+}
+</code></pre>
+<p>In <code>granary-models/variables.tf</code>, add the following variables to tell Terraform what project name
+to use to substitute in the names of resources and in what region to create and destroy AWS
+resources.</p>
+<pre><code class="hljs css language-terraform">variable <span class="hljs-string">"project"</span> {
+ <span class="hljs-built_in"> default </span>= <span class="hljs-string">"GranaryDemo"</span>
+ <span class="hljs-built_in"> type </span>   = string
+}
+
+variable <span class="hljs-string">"aws_region"</span> {
+ <span class="hljs-built_in"> default </span>= <span class="hljs-string">"us-east-1"</span>
+ <span class="hljs-built_in"> type </span>   = string
+}
+</code></pre>
+<p>You can change them if you'd like, but the rest of this tutorial will assume that you used
+the default values.</p>
+<p>That configuration refers to a template file in <code>job-definitions</code> that doesn't
+exist yet. Put the following template in <code>granary-models/calculate-water.json</code>.</p>
+<pre><code class="hljs css language-json">{
+    <span class="hljs-attr">"image"</span>: <span class="hljs-string">"quay.io/raster-foundry/granary-calculate-water:eeec5da"</span>,
+    <span class="hljs-attr">"vcpus"</span>: <span class="hljs-number">2</span>,
+    <span class="hljs-attr">"memory"</span>: <span class="hljs-number">2048</span>,
+    <span class="hljs-attr">"command"</span>: [
+        <span class="hljs-string">"Ref::RED_BAND"</span>,
+        <span class="hljs-string">"Ref::GREEN_BAND"</span>,
+        <span class="hljs-string">"Ref::OUTPUT_LOCATION"</span>,
+        <span class="hljs-string">"Ref::WEBHOOK_URL"</span>
+    ],
+    <span class="hljs-attr">"volumes"</span>: [],
+    <span class="hljs-attr">"environment"</span>: [],
+    <span class="hljs-attr">"mountPoints"</span>: [],
+    <span class="hljs-attr">"privileged"</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-attr">"ulimits"</span>: [],
+    <span class="hljs-attr">"resourceRequirements"</span>: []
+}
+</code></pre>
+<p>Finally, we'll create the job definition for the water model. From the <code>granary-models</code> directory,
+initialize Terraform with:</p>
+<pre><code class="hljs css language-bash">$ terraform init \
+    -backend-config=<span class="hljs-string">"bucket=&lt;an s3 bucket you can write to&gt;"</span> \
+    -backed-config=<span class="hljs-string">"key=terraform/granary-demo/state"</span>
+</code></pre>
+<p>Initializing Terraform checks that your Terraform configuration in this directory is correct.</p>
+<p>Next, check to make sure that Terraform is going to do what you want it to do:</p>
+<pre><code class="hljs css language-bash">$ terraform plan -out=tfplan
+</code></pre>
+<p>If the proposed resources look good to you (they should just be to create one new job
+definition), follow up with</p>
+<pre><code class="hljs css language-bash">$ terraform apply -plan=tfplan
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="create-your-new-model-in-granary"></a><a href="#create-your-new-model-in-granary" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Create your new model in Granary</h3>
+<p>This step will require the <a href="https://httpie.org/doc#installation"><code>httpie</code></a> command line HTTP
+client.</p>
+<p>With your <code>jobGranaryDemoCalculateWater</code> job definition now present in AWS Batch, you can
+create a Granary model that refers to it. The JSON representation of the Granary model
+we're going to create looks like this:</p>
+<p>// TODO verify the job queue name resulting from the basic deploy</p>
+<pre><code class="hljs css language-json">{
+    <span class="hljs-attr">"$schema"</span>: <span class="hljs-string">"http://json-schema.org/draft-07/schema"</span>,
+    <span class="hljs-attr">"$id"</span>: <span class="hljs-string">"http://example.com/example.json"</span>,
+    <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+    <span class="hljs-attr">"title"</span>: <span class="hljs-string">"The Root Schema"</span>,
+    <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The root schema comprises the entire JSON document."</span>,
+    <span class="hljs-attr">"required"</span>: [
+        <span class="hljs-string">"RED_BAND"</span>,
+        <span class="hljs-string">"GREEN_BAND"</span>,
+        <span class="hljs-string">"OUTPUT_LOCATION"</span>,
+        <span class="hljs-string">"WEBHOOK_URL"</span>
+    ],
+    <span class="hljs-attr">"properties"</span>: {
+        <span class="hljs-attr">"RED_BAND"</span>: {
+            <span class="hljs-attr">"$id"</span>: <span class="hljs-string">"#/properties/RED_BAND"</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"integer"</span>,
+            <span class="hljs-attr">"title"</span>: <span class="hljs-string">"The Red_band Schema"</span>,
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"An explanation about the purpose of this instance."</span>,
+            <span class="hljs-attr">"default"</span>: <span class="hljs-number">0</span>,
+            <span class="hljs-attr">"examples"</span>: [
+                <span class="hljs-number">1</span>
+            ]
+        },
+        <span class="hljs-attr">"GREEN_BAND"</span>: {
+            <span class="hljs-attr">"$id"</span>: <span class="hljs-string">"#/properties/GREEN_BAND"</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"integer"</span>,
+            <span class="hljs-attr">"title"</span>: <span class="hljs-string">"The Green_band Schema"</span>,
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"An explanation about the purpose of this instance."</span>,
+            <span class="hljs-attr">"default"</span>: <span class="hljs-number">0</span>,
+            <span class="hljs-attr">"examples"</span>: [
+                <span class="hljs-number">2</span>
+            ]
+        },
+        <span class="hljs-attr">"OUTPUT_LOCATION"</span>: {
+            <span class="hljs-attr">"$id"</span>: <span class="hljs-string">"#/properties/OUTPUT_LOCATION"</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+            <span class="hljs-attr">"title"</span>: <span class="hljs-string">"The Output_location Schema"</span>,
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"An explanation about the purpose of this instance."</span>,
+            <span class="hljs-attr">"default"</span>: <span class="hljs-string">""</span>,
+            <span class="hljs-attr">"examples"</span>: [
+                <span class="hljs-string">"s3://coolbucket/foo.tif"</span>
+            ]
+        },
+        <span class="hljs-attr">"WEBHOOK_URL"</span>: {
+            <span class="hljs-attr">"$id"</span>: <span class="hljs-string">"#/properties/WEBHOOK_URL"</span>,
+            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+            <span class="hljs-attr">"title"</span>: <span class="hljs-string">"The Webhook_url Schema"</span>,
+            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"An explanation about the purpose of this instance."</span>,
+            <span class="hljs-attr">"default"</span>: <span class="hljs-string">""</span>,
+            <span class="hljs-attr">"examples"</span>: [
+                <span class="hljs-string">"https://granary.rasterfoundry.com"</span>
+            ]
+        }
+    }
+}
+</code></pre>
+<p>To create the model, save that json to <code>model.json</code>, then:</p>
+<pre><code class="hljs css language-bash">$ cat model.json | http https://granary.yourdomain.com/api/models
+</code></pre>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#deploying-granary-alongside-an-existing-rds-backed-service">Deploying Granary alongside an existing RDS-backed service</a></li><li><a href="#adding-a-new-model">Adding a new model</a><ul class="toc-headings"><li><a href="#create-a-job-definition-for-your-new-model">Create a job definition for your new model</a></li><li><a href="#create-your-new-model-in-granary">Create your new model in Granary</a></li></ul></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/granary/" class="nav-home"><img src="/granary/img/favicon.ico" alt="Granary" width="66" height="58"/></a><div><h5>Docs</h5><a href="/granary/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/granary/docs/en/doc2.html">Guides (or other categories)</a><a href="/granary/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/granary/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/granary/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/granary/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2020 Your Name or Your Company Name</section></footer></div></body></html>
