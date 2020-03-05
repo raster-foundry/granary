@@ -11,6 +11,9 @@ service.
 
 ## Adding a new model
 
+These three steps will explain how to create AWS resources for a new model, how to create
+the new model in Granary, and how to submit a prediction for that new model.
+
 ### Create a job definition for your new model
 
 With your running Granary instance now available, we add another model and kick
@@ -77,7 +80,7 @@ exist yet. Put the following template in `granary-models/calculate-water.json`.
     "vcpus": 2,
     "memory": 2048,
     "command": [
-        "Ref::RED_BAND",
+        "Ref::NIR_BAND",
         "Ref::GREEN_BAND",
         "Ref::OUTPUT_LOCATION",
         "Ref::WEBHOOK_URL"
@@ -97,7 +100,7 @@ initialize Terraform with:
 ```bash
 $ terraform init \
     -backend-config="bucket=<an s3 bucket you can write to>" \
-	-backed-config="key=terraform/granary-demo/state"
+    -backed-config="key=terraform/granary-demo/state"
 ```
 
 Initializing Terraform checks that your Terraform configuration in this directory is correct.
@@ -134,58 +137,137 @@ we're going to create looks like this:
     "title": "The Root Schema",
     "description": "The root schema comprises the entire JSON document.",
     "required": [
-        "RED_BAND",
+        "NIR_BAND",
         "GREEN_BAND",
         "OUTPUT_LOCATION",
-        "WEBHOOK_URL"
     ],
     "properties": {
-        "RED_BAND": {
-            "$id": "#/properties/RED_BAND",
-            "type": "integer",
-            "title": "The Red_band Schema",
-            "description": "An explanation about the purpose of this instance.",
-            "default": 0,
+        "NIR_BAND": {
+            "$id": "#/properties/NIR_BAND",
+            "type": "string",
+            "format": "uri",
+            "title": "The NIR_band Schema",
+            "description": "A URI pointing to data from a near infrared band",
             "examples": [
-                1
+                "s3://cool-bucket/nir.tiff"
             ]
         },
         "GREEN_BAND": {
             "$id": "#/properties/GREEN_BAND",
-            "type": "integer",
+            "type": "string",
+            "format": "uri",
             "title": "The Green_band Schema",
-            "description": "An explanation about the purpose of this instance.",
-            "default": 0,
+            "description": "A URI pointing to data from a green band",
             "examples": [
-                2
+                "s3://cool-bucket/green.tiff"
             ]
         },
         "OUTPUT_LOCATION": {
             "$id": "#/properties/OUTPUT_LOCATION",
             "type": "string",
-            "title": "The Output_location Schema",
-            "description": "An explanation about the purpose of this instance.",
+            "format": "uri",
+            "title": "The output_location Schema",
+            "description": "A uri pointing to where to store the result of running this model",
             "default": "",
             "examples": [
-                "s3://coolbucket/foo.tif"
-            ]
-        },
-        "WEBHOOK_URL": {
-            "$id": "#/properties/WEBHOOK_URL",
-            "type": "string",
-            "title": "The Webhook_url Schema",
-            "description": "An explanation about the purpose of this instance.",
-            "default": "",
-            "examples": [
-                "https://granary.rasterfoundry.com"
+                "s3://cool-bucket/foo.tif"
             ]
         }
     }
 }
 ```
 
+Note that the `WEBHOOK_URL` isn't present in the schema here. The reason for that is that the server
+will create an ID for the webhook when predictions are created. Since there's no way for a user to
+know that value in advance, the server fills it in and updates the parameters for the AWS Batch job
+accordingly.
+
 To create the model, save that json to `model.json`, then:
 
 ```bash
 $ cat model.json | http https://granary.yourdomain.com/api/models
+```
+
+### Creating a prediction for your model
+
+In the last step, you created a model in your deployed Granary service. In this step, you'll
+use that model to create a prediction. You'll also see what happens if you try to create a prediction
+with arguments the model doesn't recognize or poorly formatted arguments. This step also requires
+[`httpie`](https://httpie.org/doc#installation).
+
+Creating a prediction is simpler than creating a model. Predictions require only two arguments to create:
+a model ID and JSON of some arguments. Because of the `schema` of the model we created in the previous step,
+our arguments must conform to the shape:
+
+```json
+{
+    "NIR_BAND": "s3://foo/bar.tiff",
+    "GREEN_BAND": "s3://foo/baz.tiff",
+    "OUTPUT_LOCATION": "s3://this/could/be/any/uri.tif"
+}
+```
+
+To create a prediction, we'll use the separated bands for a Landsat 8 image hosted on AWS. The
+
+```json
+{
+    "modelId": "id-of-the-model-you-created",
+    "arguments": {
+        "NIR_BAND": "s3://landsat-pds/c1/L8/047/027/LC08_L1TP_047027_20200220_20200225_01_T1/LC08_L1TP_047027_20200220_20200225_01_T1_B5.TIF",
+        "GREEN_BAND": "s3://landsat-pds/c1/L8/047/027/LC08_L1TP_047027_20200220_20200225_01_T1/LC08_L1TP_047027_20200220_20200225_01_T1_B3.TIF",
+        "OUTPUT_LOCATION": "s3://your-bucket/prefix/input.jp2"
+    }
+}
+```
+
+Finally, create the prediction:
+
+```bash
+$ cat prediction.json | http https://granary.yourdomain.com/api/predictions
+```
+
+If everything went well, you'll get a response telling you that the job has started.
+
+Now let's make some things go wrong on purpose. One thing that AWS Batch will let you try to do is
+create `SubmitJob` requests without arguments that the job definition requires. Let's try to do something
+similar with the model from the first step. In `prediction.json`, let's make a simple typo and substitute
+`GREN` for `GREEN`, so it now reads:
+
+```json
+{
+    "modelId": "id-of-the-model-you-created",
+    "arguments": {
+        "NIR_BAND": "s3://landsat-pds/c1/L8/047/027/LC08_L1TP_047027_20200220_20200225_01_T1/LC08_L1TP_047027_20200220_20200225_01_T1_B5.TIF",
+        "GREN_BAND": "s3://landsat-pds/c1/L8/047/027/LC08_L1TP_047027_20200220_20200225_01_T1/LC08_L1TP_047027_20200220_20200225_01_T1_B3.TIF",
+        "OUTPUT_LOCATION": "s3://your-bucket/your-prefix/output.tiff"
+    }
+}
+```
+
+`POST`-ing that to the `predictions` endpoint, the server will helpfully tell you:
+
+```json
+{
+    "msg": "#: required key [GREEN_BAND] not found"
+}
+```
+
+Similarly, if you forget the correct format for the bands (maybe you convince yourself they should
+be band indices instead of pointers to separated bands of a multi-band tiff, which is _definitely_ not
+a mistake I made while putting together this tutorial), the server will helpfully tell you:
+
+```json
+{
+    "msg": "#: 2 schema violations found#/RED_BAND: expected type: String, found: Integer#/GREEN_BAND: expected type: String, found: Integer"
+}
+```
+
+Mixtures of errors are similarly well handled, in case you're the sort of person who likes to make a few
+kinds of mistakes at once (again, _definitely_ not something I did while putting together this
+tutorial):
+
+```json
+{
+    "msg": "#: 2 schema violations found#: required key [GREEN_BAND] not found#/RED_BAND: expected type: String, found: Integer"
+}
 ```
