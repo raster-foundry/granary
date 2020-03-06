@@ -9,6 +9,11 @@ service.
 
 ## Deploying Granary alongside an existing RDS-backed service
 
+- talk through what terraform does
+- create a sample vars file that the user needs to fill in
+- tell them to put it in `deployment/terraform`
+- explain steps to do the deploy
+
 ## Adding a new model
 
 These three steps will explain how to create AWS resources for a new model, how to create
@@ -72,7 +77,7 @@ You can change them if you'd like, but the rest of this tutorial will assume tha
 the default values.
 
 That configuration refers to a template file in `job-definitions` that doesn't
-exist yet. Put the following template in `granary-models/calculate-water.json`.
+exist yet. Let's create it! Put the following template in `granary-models/calculate-water.json`.
 
 ```json
 {
@@ -278,3 +283,17 @@ tutorial):
     "msg": "#: 2 schema violations found#: required key [GREEN_BAND] not found#/RED_BAND: expected type: String, found: Integer"
 }
 ```
+
+### Inspecting the prediction
+
+Eventually, the prediction should complete. You'll be able to tell it's done, because one of two things will
+be the case when you hit `/api/predictions/<prediction id>/`
+
+- its status will be `"SUCCESSFUL"` and it will have a value in its `outputLocation` field
+- its status will be `"FAILED"` and it will have a value in its `statusReason` field
+
+Because this is the demo model, it should be the first one.
+
+...does this produce a tif? If a tif, talk through downloading it and opening it in QGIS. If it's like a count
+or something or segmentation? I don't remember what this produces. But anyway make appropriate choices based on the
+model output
