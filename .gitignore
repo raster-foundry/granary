@@ -144,3 +144,4 @@ override.tf.json
 
 # generated ghpages files
 granary-gh-pages
+website/build/index.html
