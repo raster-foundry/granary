@@ -6,8 +6,6 @@ id: add-a-new-model
 This tutorial will guide you through adding a new model to your deployed Granary
 service.
 
-## Deploying Granary alongside an existing RDS-backed service
-
 ## Adding a new model
 
 These three steps will explain how to create AWS resources for a new model, how to create
