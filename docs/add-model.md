@@ -8,7 +8,7 @@ service.
 
 ## Create a job definition for your new model
 
-With your running Granary instance available, we'll add another model and kick
+With a running Granary instance available, we'll add another model and kick
 off some predictions. We'll use a public container image to create a job definition,
 then create a model in Granary referring to that job definition. For this step, you'll
 need to install the [`terraform`](https://www.terraform.io/downloads.html) CLI.
@@ -28,7 +28,6 @@ resource "aws_batch_job_definition" "calculate_water" {
 
 In `granary-models/config.tf`, add the following Terraform configuration that tells Terraform
 what provider (you can mentally substitute "cloud service") and backend to use.
-"persistenc
 
 ```terraform
 provider "aws" {
@@ -103,8 +102,8 @@ Next, check to make sure that Terraform is going to do what you want it to do:
 $ terraform plan -out=tfplan
 ```
 
-If the proposed resources look good to you (they should just be to create one new job
-definition), follow up with
+If the proposed resources look good to you (the only planned change should be to create one
+new job definition), follow up with
 
 ```bash
 $ terraform apply -plan=tfplan
@@ -118,8 +117,6 @@ client.
 With your `jobGranaryDemoCalculateWater` job definition now present in AWS Batch, you can
 create a Granary model that refers to it. The JSON representation of the Granary model
 we're going to create looks like this:
-
-// TODO verify the job queue name resulting from the basic deploy
 
 ```json
 {
@@ -172,7 +169,7 @@ we're going to create looks like this:
     }
   },
   "jobDefinition": "jobGranaryDemoCalculateWater",
-  "jobQueue": "granaryDemoCpuJobQueue"
+  "jobQueue": "queueGranaryDemoGPU"
 }
 ```
 
@@ -202,18 +199,18 @@ our arguments must conform to the shape:
 {
     "NIR_BAND": "s3://foo/bar.tiff",
     "GREEN_BAND": "s3://foo/baz.tiff",
-    "OUTPUT_LOCATION": "s3://this/could/be/any/uri.tif"
+    "OUTPUT_LOCATION": "s3://this/could/be/any/writeable/uri.tif"
 }
 ```
 
-To create a prediction, we'll use the separated bands for a Landsat 8 image hosted on AWS. The
+To create a prediction, we'll use the separated bands for an L2C Sentinel-2 image hosted on AWS:
 
 ```json
 {
     "modelId": "id-of-the-model-you-created",
     "arguments": {
-        "NIR_BAND": "s3://landsat-pds/c1/L8/047/027/LC08_L1TP_047027_20200220_20200225_01_T1/LC08_L1TP_047027_20200220_20200225_01_T1_B5.TIF",
-        "GREEN_BAND": "s3://landsat-pds/c1/L8/047/027/LC08_L1TP_047027_20200220_20200225_01_T1/LC08_L1TP_047027_20200220_20200225_01_T1_B3.TIF",
+        "NIR_BAND": "s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B05.jp2",
+        "GREEN_BAND": "s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B03.jp2",
         "OUTPUT_LOCATION": "s3://your-bucket/prefix/input.jp2"
     }
 }
@@ -236,9 +233,9 @@ similar with the model from the first step. In `prediction.json`, let's make a s
 {
     "modelId": "id-of-the-model-you-created",
     "arguments": {
-        "NIR_BAND": "s3://landsat-pds/c1/L8/047/027/LC08_L1TP_047027_20200220_20200225_01_T1/LC08_L1TP_047027_20200220_20200225_01_T1_B5.TIF",
-        "GREN_BAND": "s3://landsat-pds/c1/L8/047/027/LC08_L1TP_047027_20200220_20200225_01_T1/LC08_L1TP_047027_20200220_20200225_01_T1_B3.TIF",
-        "OUTPUT_LOCATION": "s3://your-bucket/your-prefix/output.tiff"
+        "NIR_BAND": "s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B05.jp2",
+        "GREN_BAND": "s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B03.jp2",
+        "OUTPUT_LOCATION": "s3://your-bucket/your/prefix/water-model-output.geojson"
     }
 }
 ```
@@ -251,9 +248,9 @@ similar with the model from the first step. In `prediction.json`, let's make a s
 }
 ```
 
-Similarly, if you forget the correct format for the bands (maybe you convince yourself they should
-be band indices instead of pointers to separated bands of a multi-band tiff, which is _definitely_ not
-a mistake I made while putting together this tutorial), the server will helpfully tell you:
+Similarly, if you forget the correct format for the bands (for example, if you submit
+integer band indices instead of URI pointers to separate bands), the server will
+helpfully tell you:
 
 ```json
 {
@@ -261,9 +258,8 @@ a mistake I made while putting together this tutorial), the server will helpfull
 }
 ```
 
-Mixtures of errors are similarly well handled, in case you're the sort of person who likes to make a few
-kinds of mistakes at once (again, _definitely_ not something I did while putting together this
-tutorial):
+Mixtures of errors are similarly well handled, in case there's more than one problem with the
+prediction's arguments and you don't want to fix one thing at a time:
 
 ```json
 {
@@ -279,8 +275,9 @@ be the case when you hit `/api/predictions/<prediction id>/`
 - its status will be `"SUCCESSFUL"` and it will have a value in its `outputLocation` field
 - its status will be `"FAILED"` and it will have a value in its `statusReason` field
 
-Because this is the demo model, it should be the first one.
-
-...does this produce a tif? If a tif, talk through downloading it and opening it in QGIS. If it's like a count
-or something or segmentation? I don't remember what this produces. But anyway make appropriate choices based on the
-model output
+Because this is the demo model, it should be the first one. Inspect the `outputLocation` field to find the path
+to the model's output, download it, and open it in QGIS. If you used the NIR and green bands from the example,
+you'll see that there's not a lot of water predicted in this image. If you toss the geojson output into
+[geojson.io](http://geojson.io) or [QGIS](https://www.qgis.org/en/site/), you can see that there's not too much
+water on the Earth there either, though clearly the model is missing some though. However, model sophistication
+is not the point of this example.

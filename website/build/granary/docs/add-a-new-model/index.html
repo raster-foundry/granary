@@ -57,7 +57,7 @@
         </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Add a new model</h1></header><article><div><span><p>This tutorial will guide you through adding a new model to your deployed Granary
 service.</p>
 <h2><a class="anchor" aria-hidden="true" id="create-a-job-definition-for-your-new-model"></a><a href="#create-a-job-definition-for-your-new-model" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Create a job definition for your new model</h2>
-<p>With your running Granary instance available, we'll add another model and kick
+<p>With a running Granary instance available, we'll add another model and kick
 off some predictions. We'll use a public container image to create a job definition,
 then create a model in Granary referring to that job definition. For this step, you'll
 need to install the <a href="https://www.terraform.io/downloads.html"><code>terraform</code></a> CLI.</p>
@@ -72,8 +72,7 @@ configuration to describe the AWS Batch job definition that we'd like to create.
 }
 </code></pre>
 <p>In <code>granary-models/config.tf</code>, add the following Terraform configuration that tells Terraform
-what provider (you can mentally substitute &quot;cloud service&quot;) and backend to use.
-&quot;persistenc</p>
+what provider (you can mentally substitute &quot;cloud service&quot;) and backend to use.</p>
 <pre><code class="hljs css language-terraform"><span class="hljs-attribute">provider</span> <span class="hljs-string">"aws"</span> {
   <span class="hljs-attribute">version</span> = <span class="hljs-string">"~&gt; 2.44.0"</span>
   region  = var.aws_region
@@ -131,8 +130,8 @@ initialize Terraform with:</p>
 <p>Next, check to make sure that Terraform is going to do what you want it to do:</p>
 <pre><code class="hljs css language-bash">$ terraform plan -out=tfplan
 </code></pre>
-<p>If the proposed resources look good to you (they should just be to create one new job
-definition), follow up with</p>
+<p>If the proposed resources look good to you (the only planned change should be to create one
+new job definition), follow up with</p>
 <pre><code class="hljs css language-bash">$ terraform apply -plan=tfplan
 </code></pre>
 <h2><a class="anchor" aria-hidden="true" id="create-your-new-model-in-granary"></a><a href="#create-your-new-model-in-granary" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Create your new model in Granary</h2>
@@ -141,7 +140,6 @@ client.</p>
 <p>With your <code>jobGranaryDemoCalculateWater</code> job definition now present in AWS Batch, you can
 create a Granary model that refers to it. The JSON representation of the Granary model
 we're going to create looks like this:</p>
-<p>// TODO verify the job queue name resulting from the basic deploy</p>
 <pre><code class="hljs css language-json">{
   <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Calculate Water"</span>,
   <span class="hljs-attr">"validator"</span>: {
@@ -192,7 +190,7 @@ we're going to create looks like this:</p>
     }
   },
   <span class="hljs-attr">"jobDefinition"</span>: <span class="hljs-string">"jobGranaryDemoCalculateWater"</span>,
-  <span class="hljs-attr">"jobQueue"</span>: <span class="hljs-string">"granaryDemoCpuJobQueue"</span>
+  <span class="hljs-attr">"jobQueue"</span>: <span class="hljs-string">"queueGranaryDemoGPU"</span>
 }
 </code></pre>
 <p>Note that the <code>WEBHOOK_URL</code> isn't present in the schema here. The reason for that is that the server
@@ -213,15 +211,15 @@ our arguments must conform to the shape:</p>
 <pre><code class="hljs css language-json">{
     <span class="hljs-attr">"NIR_BAND"</span>: <span class="hljs-string">"s3://foo/bar.tiff"</span>,
     <span class="hljs-attr">"GREEN_BAND"</span>: <span class="hljs-string">"s3://foo/baz.tiff"</span>,
-    <span class="hljs-attr">"OUTPUT_LOCATION"</span>: <span class="hljs-string">"s3://this/could/be/any/uri.tif"</span>
+    <span class="hljs-attr">"OUTPUT_LOCATION"</span>: <span class="hljs-string">"s3://this/could/be/any/writeable/uri.tif"</span>
 }
 </code></pre>
-<p>To create a prediction, we'll use the separated bands for a Landsat 8 image hosted on AWS. The</p>
+<p>To create a prediction, we'll use the separated bands for an L2C Sentinel-2 image hosted on AWS:</p>
 <pre><code class="hljs css language-json">{
     <span class="hljs-attr">"modelId"</span>: <span class="hljs-string">"id-of-the-model-you-created"</span>,
     <span class="hljs-attr">"arguments"</span>: {
-        <span class="hljs-attr">"NIR_BAND"</span>: <span class="hljs-string">"s3://landsat-pds/c1/L8/047/027/LC08_L1TP_047027_20200220_20200225_01_T1/LC08_L1TP_047027_20200220_20200225_01_T1_B5.TIF"</span>,
-        <span class="hljs-attr">"GREEN_BAND"</span>: <span class="hljs-string">"s3://landsat-pds/c1/L8/047/027/LC08_L1TP_047027_20200220_20200225_01_T1/LC08_L1TP_047027_20200220_20200225_01_T1_B3.TIF"</span>,
+        <span class="hljs-attr">"NIR_BAND"</span>: <span class="hljs-string">"s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B05.jp2"</span>,
+        <span class="hljs-attr">"GREEN_BAND"</span>: <span class="hljs-string">"s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B03.jp2"</span>,
         <span class="hljs-attr">"OUTPUT_LOCATION"</span>: <span class="hljs-string">"s3://your-bucket/prefix/input.jp2"</span>
     }
 }
@@ -237,9 +235,9 @@ similar with the model from the first step. In <code>prediction.json</code>, let
 <pre><code class="hljs css language-json">{
     <span class="hljs-attr">"modelId"</span>: <span class="hljs-string">"id-of-the-model-you-created"</span>,
     <span class="hljs-attr">"arguments"</span>: {
-        <span class="hljs-attr">"NIR_BAND"</span>: <span class="hljs-string">"s3://landsat-pds/c1/L8/047/027/LC08_L1TP_047027_20200220_20200225_01_T1/LC08_L1TP_047027_20200220_20200225_01_T1_B5.TIF"</span>,
-        <span class="hljs-attr">"GREN_BAND"</span>: <span class="hljs-string">"s3://landsat-pds/c1/L8/047/027/LC08_L1TP_047027_20200220_20200225_01_T1/LC08_L1TP_047027_20200220_20200225_01_T1_B3.TIF"</span>,
-        <span class="hljs-attr">"OUTPUT_LOCATION"</span>: <span class="hljs-string">"s3://your-bucket/your-prefix/output.tiff"</span>
+        <span class="hljs-attr">"NIR_BAND"</span>: <span class="hljs-string">"s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B05.jp2"</span>,
+        <span class="hljs-attr">"GREN_BAND"</span>: <span class="hljs-string">"s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B03.jp2"</span>,
+        <span class="hljs-attr">"OUTPUT_LOCATION"</span>: <span class="hljs-string">"s3://your-bucket/your/prefix/water-model-output.geojson"</span>
     }
 }
 </code></pre>
@@ -248,16 +246,15 @@ similar with the model from the first step. In <code>prediction.json</code>, let
     <span class="hljs-attr">"msg"</span>: <span class="hljs-string">"#: required key [GREEN_BAND] not found"</span>
 }
 </code></pre>
-<p>Similarly, if you forget the correct format for the bands (maybe you convince yourself they should
-be band indices instead of pointers to separated bands of a multi-band tiff, which is <em>definitely</em> not
-a mistake I made while putting together this tutorial), the server will helpfully tell you:</p>
+<p>Similarly, if you forget the correct format for the bands (for example, if you submit
+integer band indices instead of URI pointers to separate bands), the server will
+helpfully tell you:</p>
 <pre><code class="hljs css language-json">{
     <span class="hljs-attr">"msg"</span>: <span class="hljs-string">"#: 2 schema violations found#/RED_BAND: expected type: String, found: Integer#/GREEN_BAND: expected type: String, found: Integer"</span>
 }
 </code></pre>
-<p>Mixtures of errors are similarly well handled, in case you're the sort of person who likes to make a few
-kinds of mistakes at once (again, <em>definitely</em> not something I did while putting together this
-tutorial):</p>
+<p>Mixtures of errors are similarly well handled, in case there's more than one problem with the
+prediction's arguments and you don't want to fix one thing at a time:</p>
 <pre><code class="hljs css language-json">{
     <span class="hljs-attr">"msg"</span>: <span class="hljs-string">"#: 2 schema violations found#: required key [GREEN_BAND] not found#/RED_BAND: expected type: String, found: Integer"</span>
 }
@@ -269,8 +266,10 @@ be the case when you hit <code>/api/predictions/&lt;prediction id&gt;/</code></p
 <li>its status will be <code>&quot;SUCCESSFUL&quot;</code> and it will have a value in its <code>outputLocation</code> field</li>
 <li>its status will be <code>&quot;FAILED&quot;</code> and it will have a value in its <code>statusReason</code> field</li>
 </ul>
-<p>Because this is the demo model, it should be the first one.</p>
-<p>...does this produce a tif? If a tif, talk through downloading it and opening it in QGIS. If it's like a count
-or something or segmentation? I don't remember what this produces. But anyway make appropriate choices based on the
-model output</p>
+<p>Because this is the demo model, it should be the first one. Inspect the <code>outputLocation</code> field to find the path
+to the model's output, download it, and open it in QGIS. If you used the NIR and green bands from the example,
+you'll see that there's not a lot of water predicted in this image. If you toss the geojson output into
+<a href="http://geojson.io">geojson.io</a> or <a href="https://www.qgis.org/en/site/">QGIS</a>, you can see that there's not too much
+water on the Earth there either, though clearly the model is missing some though. However, model sophistication
+is not the point of this example.</p>
 </span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/granary/docs/deploy-granary"><span class="arrow-prev">← </span><span>Deploy Granary alongside an existing application</span></a><a class="docs-next button" href="/granary/docs/development"><span>Development</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#create-a-job-definition-for-your-new-model">Create a job definition for your new model</a></li><li><a href="#create-your-new-model-in-granary">Create your new model in Granary</a></li><li><a href="#create-a-prediction-for-your-model">Create a prediction for your model</a></li><li><a href="#inspect-the-prediction">Inspect the prediction</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/granary/" class="nav-home"><img src="/granary/img/favicon.ico" alt="Granary" width="66" height="58"/></a><div><h5>Docs</h5><a href="/granary/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/granary/docs/en/doc2.html">Guides (or other categories)</a><a href="/granary/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/granary/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/granary/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/granary/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2020 Your Name or Your Company Name</section></footer></div></body></html>
