@@ -211,7 +211,7 @@ If the `prediction` succeeded, clients should send messages like this:
 ```scala mdoc:passthrough
 // JSON of the message to send if the prediction succeeded
 println("```json")
-print {
+println {
   PredictionSuccess("s3://where/the/results/live.json").asJson.spaces2
 }
 println("```")

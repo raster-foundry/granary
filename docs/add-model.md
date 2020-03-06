@@ -3,16 +3,10 @@ title: Add a new model
 id: add-a-new-model
 ---
 
-This tutorial will guide you through adding Granary to existing infrastructure
-that includes an RDS instance and adding a new model to your deployed Granary
+This tutorial will guide you through adding a new model to your deployed Granary
 service.
 
 ## Deploying Granary alongside an existing RDS-backed service
-
-- talk through what terraform does
-- create a sample vars file that the user needs to fill in
-- tell them to put it in `deployment/terraform`
-- explain steps to do the deploy
 
 ## Adding a new model
 

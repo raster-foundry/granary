@@ -1,0 +1,181 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Deploy Granary alongside an existing application · Granary</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="This tutorial will guide you through adding Granary to existing infrastructure"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Deploy Granary alongside an existing application · Granary"/><meta property="og:type" content="website"/><meta property="og:url" content="https://rasterfoundry.github.io/granary/"/><meta property="og:description" content="This tutorial will guide you through adding Granary to existing infrastructure"/><meta property="og:image" content="https://rasterfoundry.github.io/granary/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://rasterfoundry.github.io/granary/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/granary/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/granary/js/scrollSpy.js"></script><link rel="stylesheet" href="/granary/css/main.css"/><script src="/granary/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/granary/"><img class="logo" src="/granary/img/favicon.ico" alt="Granary"/><h2 class="headerTitleWithLogo">Granary</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/granary/docs/introduction" target="_self">Getting started</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Overview</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Overview</h3><ul class=""><li class="navListItem"><a class="navItem" href="/granary/docs/introduction">Introduction</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/granary/docs/deploy-granary">Deploy Granary alongside an existing application</a></li><li class="navListItem"><a class="navItem" href="/granary/docs/add-a-new-model">Add a new model</a></li><li class="navListItem"><a class="navItem" href="/granary/docs/development">Development</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">ADRs</h3><ul class=""><li class="navListItem"><a class="navItem" href="/granary/docs/architecture/adr-0001-app-setup-and-goals">1 - Application Setup and Goals</a></li><li class="navListItem"><a class="navItem" href="/granary/docs/architecture/adr-0002-api-documentation">2 - API Documentation</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Deploy Granary alongside an existing application</h1></header><article><div><span><p>This tutorial will guide you through adding Granary to existing infrastructure
+that includes an RDS instance. This step will require
+<a href="https://learn.hashicorp.com/terraform/getting-started/install.html">Terraform</a>
+and a clone of the <a href="https://github.com/raster-foundry/granary/">Granary repository</a>.</p>
+<h2><a class="anchor" aria-hidden="true" id="configuring-the-deployment"></a><a href="#configuring-the-deployment" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Configuring the deployment</h2>
+<p>Granary is not designed to be deployed as a stand-alone application.
+Instead, it assumes that you have some other application that needs
+a job runner. With that in mind, you'll need to fill in some
+AWS configuration based on values from your already deployed application.</p>
+<p>The values you'll need to fill in are:</p>
+<ul>
+<li><a href="#aws_key_name"><code>aws_key_name</code></a></li>
+<li><a href="#r53_public_hosted_zone"><code>r53_public_hosted_zone</code></a></li>
+<li><a href="#r53_public_hosted_zone_record"><code>r53_public_hosted_zone_record</code></a></li>
+<li><a href="#vpc_id"><code>vpc_id</code></a></li>
+<li><a href="#vpc_private_subnet_ids"><code>vpc_private_subnet_ids</code></a></li>
+<li><a href="#vpc_public_subnet_ids"><code>vpc_public_subnet_ids</code></a></li>
+<li><a href="#rds_security_group_id"><code>rds_security_group_id</code></a></li>
+<li><a href="#rds_database_hostname"><code>rds_database_hostname</code></a></li>
+<li><a href="#rds_database_username"><code>rds_database_username</code></a></li>
+<li><a href="#rds_database_password"><code>rds_database_password</code></a></li>
+<li><a href="#rds_database_name"><code>rds_database_name</code></a></li>
+<li><a href="#project"><code>project</code></a> if you don't want the name to be <code>GranaryDemo</code></li>
+<li><a href="#aws_region"><code>aws_region</code></a> if you don't want to deploy in <code>us-east-1</code></li>
+</ul>
+<p>A complete Terraform variables file containing the variables to be filled in
+and other necessary variables is shown below. Descriptions of each variable mentioned
+above can be found below the Terraform variables file. Copy the variables shown here
+into <code>deployment/terraform/variables.tf</code> in your Clone of the Granary repository,
+filling in appropriate values for the variables listed above.</p>
+<pre><code class="hljs css language-terraform"><span class="hljs-attr">project</span> = <span class="hljs-string">"GranaryDemo"</span>
+
+<span class="hljs-attr">environment</span> = <span class="hljs-string">"Production"</span>
+
+<span class="hljs-attr">aws_region</span> = <span class="hljs-string">"us-east-1"</span>
+
+<span class="hljs-attr">aws_key_name</span> = <span class="hljs-string">""</span>
+
+<span class="hljs-attr">r53_public_hosted_zone</span> = <span class="hljs-string">""</span>
+
+<span class="hljs-attr">r53_public_hosted_zone_record</span> = <span class="hljs-string">""</span>
+
+<span class="hljs-attr">vpc_id</span> = <span class="hljs-string">""</span>
+
+<span class="hljs-attr">vpc_private_subnet_ids</span> = [
+]
+
+<span class="hljs-attr">vpc_public_subnet_ids</span> = [
+]
+
+<span class="hljs-attr">rds_security_group_id</span> = <span class="hljs-string">""</span>
+
+<span class="hljs-attr">rds_database_hostname</span> = <span class="hljs-string">""</span>
+
+<span class="hljs-attr">rds_database_username</span> = <span class="hljs-string">"granarydemo"</span>
+
+<span class="hljs-attr">rds_database_password</span> = <span class="hljs-string">""</span>
+
+<span class="hljs-attr">rds_database_name</span> = <span class="hljs-string">"granarydemo"</span>
+
+<span class="hljs-attr">batch_gpu_ce_instance_types</span> = [
+  <span class="hljs-string">"p3 family"</span>,
+  <span class="hljs-string">"c5d family"</span>
+]
+
+<span class="hljs-attr">alb_ingress_cidr_blocks</span> = [<span class="hljs-string">"0.0.0.0/0"</span>]
+
+<span class="hljs-attr">alb_ingress_ipv6_cidr_blocks</span> = []
+
+<span class="hljs-attr">fargate_api_cpu</span> = <span class="hljs-string">"512"</span>
+
+<span class="hljs-attr">fargate_api_memory</span> = <span class="hljs-string">"1024"</span>
+
+<span class="hljs-attr">fargate_api_migrations_cpu</span> = <span class="hljs-string">"256"</span>
+
+<span class="hljs-attr">fargate_api_migrations_memory</span> = <span class="hljs-string">"512"</span>
+
+<span class="hljs-attr">api_log_level</span> = <span class="hljs-string">"info"</span>
+
+<span class="hljs-attr">api_tracing_sink</span> = <span class="hljs-string">"xray"</span>
+
+<span class="hljs-attr">desired_count</span> = <span class="hljs-number">2</span>
+
+<span class="hljs-attr">deployment_min_percent</span> = <span class="hljs-number">100</span>
+
+<span class="hljs-attr">deployment_max_percent</span> = <span class="hljs-number">200</span>
+
+<span class="hljs-attr">batch_gpu_container_instance_volume_size</span> = <span class="hljs-number">30</span>
+
+<span class="hljs-attr">batch_gpu_ce_desired_vcpus</span> = <span class="hljs-string">"0"</span>
+
+<span class="hljs-attr">batch_gpu_ce_min_vcpus</span> = <span class="hljs-string">"0"</span>
+
+<span class="hljs-attr">batch_gpu_ce_max_vcpus</span> = <span class="hljs-string">"128"</span>
+
+<span class="hljs-attr">batch_gpu_ce_spot_fleet_bid_precentage</span> = <span class="hljs-string">"60"</span>
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="aws_key_name"></a><a href="#aws_key_name" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>aws_key_name</code></h3>
+<h3><a class="anchor" aria-hidden="true" id="project"></a><a href="#project" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>project</code></h3>
+<h3><a class="anchor" aria-hidden="true" id="aws_region"></a><a href="#aws_region" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>aws_region</code></h3>
+<h3><a class="anchor" aria-hidden="true" id="r53_public_hosted_zone"></a><a href="#r53_public_hosted_zone" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>r53_public_hosted_zone</code></h3>
+<h3><a class="anchor" aria-hidden="true" id="r53_public_hosted_zone_record"></a><a href="#r53_public_hosted_zone_record" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>r53_public_hosted_zone_record</code></h3>
+<h3><a class="anchor" aria-hidden="true" id="vpc_id"></a><a href="#vpc_id" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>vpc_id</code></h3>
+<h3><a class="anchor" aria-hidden="true" id="vpc_private_subnet_ids"></a><a href="#vpc_private_subnet_ids" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>vpc_private_subnet_ids</code></h3>
+<h3><a class="anchor" aria-hidden="true" id="vpc_public_subnet_ids"></a><a href="#vpc_public_subnet_ids" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>vpc_public_subnet_ids</code></h3>
+<h3><a class="anchor" aria-hidden="true" id="rds_security_group_id"></a><a href="#rds_security_group_id" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>rds_security_group_id</code></h3>
+<h3><a class="anchor" aria-hidden="true" id="rds_database_hostname"></a><a href="#rds_database_hostname" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>rds_database_hostname</code></h3>
+<h3><a class="anchor" aria-hidden="true" id="rds_database_username"></a><a href="#rds_database_username" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>rds_database_username</code></h3>
+<h3><a class="anchor" aria-hidden="true" id="rds_database_password"></a><a href="#rds_database_password" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>rds_database_password</code></h3>
+<h3><a class="anchor" aria-hidden="true" id="rds_database_name"></a><a href="#rds_database_name" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>rds_database_name</code></h3>
+<h2><a class="anchor" aria-hidden="true" id="deploying-your-granary-service"></a><a href="#deploying-your-granary-service" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Deploying your Granary service</h2>
+<p>With variables filled in, the next step is to create resources for your
+Granary service. We'll deploy resources using three simple terraform
+steps:</p>
+<ul>
+<li><a href="#init"><code>init</code></a> -- This step makes sure the Terraform configuration is syntactically
+valid and has all the variables it needs.</li>
+<li><a href="#plan"><code>plan</code></a> -- This step creates a graph of all of the resources to be created
+and their dependencies on each other.</li>
+<li><a href="#apply"><code>apply</code></a> -- This step interacts with AWS to create the planned resources.</li>
+</ul>
+<h3><a class="anchor" aria-hidden="true" id="init"></a><a href="#init" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>init</code></h3>
+<h3><a class="anchor" aria-hidden="true" id="plan"></a><a href="#plan" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>plan</code></h3>
+<h3><a class="anchor" aria-hidden="true" id="apply"></a><a href="#apply" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>apply</code></h3>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/granary/docs/introduction"><span class="arrow-prev">← </span><span>Introduction</span></a><a class="docs-next button" href="/granary/docs/add-a-new-model"><span>Add a new model</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#configuring-the-deployment">Configuring the deployment</a><ul class="toc-headings"><li><a href="#aws_key_name"><code>aws_key_name</code></a></li><li><a href="#project"><code>project</code></a></li><li><a href="#aws_region"><code>aws_region</code></a></li><li><a href="#r53_public_hosted_zone"><code>r53_public_hosted_zone</code></a></li><li><a href="#r53_public_hosted_zone_record"><code>r53_public_hosted_zone_record</code></a></li><li><a href="#vpc_id"><code>vpc_id</code></a></li><li><a href="#vpc_private_subnet_ids"><code>vpc_private_subnet_ids</code></a></li><li><a href="#vpc_public_subnet_ids"><code>vpc_public_subnet_ids</code></a></li><li><a href="#rds_security_group_id"><code>rds_security_group_id</code></a></li><li><a href="#rds_database_hostname"><code>rds_database_hostname</code></a></li><li><a href="#rds_database_username"><code>rds_database_username</code></a></li><li><a href="#rds_database_password"><code>rds_database_password</code></a></li><li><a href="#rds_database_name"><code>rds_database_name</code></a></li></ul></li><li><a href="#deploying-your-granary-service">Deploying your Granary service</a><ul class="toc-headings"><li><a href="#init"><code>init</code></a></li><li><a href="#plan"><code>plan</code></a></li><li><a href="#apply"><code>apply</code></a></li></ul></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/granary/" class="nav-home"><img src="/granary/img/favicon.ico" alt="Granary" width="66" height="58"/></a><div><h5>Docs</h5><a href="/granary/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/granary/docs/en/doc2.html">Guides (or other categories)</a><a href="/granary/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/granary/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/granary/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/granary/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2020 Your Name or Your Company Name</section></footer></div></body></html>
