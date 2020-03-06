@@ -200,12 +200,14 @@ To create the model, save that json to `model.json`, then:
 $ cat model.json | http https://granary.yourdomain.com/api/models
 ```
 
-### Creating a prediction for your model
+## Creating a prediction for your model
 
 In the last step, you created a model in your deployed Granary service. In this step, you'll
 use that model to create a prediction. You'll also see what happens if you try to create a prediction
 with arguments the model doesn't recognize or poorly formatted arguments. This step also requires
 [`httpie`](https://httpie.org/doc#installation).
+
+### Create the `Prediction` in Granary
 
 Creating a prediction is simpler than creating a model. Predictions require only two arguments to create:
 a model ID and JSON of some arguments. Because of the `schema` of the model we created in the previous step,

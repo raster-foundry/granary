@@ -52,6 +52,8 @@ documentation. You can see an
 [OpenAPI Spec](https://swagger.io/docs/specification/about/)
 for Granary [here](https://granary.rasterfoundry.com/api/docs/docs.yaml).
 
+![](/granary/img/granary-api.png)
+
 ## What's a `Model`?
 
 A model is a bundle of a human-readable name, some AWS Batch configuration,
