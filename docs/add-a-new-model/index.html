@@ -148,49 +148,56 @@ create a Granary model that refers to it. The JSON representation of the Granary
 we're going to create looks like this:</p>
 <p>// TODO verify the job queue name resulting from the basic deploy</p>
 <pre><code class="hljs css language-json">{
-    <span class="hljs-attr">"$schema"</span>: <span class="hljs-string">"http://json-schema.org/draft-07/schema"</span>,
-    <span class="hljs-attr">"$id"</span>: <span class="hljs-string">"http://example.com/example.json"</span>,
-    <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
-    <span class="hljs-attr">"title"</span>: <span class="hljs-string">"The Root Schema"</span>,
-    <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The root schema comprises the entire JSON document."</span>,
-    <span class="hljs-attr">"required"</span>: [
+  <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Calculate Water"</span>,
+  <span class="hljs-attr">"validator"</span>: {
+    <span class="hljs-attr">"schema"</span>: {
+      <span class="hljs-attr">"$schema"</span>: <span class="hljs-string">"http://json-schema.org/draft-07/schema"</span>,
+      <span class="hljs-attr">"$id"</span>: <span class="hljs-string">"http://example.com/example.json"</span>,
+      <span class="hljs-attr">"type"</span>: <span class="hljs-string">"object"</span>,
+      <span class="hljs-attr">"title"</span>: <span class="hljs-string">"The Root Schema"</span>,
+      <span class="hljs-attr">"description"</span>: <span class="hljs-string">"The root schema comprises the entire JSON document."</span>,
+      <span class="hljs-attr">"required"</span>: [
         <span class="hljs-string">"NIR_BAND"</span>,
         <span class="hljs-string">"GREEN_BAND"</span>,
-        <span class="hljs-string">"OUTPUT_LOCATION"</span>,
-    ],
-    <span class="hljs-attr">"properties"</span>: {
+        <span class="hljs-string">"OUTPUT_LOCATION"</span>
+      ],
+      <span class="hljs-attr">"properties"</span>: {
         <span class="hljs-attr">"NIR_BAND"</span>: {
-            <span class="hljs-attr">"$id"</span>: <span class="hljs-string">"#/properties/NIR_BAND"</span>,
-            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
-            <span class="hljs-attr">"format"</span>: <span class="hljs-string">"uri"</span>,
-            <span class="hljs-attr">"title"</span>: <span class="hljs-string">"The NIR_band Schema"</span>,
-            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A URI pointing to data from a near infrared band"</span>,
-            <span class="hljs-attr">"examples"</span>: [
-                <span class="hljs-string">"s3://cool-bucket/nir.tiff"</span>
-            ]
+          <span class="hljs-attr">"$id"</span>: <span class="hljs-string">"#/properties/NIR_BAND"</span>,
+          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+          <span class="hljs-attr">"format"</span>: <span class="hljs-string">"uri"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"The NIR_band Schema"</span>,
+          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A URI pointing to data from a near infrared band"</span>,
+          <span class="hljs-attr">"examples"</span>: [
+            <span class="hljs-string">"s3://cool-bucket/nir.tiff"</span>
+          ]
         },
         <span class="hljs-attr">"GREEN_BAND"</span>: {
-            <span class="hljs-attr">"$id"</span>: <span class="hljs-string">"#/properties/GREEN_BAND"</span>,
-            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
-            <span class="hljs-attr">"format"</span>: <span class="hljs-string">"uri"</span>,
-            <span class="hljs-attr">"title"</span>: <span class="hljs-string">"The Green_band Schema"</span>,
-            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A URI pointing to data from a green band"</span>,
-            <span class="hljs-attr">"examples"</span>: [
-                <span class="hljs-string">"s3://cool-bucket/green.tiff"</span>
-            ]
+          <span class="hljs-attr">"$id"</span>: <span class="hljs-string">"#/properties/GREEN_BAND"</span>,
+          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+          <span class="hljs-attr">"format"</span>: <span class="hljs-string">"uri"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"The Green_band Schema"</span>,
+          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A URI pointing to data from a green band"</span>,
+          <span class="hljs-attr">"examples"</span>: [
+            <span class="hljs-string">"s3://cool-bucket/green.tiff"</span>
+          ]
         },
         <span class="hljs-attr">"OUTPUT_LOCATION"</span>: {
-            <span class="hljs-attr">"$id"</span>: <span class="hljs-string">"#/properties/OUTPUT_LOCATION"</span>,
-            <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
-            <span class="hljs-attr">"format"</span>: <span class="hljs-string">"uri"</span>,
-            <span class="hljs-attr">"title"</span>: <span class="hljs-string">"The output_location Schema"</span>,
-            <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A uri pointing to where to store the result of running this model"</span>,
-            <span class="hljs-attr">"default"</span>: <span class="hljs-string">""</span>,
-            <span class="hljs-attr">"examples"</span>: [
-                <span class="hljs-string">"s3://cool-bucket/foo.tif"</span>
-            ]
+          <span class="hljs-attr">"$id"</span>: <span class="hljs-string">"#/properties/OUTPUT_LOCATION"</span>,
+          <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
+          <span class="hljs-attr">"format"</span>: <span class="hljs-string">"uri"</span>,
+          <span class="hljs-attr">"title"</span>: <span class="hljs-string">"The output_location Schema"</span>,
+          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A uri pointing to where to store the result of running this model"</span>,
+          <span class="hljs-attr">"default"</span>: <span class="hljs-string">""</span>,
+          <span class="hljs-attr">"examples"</span>: [
+            <span class="hljs-string">"s3://cool-bucket/foo.tif"</span>
+          ]
         }
+      }
     }
+  },
+  <span class="hljs-attr">"jobDefinition"</span>: <span class="hljs-string">"jobGranaryDemoCalculateWater"</span>,
+  <span class="hljs-attr">"jobQueue"</span>: <span class="hljs-string">"granaryDemoCpuJobQueue"</span>
 }
 </code></pre>
 <p>Note that the <code>WEBHOOK_URL</code> isn't present in the schema here. The reason for that is that the server
