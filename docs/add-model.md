@@ -131,49 +131,56 @@ we're going to create looks like this:
 
 ```json
 {
-    "$schema": "http://json-schema.org/draft-07/schema",
-    "$id": "http://example.com/example.json",
-    "type": "object",
-    "title": "The Root Schema",
-    "description": "The root schema comprises the entire JSON document.",
-    "required": [
+  "name": "Calculate Water",
+  "validator": {
+    "schema": {
+      "$schema": "http://json-schema.org/draft-07/schema",
+      "$id": "http://example.com/example.json",
+      "type": "object",
+      "title": "The Root Schema",
+      "description": "The root schema comprises the entire JSON document.",
+      "required": [
         "NIR_BAND",
         "GREEN_BAND",
-        "OUTPUT_LOCATION",
-    ],
-    "properties": {
+        "OUTPUT_LOCATION"
+      ],
+      "properties": {
         "NIR_BAND": {
-            "$id": "#/properties/NIR_BAND",
-            "type": "string",
-            "format": "uri",
-            "title": "The NIR_band Schema",
-            "description": "A URI pointing to data from a near infrared band",
-            "examples": [
-                "s3://cool-bucket/nir.tiff"
-            ]
+          "$id": "#/properties/NIR_BAND",
+          "type": "string",
+          "format": "uri",
+          "title": "The NIR_band Schema",
+          "description": "A URI pointing to data from a near infrared band",
+          "examples": [
+            "s3://cool-bucket/nir.tiff"
+          ]
         },
         "GREEN_BAND": {
-            "$id": "#/properties/GREEN_BAND",
-            "type": "string",
-            "format": "uri",
-            "title": "The Green_band Schema",
-            "description": "A URI pointing to data from a green band",
-            "examples": [
-                "s3://cool-bucket/green.tiff"
-            ]
+          "$id": "#/properties/GREEN_BAND",
+          "type": "string",
+          "format": "uri",
+          "title": "The Green_band Schema",
+          "description": "A URI pointing to data from a green band",
+          "examples": [
+            "s3://cool-bucket/green.tiff"
+          ]
         },
         "OUTPUT_LOCATION": {
-            "$id": "#/properties/OUTPUT_LOCATION",
-            "type": "string",
-            "format": "uri",
-            "title": "The output_location Schema",
-            "description": "A uri pointing to where to store the result of running this model",
-            "default": "",
-            "examples": [
-                "s3://cool-bucket/foo.tif"
-            ]
+          "$id": "#/properties/OUTPUT_LOCATION",
+          "type": "string",
+          "format": "uri",
+          "title": "The output_location Schema",
+          "description": "A uri pointing to where to store the result of running this model",
+          "default": "",
+          "examples": [
+            "s3://cool-bucket/foo.tif"
+          ]
         }
+      }
     }
+  },
+  "jobDefinition": "jobGranaryDemoCalculateWater",
+  "jobQueue": "granaryDemoCpuJobQueue"
 }
 ```
 
