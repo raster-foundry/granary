@@ -6,14 +6,9 @@ id: add-a-new-model
 This tutorial will guide you through adding a new model to your deployed Granary
 service.
 
-## Adding a new model
+## Create a job definition for your new model
 
-These three steps will explain how to create AWS resources for a new model, how to create
-the new model in Granary, and how to submit a prediction for that new model.
-
-### Create a job definition for your new model
-
-With your running Granary instance now available, we add another model and kick
+With your running Granary instance available, we'll add another model and kick
 off some predictions. We'll use a public container image to create a job definition,
 then create a model in Granary referring to that job definition. For this step, you'll
 need to install the [`terraform`](https://www.terraform.io/downloads.html) CLI.
@@ -115,7 +110,7 @@ definition), follow up with
 $ terraform apply -plan=tfplan
 ```
 
-### Create your new model in Granary
+## Create your new model in Granary
 
 This step will require the [`httpie`](https://httpie.org/doc#installation) command line HTTP
 client.
@@ -192,14 +187,12 @@ To create the model, save that json to `model.json`, then:
 $ cat model.json | http https://granary.yourdomain.com/api/models
 ```
 
-## Creating a prediction for your model
+## Create a prediction for your model
 
 In the last step, you created a model in your deployed Granary service. In this step, you'll
 use that model to create a prediction. You'll also see what happens if you try to create a prediction
 with arguments the model doesn't recognize or poorly formatted arguments. This step also requires
 [`httpie`](https://httpie.org/doc#installation).
-
-### Create the `Prediction` in Granary
 
 Creating a prediction is simpler than creating a model. Predictions require only two arguments to create:
 a model ID and JSON of some arguments. Because of the `schema` of the model we created in the previous step,
@@ -278,7 +271,7 @@ tutorial):
 }
 ```
 
-### Inspecting the prediction
+## Inspect the prediction
 
 Eventually, the prediction should complete. You'll be able to tell it's done, because one of two things will
 be the case when you hit `/api/predictions/<prediction id>/`
