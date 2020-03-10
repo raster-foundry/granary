@@ -1,6 +1,6 @@
 {
   "docs": {
-      "Overview": ["introduction", "development"],
+      "Overview": ["introduction", "deploy-granary", "add-a-new-model", "development"],
       "ADRs": [
 	  "architecture/adr-0001-app-setup-and-goals",
 	  "architecture/adr-0002-api-documentation"

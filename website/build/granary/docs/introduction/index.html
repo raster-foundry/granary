@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Introduction · Granary</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="## What is `granary`?"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Introduction · Granary"/><meta property="og:type" content="website"/><meta property="og:url" content="https://rasterfoundry.github.io/granary/"/><meta property="og:description" content="## What is `granary`?"/><meta property="og:image" content="https://rasterfoundry.github.io/granary/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://rasterfoundry.github.io/granary/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/granary/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/granary/js/scrollSpy.js"></script><link rel="stylesheet" href="/granary/css/main.css"/><script src="/granary/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/granary/"><img class="logo" src="/granary/img/favicon.ico" alt="Granary"/><h2 class="headerTitleWithLogo">Granary</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive siteNavItemActive"><a href="/granary/docs/introduction" target="_self">Getting started</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Overview</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Overview</h3><ul class=""><li class="navListItem navListItemActive"><a class="navItem" href="/granary/docs/introduction">Introduction</a></li><li class="navListItem"><a class="navItem" href="/granary/docs/development">Development</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">ADRs</h3><ul class=""><li class="navListItem"><a class="navItem" href="/granary/docs/architecture/adr-0001-app-setup-and-goals">1 - Application Setup and Goals</a></li><li class="navListItem"><a class="navItem" href="/granary/docs/architecture/adr-0002-api-documentation">2 - API Documentation</a></li></ul></div></div></section></div><script>
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Introduction · Granary</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="## What is `granary`?"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Introduction · Granary"/><meta property="og:type" content="website"/><meta property="og:url" content="https://rasterfoundry.github.io/granary/"/><meta property="og:description" content="## What is `granary`?"/><meta property="og:image" content="https://rasterfoundry.github.io/granary/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://rasterfoundry.github.io/granary/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/granary/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/granary/js/scrollSpy.js"></script><link rel="stylesheet" href="/granary/css/main.css"/><script src="/granary/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/granary/"><img class="logo" src="/granary/img/favicon.ico" alt="Granary"/><h2 class="headerTitleWithLogo">Granary</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive siteNavItemActive"><a href="/granary/docs/introduction" target="_self">Getting started</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Overview</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Overview</h3><ul class=""><li class="navListItem navListItemActive"><a class="navItem" href="/granary/docs/introduction">Introduction</a></li><li class="navListItem"><a class="navItem" href="/granary/docs/deploy-granary">Deploy Granary alongside an existing application</a></li><li class="navListItem"><a class="navItem" href="/granary/docs/add-a-new-model">Add a new model</a></li><li class="navListItem"><a class="navItem" href="/granary/docs/development">Development</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">ADRs</h3><ul class=""><li class="navListItem"><a class="navItem" href="/granary/docs/architecture/adr-0001-app-setup-and-goals">1 - Application Setup and Goals</a></li><li class="navListItem"><a class="navItem" href="/granary/docs/architecture/adr-0002-api-documentation">2 - API Documentation</a></li></ul></div></div></section></div><script>
             var coll = document.getElementsByClassName('collapsible');
             var checkActiveCategory = true;
             for (var i = 0; i < coll.length; i++) {
@@ -62,78 +62,75 @@ to simplify interactions that otherwise involve repeatedly checking AWS SDK
 documentation. You can see an
 <a href="https://swagger.io/docs/specification/about/">OpenAPI Spec</a>
 for Granary <a href="https://granary.rasterfoundry.com/api/docs/docs.yaml">here</a>.</p>
+<p><img src="/granary/img/granary-api.png" alt=""></p>
 <h2><a class="anchor" aria-hidden="true" id="whats-a-model"></a><a href="#whats-a-model" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>What's a <code>Model</code>?</h2>
 <p>A model is a bundle of a human-readable name, some AWS Batch configuration,
 and an argument validator. <code>Model</code>s in Granary correspond to containers that
 have been configured to run via AWS Batch job definitions. The major difference
 between using Granary and hand rolling <code>SubmitJob</code> requests is the <code>Validator</code>.</p>
 <p>To create a model, <code>POST</code> JSON like this to <code>/api/models</code>:</p>
-<pre>
-<code>
-{
-  "name" : "A descriptive model name",
-  "validator" : {
-    "schema" : {
-      "$schema" : "http://json-schema.org/draft-07/schema",
-      "$id" : "http://example.com/example.json",
-      "type" : "object",
-      "title" : "The Root Schema",
-      "description" : "The root schema comprises the entire JSON document.",
-      "required" : [
-        "foo"
+<pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"name"</span> : <span class="hljs-string">"A descriptive model name"</span>,
+  <span class="hljs-attr">"validator"</span> : {
+    <span class="hljs-attr">"schema"</span> : {
+      <span class="hljs-attr">"$schema"</span> : <span class="hljs-string">"http://json-schema.org/draft-07/schema"</span>,
+      <span class="hljs-attr">"$id"</span> : <span class="hljs-string">"http://example.com/example.json"</span>,
+      <span class="hljs-attr">"type"</span> : <span class="hljs-string">"object"</span>,
+      <span class="hljs-attr">"title"</span> : <span class="hljs-string">"The Root Schema"</span>,
+      <span class="hljs-attr">"description"</span> : <span class="hljs-string">"The root schema comprises the entire JSON document."</span>,
+      <span class="hljs-attr">"required"</span> : [
+        <span class="hljs-string">"foo"</span>
       ],
-      "properties" : {
-        "foo" : {
-          "$id" : "#/properties/foo",
-          "type" : "integer",
-          "title" : "The Foo Schema",
-          "description" : "An explanation about the purpose of this instance.",
-          "default" : 0,
-          "examples" : [
-            3
+      <span class="hljs-attr">"properties"</span> : {
+        <span class="hljs-attr">"foo"</span> : {
+          <span class="hljs-attr">"$id"</span> : <span class="hljs-string">"#/properties/foo"</span>,
+          <span class="hljs-attr">"type"</span> : <span class="hljs-string">"integer"</span>,
+          <span class="hljs-attr">"title"</span> : <span class="hljs-string">"The Foo Schema"</span>,
+          <span class="hljs-attr">"description"</span> : <span class="hljs-string">"An explanation about the purpose of this instance."</span>,
+          <span class="hljs-attr">"default"</span> : <span class="hljs-number">0</span>,
+          <span class="hljs-attr">"examples"</span> : [
+            <span class="hljs-number">3</span>
           ]
         }
       }
     }
   },
-  "jobDefinition" : "perfectAccuracyModel:1",
-  "jobQueue" : "veryExpensiveOnDemandQueue"
-}</code>
-</pre>
+  <span class="hljs-attr">"jobDefinition"</span> : <span class="hljs-string">"perfectAccuracyModel:1"</span>,
+  <span class="hljs-attr">"jobQueue"</span> : <span class="hljs-string">"veryExpensiveOnDemandQueue"</span>
+}
+</code></pre>
 <p>If that's successful, here's what the response will look like:</p>
-<pre>
-<code>
-{
-  "id" : "1d99bab2-1470-46c8-aa00-a8a2ced5c60c",
-  "name" : "A descriptive model name",
-  "validator" : {
-    "schema" : {
-      "$schema" : "http://json-schema.org/draft-07/schema",
-      "$id" : "http://example.com/example.json",
-      "type" : "object",
-      "title" : "The Root Schema",
-      "description" : "The root schema comprises the entire JSON document.",
-      "required" : [
-        "foo"
+<pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"id"</span> : <span class="hljs-string">"1d99bab2-1470-46c8-aa00-a8a2ced5c60c"</span>,
+  <span class="hljs-attr">"name"</span> : <span class="hljs-string">"A descriptive model name"</span>,
+  <span class="hljs-attr">"validator"</span> : {
+    <span class="hljs-attr">"schema"</span> : {
+      <span class="hljs-attr">"$schema"</span> : <span class="hljs-string">"http://json-schema.org/draft-07/schema"</span>,
+      <span class="hljs-attr">"$id"</span> : <span class="hljs-string">"http://example.com/example.json"</span>,
+      <span class="hljs-attr">"type"</span> : <span class="hljs-string">"object"</span>,
+      <span class="hljs-attr">"title"</span> : <span class="hljs-string">"The Root Schema"</span>,
+      <span class="hljs-attr">"description"</span> : <span class="hljs-string">"The root schema comprises the entire JSON document."</span>,
+      <span class="hljs-attr">"required"</span> : [
+        <span class="hljs-string">"foo"</span>
       ],
-      "properties" : {
-        "foo" : {
-          "$id" : "#/properties/foo",
-          "type" : "integer",
-          "title" : "The Foo Schema",
-          "description" : "An explanation about the purpose of this instance.",
-          "default" : 0,
-          "examples" : [
-            3
+      <span class="hljs-attr">"properties"</span> : {
+        <span class="hljs-attr">"foo"</span> : {
+          <span class="hljs-attr">"$id"</span> : <span class="hljs-string">"#/properties/foo"</span>,
+          <span class="hljs-attr">"type"</span> : <span class="hljs-string">"integer"</span>,
+          <span class="hljs-attr">"title"</span> : <span class="hljs-string">"The Foo Schema"</span>,
+          <span class="hljs-attr">"description"</span> : <span class="hljs-string">"An explanation about the purpose of this instance."</span>,
+          <span class="hljs-attr">"default"</span> : <span class="hljs-number">0</span>,
+          <span class="hljs-attr">"examples"</span> : [
+            <span class="hljs-number">3</span>
           ]
         }
       }
     }
   },
-  "jobDefinition" : "perfectAccuracyModel:1",
-  "jobQueue" : "veryExpensiveOnDemandQueue"
-}</code>
-</pre>
+  <span class="hljs-attr">"jobDefinition"</span> : <span class="hljs-string">"perfectAccuracyModel:1"</span>,
+  <span class="hljs-attr">"jobQueue"</span> : <span class="hljs-string">"veryExpensiveOnDemandQueue"</span>
+}
+</code></pre>
 <h2><a class="anchor" aria-hidden="true" id="whats-a-validator"></a><a href="#whats-a-validator" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>What's a <code>Validator</code>?</h2>
 <p>A <code>Validator</code> uses <a href="http://json-schema.org/">JSON Schema</a> Draft 7 to ensure that
 when you try to run your job, you have the correct arguments. For example, in the
@@ -192,51 +189,43 @@ to generate schemas from examples, then edit those to match your needs.</p>
 <h2><a class="anchor" aria-hidden="true" id="whats-a-prediction"></a><a href="#whats-a-prediction" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>What's a <code>Prediction</code>?</h2>
 <p>A <code>Prediction</code> is a single run of a model with specific inputs. Predictions are
 created when you <code>POST</code> a model id and arguments to <code>/api/predictions</code>.</p>
-<pre>
-<code>
-{
-  "modelId" : "1d99bab2-1470-46c8-aa00-a8a2ced5c60c",
-  "arguments" : {
-    "foo" : 4
+<pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"modelId"</span> : <span class="hljs-string">"1d99bab2-1470-46c8-aa00-a8a2ced5c60c"</span>,
+  <span class="hljs-attr">"arguments"</span> : {
+    <span class="hljs-attr">"foo"</span> : <span class="hljs-number">4</span>
   }
-}</code>
-</pre>
+}
+</code></pre>
 <p>The model's JSON schema is used to validate the prediction's arguments.
 If validation passes, Granary will insert a record for this prediction and submit
 a job to AWS Batch with the resources configured on the model. If that was successful,
 you'll receive a response that looks like this:</p>
-<pre>
-<code>
-{
-  "id" : "78d4345a-5c22-43ec-8a9a-fe354915c3eb",
-  "modelId" : "1d99bab2-1470-46c8-aa00-a8a2ced5c60c",
-  "invokedAt" : "2020-03-03T15:16:51.188Z",
-  "arguments" : {
-    "foo" : 4
+<pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"id"</span> : <span class="hljs-string">"78d4345a-5c22-43ec-8a9a-fe354915c3eb"</span>,
+  <span class="hljs-attr">"modelId"</span> : <span class="hljs-string">"1d99bab2-1470-46c8-aa00-a8a2ced5c60c"</span>,
+  <span class="hljs-attr">"invokedAt"</span> : <span class="hljs-string">"2020-03-03T15:16:51.188Z"</span>,
+  <span class="hljs-attr">"arguments"</span> : {
+    <span class="hljs-attr">"foo"</span> : <span class="hljs-number">4</span>
   },
-  "status" : "STARTED",
-  "statusReason" : null,
-  "outputLocation" : null,
-  "webhookId" : "f0ff558a-f989-4648-b606-abcf8b977e6c"
-}</code>
-</pre>
+  <span class="hljs-attr">"status"</span> : <span class="hljs-string">"STARTED"</span>,
+  <span class="hljs-attr">"statusReason"</span> : <span class="hljs-literal">null</span>,
+  <span class="hljs-attr">"outputLocation"</span> : <span class="hljs-literal">null</span>,
+  <span class="hljs-attr">"webhookId"</span> : <span class="hljs-string">"f0ff558a-f989-4648-b606-abcf8b977e6c"</span>
+}
+</code></pre>
 <p>The <code>webhookId</code> in the response points to a single-use webhook for updating the prediction.
 This webhook can be accessed at <code>/api/predictions/{predictionId}/results/{webhookId}</code> and
 accepts two kinds of messages.</p>
 <p>If the <code>prediction</code> failed, clients should send messages like this:</p>
-<pre>
-<code>
-{
-  "message" : "everything went wrong"
-}</code>
-</pre>
+<pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"message"</span> : <span class="hljs-string">"everything went wrong"</span>
+}
+</code></pre>
 <p>If the <code>prediction</code> succeeded, clients should send messages like this:</p>
-<pre>
-<code>
-{
-  "outputLocation" : "s3://where/the/results/live.json"
-}</code>
-</pre>
+<pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"outputLocation"</span> : <span class="hljs-string">"s3://where/the/results/live.json"</span>
+}
+</code></pre>
 <p>In the ideal case, the container for running the model in batch will submit results when it
 is done or fails. This strategy will not cover cases in which the model cannot perform
 error-handling though, for instance, <code>OutOfMemory</code> errors and cases in which a spot
@@ -246,4 +235,4 @@ those sorts of errors or for retrying predictions. Additionally, if your model h
 logic, it's your responsibility to make sure that it doesn't <code>POST</code> to the results webhook
 until it has exhausted its retries, since the first <code>POST</code> to the webhook will make it
 inaccessible for the rest of time.</p>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-next button" href="/granary/docs/development"><span>Development</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#what-is-granary">What is <code>granary</code>?</a></li><li><a href="#whats-a-model">What's a <code>Model</code>?</a></li><li><a href="#whats-a-validator">What's a <code>Validator</code>?</a></li><li><a href="#whats-a-prediction">What's a <code>Prediction</code>?</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/granary/" class="nav-home"><img src="/granary/img/favicon.ico" alt="Granary" width="66" height="58"/></a><div><h5>Docs</h5><a href="/granary/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/granary/docs/en/doc2.html">Guides (or other categories)</a><a href="/granary/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/granary/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/granary/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/granary/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2020 Your Name or Your Company Name</section></footer></div></body></html>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-next button" href="/granary/docs/deploy-granary"><span>Deploy Granary alongside an existing application</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#what-is-granary">What is <code>granary</code>?</a></li><li><a href="#whats-a-model">What's a <code>Model</code>?</a></li><li><a href="#whats-a-validator">What's a <code>Validator</code>?</a></li><li><a href="#whats-a-prediction">What's a <code>Prediction</code>?</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><a href="/granary/" class="nav-home"><img src="/granary/img/favicon.ico" alt="Granary" width="66" height="58"/></a><div><h5>Docs</h5><a href="/granary/docs/en/doc1.html">Getting Started (or other categories)</a><a href="/granary/docs/en/doc2.html">Guides (or other categories)</a><a href="/granary/docs/en/doc3.html">API Reference (or other categories)</a></div><div><h5>Community</h5><a href="/granary/en/users.html">User Showcase</a><a href="https://stackoverflow.com/questions/tagged/" target="_blank" rel="noreferrer noopener">Stack Overflow</a><a href="https://discordapp.com/">Project Chat</a><a href="https://twitter.com/" target="_blank" rel="noreferrer noopener">Twitter</a></div><div><h5>More</h5><a href="/granary/blog">Blog</a><a href="https://github.com/">GitHub</a><a class="github-button" data-icon="octicon-star" data-count-href="/facebook/docusaurus/stargazers" data-show-count="true" data-count-aria-label="# stargazers on GitHub" aria-label="Star this project on GitHub">Star</a></div></section><a href="https://opensource.facebook.com/" target="_blank" rel="noreferrer noopener" class="fbOpenSource"><img src="/granary/img/oss_logo.png" alt="Facebook Open Source" width="170" height="45"/></a><section class="copyright">Copyright © 2020 Your Name or Your Company Name</section></footer></div></body></html>

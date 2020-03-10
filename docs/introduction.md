@@ -52,6 +52,8 @@ documentation. You can see an
 [OpenAPI Spec](https://swagger.io/docs/specification/about/)
 for Granary [here](https://granary.rasterfoundry.com/api/docs/docs.yaml).
 
+![](/granary/img/granary-api.png)
+
 ## What's a `Model`?
 
 A model is a bundle of a human-readable name, some AWS Batch configuration,
@@ -61,10 +63,9 @@ between using Granary and hand rolling `SubmitJob` requests is the `Validator`.
 
 To create a model, `POST` JSON like this to `/api/models`:
 
-<pre>
-<code>
 ```scala mdoc:passthrough
-print {
+println("```json")
+println {
   Model.Create(
     "A descriptive model name",
     Validator(jsonSchema), // a Validator -- more on this below
@@ -72,16 +73,14 @@ print {
     "veryExpensiveOnDemandQueue" // an AWS Batch job queue
   ).asJson.spaces2
 }
+println("```")
 ```
-</code>
-</pre>
 
 If that's successful, here's what the response will look like:
 
-<pre>
-<code>
 ```scala mdoc:passthrough
-print {
+println("```json")
+println {
   Model(
     modelId,
     "A descriptive model name",
@@ -90,9 +89,8 @@ print {
     "veryExpensiveOnDemandQueue"
   ).asJson.spaces2
 }
+println("```")
 ```
-</code>
-</pre>
 
 ## What's a `Validator`?
 
@@ -160,28 +158,25 @@ to generate schemas from examples, then edit those to match your needs.
 A `Prediction` is a single run of a model with specific inputs. Predictions are
 created when you `POST` a model id and arguments to `/api/predictions`.
 
-<pre>
-<code>
 ```scala mdoc:passthrough
-print {
+println("```json")
+println {
   Prediction.Create(
     modelId, // the modelId to associate with this prediction
     jsonPayload, // the arguments to pass to the model
   ).asJson.spaces2
 }
+println("```")
 ```
-</code>
-</pre>
 
 The model's JSON schema is used to validate the prediction's arguments.
 If validation passes, Granary will insert a record for this prediction and submit
 a job to AWS Batch with the resources configured on the model. If that was successful,
 you'll receive a response that looks like this:
 
-<pre>
-<code>
 ```scala mdoc:passthrough
-print {
+println("```json")
+println {
   Prediction(
     predictionId,
     modelId,
@@ -193,9 +188,8 @@ print {
     Some(webhookId)
   ).asJson.spaces2
 }
+println("```")
 ```
-</code>
-</pre>
 
 The `webhookId` in the response points to a single-use webhook for updating the prediction.
 This webhook can be accessed at `/api/predictions/{predictionId}/results/{webhookId}` and
@@ -203,29 +197,25 @@ accepts two kinds of messages.
 
 If the `prediction` failed, clients should send messages like this:
 
-<pre>
-<code>
 ```scala mdoc:passthrough
 // JSON of the message to send if the prediction failed
-print {
+println("```json")
+println {
   PredictionFailure("everything went wrong").asJson.spaces2
 }
+println("```")
 ```
-</code>
-</pre>
 
 If the `prediction` succeeded, clients should send messages like this:
 
-<pre>
-<code>
 ```scala mdoc:passthrough
 // JSON of the message to send if the prediction succeeded
-print {
+println("```json")
+println {
   PredictionSuccess("s3://where/the/results/live.json").asJson.spaces2
 }
+println("```")
 ```
-</code>
-</pre>
 
 In the ideal case, the container for running the model in batch will submit results when it
 is done or fails. This strategy will not cover cases in which the model cannot perform
