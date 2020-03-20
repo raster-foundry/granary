@@ -18,7 +18,7 @@ object Versions {
   val ScapegoatVersion       = "1.3.11"
   val ScalacheckVersion      = "1.14.3"
   val Specs2Version          = "4.9.2"
-  val TapirVersion           = "0.12.24"
+  val TapirVersion           = "0.12.25"
 }
 
 object Dependencies {
