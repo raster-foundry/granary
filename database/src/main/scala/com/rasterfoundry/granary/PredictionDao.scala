@@ -41,9 +41,7 @@ object PredictionDao {
       modelId: Option[UUID],
       status: Option[JobStatus]
   ): ConnectionIO[List[Prediction]] =
-    (selectF ++ Fragments.whereOrOpt(modelId map { id =>
-      fr"model_id = $id"
-    }, status map { s =>
+    (selectF ++ Fragments.whereOrOpt(modelId map { id => fr"model_id = $id" }, status map { s =>
       fr"status = $s"
     }))
       .query[Prediction]
@@ -82,9 +80,7 @@ object PredictionDao {
           (fr"""
           update predictions
           set status = ${newPrediction.status}, status_reason=${newPrediction.statusReason}
-        """ ++ Fragments.whereOr(fr"id = ${prediction.id}")).update.run map { _ =>
-            Left(resultErr)
-          }
+        """ ++ Fragments.whereOr(fr"id = ${prediction.id}")).update.run map { _ => Left(resultErr) }
         }
       }
 
