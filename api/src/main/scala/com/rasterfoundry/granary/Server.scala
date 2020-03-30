@@ -30,8 +30,7 @@ object ApiServer extends IOApp {
     ConfigSource.default.at("tracing").load[TracingConfig] traverse {
       case TracingConfig(s) => {
         Logger[IO].info(s"Ignoring tracer $s due to a large tower of dependency Jenga") flatMap {
-          _ =>
-            NoOpTracingContext.getNoOpTracingContextBuilder[IO]
+          _ => NoOpTracingContext.getNoOpTracingContextBuilder[IO]
         }
       }
     }
@@ -70,11 +69,10 @@ object ApiServer extends IOApp {
       transactor <- HikariTransactor
         .fromHikariConfig[IO](DBConfig.hikariConfig, connectionEc, blocker)
       allEndpoints = {
-        HelloEndpoints.endpoints ++ ModelEndpoints.endpoints ++ PredictionEndpoints.endpoints
+        ModelEndpoints.endpoints ++ PredictionEndpoints.endpoints
       }
       docs        = allEndpoints.toOpenAPI("Granary", "0.0.1")
       docRoutes   = new SwaggerHttp4s(docs.toYaml).routes
-      helloRoutes = new HelloService(tracingContextBuilder).routes
       modelRoutes = new ModelService(tracingContextBuilder, transactor).routes
       predictionService = new PredictionService(
         tracingContextBuilder,
@@ -90,7 +88,7 @@ object ApiServer extends IOApp {
               "/api" -> ((
                 Auth.customAuthMiddleware(
                   modelRoutes <+> predictionRoutes,
-                  helloRoutes <+> docRoutes,
+                  docRoutes,
                   authConfig,
                   transactor
                 )
