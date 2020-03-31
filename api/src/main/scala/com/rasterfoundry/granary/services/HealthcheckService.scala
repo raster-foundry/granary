@@ -13,6 +13,7 @@ import io.chrisdavenport.log4cats.Logger
 import sttp.tapir.server.http4s._
 
 import scala.concurrent.duration._
+import com.rasterfoundry.granary.datamodel.HealthcheckResult
 
 class HealthcheckService[F[_]: Sync: Logger: MonadError[*[_], Throwable]: Concurrent](
     contextBuilder: TracingContextBuilder[F],
@@ -24,17 +25,18 @@ class HealthcheckService[F[_]: Sync: Logger: MonadError[*[_], Throwable]: Concur
 
   def checkHealth: F[Either[UnhealthyResult, HealthyResult]] =
     mkContext("healthcheck", Map.empty, contextBuilder).use { _ =>
-      Concurrent[F]
-        .race(
-          timer.sleep(5.seconds) map { _ => UnhealthyResult(database = HealthResult.Unhealthy) },
+      Concurrent
+        .timeoutTo[F, HealthcheckResult](
           fr"select 1 from models limit 1;".query[Int].option.transact(xa) map { _ =>
             HealthyResult()
-          }
+          },
+          5.seconds,
+          Applicative[F].pure(UnhealthyResult(database = HealthResult.Unhealthy))
         )
         .attempt flatMap {
-        case Right(Left(unhealthy)) =>
+        case Right(unhealthy @ UnhealthyResult(_)) =>
           Applicative[F].pure { Left(unhealthy) }
-        case Right(Right(healthy)) =>
+        case Right(healthy @ HealthyResult()) =>
           Applicative[F].pure { Right(healthy) }
         case Left(e) =>
           Logger[F].error(e)("Database health check failed") map { _ =>
