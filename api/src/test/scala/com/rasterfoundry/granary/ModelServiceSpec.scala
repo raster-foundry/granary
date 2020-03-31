@@ -79,16 +79,12 @@ class ModelServiceSpec
   def listModelsExpectation = {
     val models = Arbitrary.arbitrary[List[Model.Create]].sample.get
     val listIO = for {
-      models <- models traverse { model =>
-        createModel(model, service)
-      }
+      models <- models traverse { model => createModel(model, service) }
       listedRaw <- service.routes.run(
         Request[IO](method = Method.GET, uri = Uri.uri("/models"))
       )
       listed <- OptionT.liftF { listedRaw.as[List[Model]] }
-      _ <- models traverse { model =>
-        deleteModel(model, service)
-      }
+      _      <- models traverse { model => deleteModel(model, service) }
     } yield (models, listed)
 
     val (inserted, listed) = listIO.value.unsafeRunSync.get
