@@ -45,8 +45,8 @@ class HealthcheckServiceSpec
     } yield (resp, decoded)
     val (response, result) = io.value.unsafeRunSync.get
 
-    response.status.code must be equalTo (200)
-    result must be equalTo (HealthyResult())
+    response.status.code ==== 200 &&
+    result ==== HealthyResult()
   }
 
   def unhealthyExpectation = {
@@ -56,7 +56,7 @@ class HealthcheckServiceSpec
     } yield (resp, decoded)
 
     val (response, result) = io.value.unsafeRunSync.get
-    result.database must be equalTo (HealthResult.Unhealthy)
-    response.status.code must be equalTo (503)
+    result.database ==== HealthResult.Unhealthy &&
+    response.status.code ==== 503
   }
 }
