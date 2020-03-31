@@ -1,7 +1,7 @@
 package com.rasterfoundry.granary.api.services
 
 import com.rasterfoundry.granary.api.endpoints.HealthcheckEndpoints
-import com.rasterfoundry.granary.datamodel.{HealthResult, HealthcheckResult}
+import com.rasterfoundry.granary.datamodel.{HealthResult, HealthyResult, UnhealthyResult}
 
 import cats._
 import cats.effect._
@@ -22,22 +22,23 @@ class HealthcheckService[F[_]: Sync: Logger: MonadError[*[_], Throwable]: Concur
     timer: Timer[F]
 ) extends GranaryService {
 
-  def checkHealth: F[Either[HealthcheckResult, HealthcheckResult]] =
+  def checkHealth: F[Either[UnhealthyResult, HealthyResult]] =
     mkContext("healthcheck", Map.empty, contextBuilder).use { _ =>
-      Concurrent
-        .timeoutTo[F, HealthcheckResult](
+      Concurrent[F]
+        .race(
+          timer.sleep(5.seconds) map { _ => UnhealthyResult(database = HealthResult.Unhealthy) },
           fr"select 1 from models limit 1;".query[Int].option.transact(xa) map { _ =>
-            HealthcheckResult(database = HealthResult.Healthy)
-          },
-          5.seconds,
-          Applicative[F].pure(HealthcheckResult(database = HealthResult.Unhealthy))
+            HealthyResult()
+          }
         )
         .attempt flatMap {
-        case Right(_) =>
-          Applicative[F].pure { Right(HealthcheckResult(database = HealthResult.Healthy)) }
+        case Right(Left(unhealthy)) =>
+          Applicative[F].pure { Left(unhealthy) }
+        case Right(Right(healthy)) =>
+          Applicative[F].pure { Right(healthy) }
         case Left(e) =>
           Logger[F].error(e)("Database health check failed") map { _ =>
-            Left(HealthcheckResult(database = HealthResult.Unhealthy))
+            Left(UnhealthyResult(database = HealthResult.Unhealthy))
           }
       }
     }

@@ -41,17 +41,18 @@ class HealthcheckServiceSpec
   def healthyExpectation = {
     val io = for {
       resp    <- service.healthcheck.run(request)
-      decoded <- OptionT.liftF { resp.as[HealthcheckResult] }
-    } yield decoded
-    val result = io.value.unsafeRunSync.get
+      decoded <- OptionT.liftF { resp.as[HealthyResult] }
+    } yield (resp, decoded)
+    val (response, result) = io.value.unsafeRunSync.get
 
-    result.database must be equalTo (HealthResult.Healthy)
+    response.status.code must be equalTo (200)
+    result must be equalTo (HealthyResult())
   }
 
   def unhealthyExpectation = {
     val io = for {
       resp    <- serviceButSleepy.healthcheck.run(request)
-      decoded <- OptionT.liftF { resp.as[HealthcheckResult] }
+      decoded <- OptionT.liftF { resp.as[UnhealthyResult] }
     } yield (resp, decoded)
 
     val (response, result) = io.value.unsafeRunSync.get

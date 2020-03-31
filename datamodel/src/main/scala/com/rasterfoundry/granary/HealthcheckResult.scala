@@ -2,29 +2,26 @@ package com.rasterfoundry.granary.datamodel
 
 import io.circe._
 import io.circe.generic.semiauto._
+import io.circe.syntax._
 
-sealed abstract class HealthResult(val repr: String) {
-  override def toString: String = repr
+sealed abstract class HealthcheckResult
+
+case class HealthyResult() extends HealthcheckResult
+
+object HealthyResult {
+
+  implicit val encHealthyResult: Encoder[HealthyResult] = new Encoder[HealthyResult] {
+    def apply(thing: HealthyResult): Json = ().asJson
+  }
+
+  implicit val decHealthyResult: Decoder[HealthyResult] = Decoder[JsonObject] map { _ =>
+    HealthyResult()
+  }
 }
 
-object HealthResult {
-  case object Healthy   extends HealthResult("healthy")
-  case object Unhealthy extends HealthResult("unhealthy")
+case class UnhealthyResult(database: HealthResult) extends HealthcheckResult
 
-  def fromStringE(s: String): Either[String, HealthResult] =
-    s.toLowerCase match {
-      case "healthy"   => Right(Healthy)
-      case "unhealthy" => Right(Unhealthy)
-      case s           => Left(s"$s is not a valid health result")
-    }
-
-  implicit val encHealthResult: Encoder[HealthResult] = Encoder.encodeString.contramap(_.toString)
-  implicit val decHealthResult: Decoder[HealthResult] = Decoder.decodeString.emap(fromStringE)
-}
-
-case class HealthcheckResult(database: HealthResult)
-
-object HealthcheckResult {
-  implicit val encHealthcheckResult: Encoder[HealthcheckResult] = deriveEncoder
-  implicit val decHealthcheckResult: Decoder[HealthcheckResult] = deriveDecoder
+object UnhealthyResult {
+  implicit val encUnhealthyResult: Encoder[UnhealthyResult] = deriveEncoder
+  implicit val decUnhealthyResult: Decoder[UnhealthyResult] = deriveDecoder
 }
