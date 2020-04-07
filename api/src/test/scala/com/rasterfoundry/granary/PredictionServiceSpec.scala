@@ -151,14 +151,10 @@ class PredictionServiceSpec
           model2Uri = Uri.fromString(s"/predictions?modelId=${createdModel2.id}").right.get
           listedForModel1 <- predictionService.routes.run(
             Request[IO](method = Method.GET, uri = model1Uri)
-          ) flatMap { resp =>
-            OptionT.liftF { resp.as[List[Prediction]] }
-          }
+          ) flatMap { resp => OptionT.liftF { resp.as[List[Prediction]] } }
           listedForModel2 <- predictionService.routes.run(
             Request[IO](method = Method.GET, uri = model2Uri)
-          ) flatMap { resp =>
-            OptionT.liftF { resp.as[List[Prediction]] }
-          }
+          ) flatMap { resp => OptionT.liftF { resp.as[List[Prediction]] } }
           _ <- List(
             PredictionSuccess("s3://center/of/the/universe.geojson"),
             PredictionFailure("wasn't set up to succeed")
@@ -170,14 +166,10 @@ class PredictionServiceSpec
           failureUri = Uri.fromString(s"/predictions?status=failed").right.get
           listedForSuccess <- predictionService.routes.run(
             Request[IO](method = Method.GET, uri = successUri)
-          ) flatMap { resp =>
-            OptionT.liftF { resp.as[List[Prediction]] }
-          }
+          ) flatMap { resp => OptionT.liftF { resp.as[List[Prediction]] } }
           listedForFailure <- predictionService.routes.run(
             Request[IO](method = Method.GET, uri = failureUri)
-          ) flatMap { resp =>
-            OptionT.liftF { resp.as[List[Prediction]] }
-          }
+          ) flatMap { resp => OptionT.liftF { resp.as[List[Prediction]] } }
           _ <- deleteModel(createdModel1, modelService)
           _ <- deleteModel(createdModel2, modelService)
         } yield {
@@ -206,13 +198,9 @@ class PredictionServiceSpec
         model1Preds.filter(_.modelId == model1Id) ==== model1Preds && model2Preds.filter(
           _.modelId == model2Id
         ) ==== model2Preds && (model1Preds ++ model2Preds).toSet ==== allCreatedPreds.toSet &&
-        (successResults map { _.status }) ==== (successResults map { _ =>
-          JobStatus.Successful
-        }) && (failureResults map {
+        (successResults map { _.status }) ==== (successResults map { _ => JobStatus.Successful }) && (failureResults map {
           _.status
-        }) ==== (failureResults map { _ =>
-          JobStatus.Failed
-        })
+        }) ==== (failureResults map { _ => JobStatus.Failed })
       }
   }
 
@@ -229,9 +217,7 @@ class PredictionServiceSpec
             method = Method.GET,
             uri = Uri.fromString(s"/predictions/${createdPrediction.id}").right.get
           )
-        ) flatMap { resp =>
-          OptionT.liftF { resp.as[Prediction] }
-        }
+        ) flatMap { resp => OptionT.liftF { resp.as[Prediction] } }
         _ <- deleteModel(createdModel, modelService)
       } yield { (createdPrediction, predictionById) }
 

@@ -49,7 +49,7 @@ resource "aws_lb_target_group" "api" {
     matcher             = 200
     protocol            = "HTTP"
     timeout             = 3
-    path                = "/api/hello/world"
+    path                = "/api/healthcheck"
     unhealthy_threshold = 2
   }
 
