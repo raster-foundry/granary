@@ -1,6 +1,6 @@
 package com.rasterfoundry.granary.database
 
-import cats.effect.{ContextShift, IO}
+import cats.effect.{ContextShift, IO, LiftIO, Timer}
 import cats.implicits._
 import doobie._
 import doobie.free.connection.unit
@@ -10,6 +10,7 @@ import org.flywaydb.core.Flyway
 import org.specs2._
 import org.specs2.specification.{AfterAll, BeforeAll}
 
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object SetupTemplateDB {
@@ -54,10 +55,16 @@ trait TestDatabaseSpec extends Specification with BeforeAll with AfterAll {
   val dbName: String         = getClass.getSimpleName.toLowerCase
   val templateDbName: String = SetupTemplateDB.templateDbName
 
+  implicit val timer: Timer[IO]     = IO.timer(global)
   implicit val cs: ContextShift[IO] = IO.contextShift(global)
 
   // Transactor used by tests with rollback behavior and transactions
   def transactor: Transactor[IO] = Config.nonHikariTransactor[IO](dbName)
+
+  def sleepyTransactor: Transactor[IO] = Transactor.strategy.set(
+    transactor,
+    Strategy.default.copy(before = LiftIO[ConnectionIO].liftIO(IO.sleep(6.seconds)))
+  )
 
   // this transactor has error handling and cleanup but no transaction/auto-commit behavior
   val setupXant: Transactor[IO] = Transactor.strategy
