@@ -17,7 +17,7 @@ object Versions {
   val PureConfig             = "0.12.3"
   val ScapegoatVersion       = "1.3.11"
   val ScalacheckVersion      = "1.14.3"
-  val Specs2Version          = "4.9.3"
+  val Specs2Version          = "4.9.4"
   val TapirVersion           = "0.12.28"
 }
 
