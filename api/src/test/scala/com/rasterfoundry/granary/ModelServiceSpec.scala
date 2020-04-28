@@ -35,7 +35,8 @@ class ModelServiceSpec
 
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
 
-  def service: ModelService[IO] = new ModelService[IO](tracingContextBuilder, transactor)
+  def service: ModelService[IO] =
+    new ModelService[IO](PageRequest(Some(0), Some(30)), tracingContextBuilder, transactor)
 
   def createExpectation = prop { (model: Model.Create) =>
     {
@@ -77,18 +78,18 @@ class ModelServiceSpec
   }
 
   def listModelsExpectation = {
-    val models = Arbitrary.arbitrary[List[Model.Create]].sample.get
+    val models = Arbitrary.arbitrary[List[Model.Create]].sample.get.take(30)
     val listIO = for {
       models <- models traverse { model => createModel(model, service) }
       listedRaw <- service.routes.run(
         Request[IO](method = Method.GET, uri = Uri.uri("/models"))
       )
-      listed <- OptionT.liftF { listedRaw.as[List[Model]] }
+      listed <- OptionT.liftF { listedRaw.as[PaginatedResponse[Model]] }
       _      <- models traverse { model => deleteModel(model, service) }
     } yield (models, listed)
 
     val (inserted, listed) = listIO.value.unsafeRunSync.get
-    listed.intersect(inserted).toSet == inserted.toSet
+    listed.results.intersect(inserted).toSet == inserted.toSet
   }
 
   def deleteModelExpectation = prop { (model: Model.Create) =>
