@@ -64,6 +64,11 @@ object ApiServer extends IOApp {
           case Right(config) => IO.pure(config)
         }
       }
+      paginationConfig <- Resource.liftF {
+        IO(
+          ConfigSource.default.at("pagination").loadOrThrow[PaginationConfig]
+        )
+      }
       connectionEc <- ExecutionContexts.fixedThreadPool[IO](2)
       blocker      <- Blocker[IO]
       transactor <- HikariTransactor
@@ -71,9 +76,13 @@ object ApiServer extends IOApp {
       allEndpoints = {
         ModelEndpoints.endpoints ++ PredictionEndpoints.endpoints ++ HealthcheckEndpoints.endpoints
       }
-      docs        = allEndpoints.toOpenAPI("Granary", "0.0.1")
-      docRoutes   = new SwaggerHttp4s(docs.toYaml).routes
-      modelRoutes = new ModelService(tracingContextBuilder, transactor).routes
+      docs      = allEndpoints.toOpenAPI("Granary", "0.0.1")
+      docRoutes = new SwaggerHttp4s(docs.toYaml).routes
+      modelRoutes = new ModelService(
+        paginationConfig.defaultLimit,
+        tracingContextBuilder,
+        transactor
+      ).routes
       predictionService = new PredictionService(
         tracingContextBuilder,
         transactor,

@@ -14,13 +14,17 @@ import org.http4s._
 import sttp.tapir.server.http4s._
 
 import java.util.UUID
+import com.rasterfoundry.granary.datamodel.PageRequest
 
 class ModelService[F[_]: Sync](
+    defaultLimit: Int,
     contextBuilder: TracingContextBuilder[F],
     xa: Transactor[F]
 )(
     implicit contextShift: ContextShift[F]
 ) extends GranaryService {
+
+  val defaultPageRequest = PageRequest.default(defaultLimit)
 
   def createModel(model: Model.Create): F[Either[Unit, Model]] =
     mkContext("createModel", Map.empty, contextBuilder) use { _ =>
@@ -29,13 +33,12 @@ class ModelService[F[_]: Sync](
       )(Right(_))
     }
 
-  def listModels: Unit => F[Either[Unit, List[Model]]] =
-    _ =>
-      mkContext("listModels", Map.empty, contextBuilder) use { _ =>
-        Functor[F].map(
-          ModelDao.listModels.transact(xa)
-        )(Right(_))
-      }
+  def listModels(pageRequest: PageRequest): F[Either[Unit, List[Model]]] =
+    mkContext("listModels", Map.empty, contextBuilder) use { _ =>
+      Functor[F].map(
+        ModelDao.listModels(pageRequest `combine` defaultPageRequest).transact(xa)
+      )(Right(_))
+    }
 
   def getById(id: UUID): F[Either[CrudError, Model]] =
     mkContext("lookupModelById", Map("modelId" -> s"$id"), contextBuilder) use { _ =>
