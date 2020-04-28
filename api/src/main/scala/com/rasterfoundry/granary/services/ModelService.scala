@@ -1,5 +1,7 @@
 package com.rasterfoundry.granary.api.services
 
+import com.rasterfoundry.granary.datamodel.PaginatedResponse
+
 import cats._
 import cats.effect._
 import cats.implicits._
@@ -33,12 +35,14 @@ class ModelService[F[_]: Sync](
       )(Right(_))
     }
 
-  def listModels(pageRequest: PageRequest): F[Either[Unit, List[Model]]] =
+  def listModels(pageRequest: PageRequest): F[Either[Unit, PaginatedResponse[Model]]] = {
+    val forPage = pageRequest `combine` defaultPageRequest
     mkContext("listModels", Map.empty, contextBuilder) use { _ =>
       Functor[F].map(
-        ModelDao.listModels(pageRequest `combine` defaultPageRequest).transact(xa)
-      )(Right(_))
+        ModelDao.listModels(forPage).transact(xa)
+      )(models => Right(PaginatedResponse.forRequest(models, forPage)))
     }
+  }
 
   def getById(id: UUID): F[Either[CrudError, Model]] =
     mkContext("lookupModelById", Map("modelId" -> s"$id"), contextBuilder) use { _ =>

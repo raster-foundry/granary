@@ -11,8 +11,11 @@ import com.rasterfoundry.granary.datamodel.PageRequest
 object ModelDao {
   val selectF = fr"select id, name, validator, job_definition, job_queue FROM models"
 
-  def listModels(pageRequest: PageRequest): ConnectionIO[List[Model]] =
+  def listModels(pageRequest: PageRequest): ConnectionIO[List[Model]] = {
+    println(s"Yeah definitely listing models, page is:")
+    println(pageRequest)
     Page(selectF, pageRequest).query[Model].to[List]
+  }
 
   def getModel(id: UUID): ConnectionIO[Option[Model]] =
     (selectF ++ Fragments.whereOr(fr"id = ${id}")).query[Model].option

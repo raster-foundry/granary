@@ -10,6 +10,8 @@ import sttp.model.StatusCode
 import java.util.UUID
 
 object ModelEndpoints {
+
+  type PaginatedModelResponse = PaginatedResponse[Model]
   val base = endpoint.in("models")
 
   val idLookup = base.get
@@ -35,7 +37,7 @@ object ModelEndpoints {
 
   val list = base.get
     .in(Inputs.paginationInput)
-    .out(jsonBody[List[Model]])
+    .out(jsonBody[PaginatedResponse[Model]])
 
   val delete = base.delete
     .in(path[UUID])
