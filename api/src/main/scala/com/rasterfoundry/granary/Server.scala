@@ -45,30 +45,16 @@ object ApiServer extends IOApp {
         }
       }
       s3Config <- Resource.liftF {
-        ConfigSource.default.at("s3").load[S3Config] match {
-          case Left(e) =>
-            IO.raiseError(new Exception(e.toList.map(_.toString).mkString("\n")))
-          case Right(config) => IO.pure(config)
-        }
+        IO(ConfigSource.default.at("s3").loadOrThrow[S3Config])
       }
       metaConfig <- Resource.liftF {
-        ConfigSource.default.at("meta").load[MetaConfig] match {
-          case Left(e) =>
-            IO.raiseError(new Exception(e.toList.map(_.toString).mkString("\n")))
-          case Right(config) => IO.pure(config)
-        }
+        IO(ConfigSource.default.at("meta").loadOrThrow[MetaConfig])
       }
       authConfig <- Resource.liftF {
-        ConfigSource.default.at("auth").load[AuthConfig] match {
-          case Left(e) =>
-            IO.raiseError(new Exception(e.toList.map(_.toString).mkString("\n")))
-          case Right(config) => IO.pure(config)
-        }
+        IO(ConfigSource.default.at("auth").loadOrThrow[AuthConfig])
       }
       paginationConfig <- Resource.liftF {
-        IO(
-          ConfigSource.default.at("pagination").loadOrThrow[PaginationConfig]
-        )
+        IO(ConfigSource.default.at("pagination").loadOrThrow[PaginationConfig])
       }
       connectionEc <- ExecutionContexts.fixedThreadPool[IO](2)
       blocker      <- Blocker[IO]
