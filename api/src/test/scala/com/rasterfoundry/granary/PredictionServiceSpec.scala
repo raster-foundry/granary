@@ -196,7 +196,8 @@ class PredictionServiceSpec
         ) =
           testIO.value.unsafeRunSync.get
 
-        model1Preds.results.filter(_.modelId == model1Id) ==== model1Preds.results && model2Preds.results
+        model1Preds.results
+          .filter(_.modelId == model1Id) ==== model1Preds.results && model2Preds.results
           .filter(
             _.modelId == model2Id
           ) ==== model2Preds.results && (model1Preds.results ++ model2Preds.results).toSet ==== allCreatedPreds.toSet &&
