@@ -38,12 +38,13 @@ object PredictionDao {
     """
 
   def listPredictions(
+      pageRequest: PageRequest,
       modelId: Option[UUID],
       status: Option[JobStatus]
   ): ConnectionIO[List[Prediction]] =
-    (selectF ++ Fragments.whereOrOpt(modelId map { id => fr"model_id = $id" }, status map { s =>
+    Page(selectF ++ Fragments.whereOrOpt(modelId map { id => fr"model_id = $id" }, status map { s =>
       fr"status = $s"
-    }))
+    }), pageRequest)
       .query[Prediction]
       .to[List]
 

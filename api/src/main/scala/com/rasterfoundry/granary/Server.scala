@@ -21,6 +21,7 @@ import pureconfig.generic.auto._
 import sttp.tapir.openapi.circe.yaml._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.swagger.http4s.SwaggerHttp4s
+import com.rasterfoundry.granary.datamodel.PageRequest
 
 object ApiServer extends IOApp {
 
@@ -76,14 +77,16 @@ object ApiServer extends IOApp {
       allEndpoints = {
         ModelEndpoints.endpoints ++ PredictionEndpoints.endpoints ++ HealthcheckEndpoints.endpoints
       }
-      docs      = allEndpoints.toOpenAPI("Granary", "0.0.1")
-      docRoutes = new SwaggerHttp4s(docs.toYaml).routes
+      docs               = allEndpoints.toOpenAPI("Granary", "0.0.1")
+      docRoutes          = new SwaggerHttp4s(docs.toYaml).routes
+      defaultPageRequest = PageRequest.default(paginationConfig.defaultLimit)
       modelRoutes = new ModelService(
-        paginationConfig.defaultLimit,
+        defaultPageRequest,
         tracingContextBuilder,
         transactor
       ).routes
       predictionService = new PredictionService(
+        defaultPageRequest,
         tracingContextBuilder,
         transactor,
         s3Config.dataBucket,

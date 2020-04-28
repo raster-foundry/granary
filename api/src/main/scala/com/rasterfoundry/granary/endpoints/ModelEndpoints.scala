@@ -11,7 +11,6 @@ import java.util.UUID
 
 object ModelEndpoints {
 
-  type PaginatedModelResponse = PaginatedResponse[Model]
   val base = endpoint.in("models")
 
   val idLookup = base.get

@@ -19,14 +19,12 @@ import java.util.UUID
 import com.rasterfoundry.granary.datamodel.PageRequest
 
 class ModelService[F[_]: Sync](
-    defaultLimit: Int,
+    defaultPageRequest: PageRequest,
     contextBuilder: TracingContextBuilder[F],
     xa: Transactor[F]
 )(
     implicit contextShift: ContextShift[F]
 ) extends GranaryService {
-
-  val defaultPageRequest = PageRequest.default(defaultLimit)
 
   def createModel(model: Model.Create): F[Either[Unit, Model]] =
     mkContext("createModel", Map.empty, contextBuilder) use { _ =>
