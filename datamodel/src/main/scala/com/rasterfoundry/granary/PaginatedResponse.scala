@@ -2,12 +2,10 @@ package com.rasterfoundry.granary.datamodel
 
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.semiauto._
-import io.circe.refined._
-import eu.timepit.refined.types.numeric.{NonNegInt, PosInt}
 
 case class PaginatedResponse[T: Encoder: Decoder](
-    page: NonNegInt,
-    pageSize: PosInt,
+    page: Int,
+    pageSize: Int,
     results: List[T]
 )
 
@@ -24,12 +22,8 @@ object PaginatedResponse {
       pageRequest: PageRequest
   ): PaginatedResponse[T] =
     PaginatedResponse(
-      pageRequest.page getOrElse NonNegInt(
-        0
-      ), // ultimate fallback -- default value apparently wasn't applied
-      pageRequest.limit getOrElse PosInt(
-        30
-      ), // ultimate fallback -- default value apparently wasn't applied
+      pageRequest.page map { _.value } getOrElse 0,   // ultimate fallback -- default value apparently wasn't applied
+      pageRequest.limit map { _.value } getOrElse 30, // ultimate fallback -- default value apparently wasn't applied
       results
     )
 }

@@ -10,6 +10,7 @@ import com.rasterfoundry.granary.api.endpoints.DeleteMessage
 import com.rasterfoundry.granary.api.error.NotFound
 import com.rasterfoundry.granary.database.TestDatabaseSpec
 import com.rasterfoundry.granary.datamodel._
+import eu.timepit.refined.types.numeric.{NonNegInt, PosInt}
 import org.http4s._
 import org.http4s.circe.CirceEntityDecoder._
 import org.scalacheck._
@@ -36,7 +37,7 @@ class ModelServiceSpec
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
 
   def service: ModelService[IO] =
-    new ModelService[IO](PageRequest(Some(0), Some(30)), tracingContextBuilder, transactor)
+    new ModelService[IO](PageRequest(Some(NonNegInt(0)), Some(PosInt(30))), tracingContextBuilder, transactor)
 
   def createExpectation = prop { (model: Model.Create) =>
     {

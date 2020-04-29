@@ -8,6 +8,7 @@ import cats.data.OptionT
 import cats.effect.IO
 import cats.implicits._
 import com.colisweb.tracing.NoOpTracingContext
+import eu.timepit.refined.types.numeric.{NonNegInt, PosInt}
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
@@ -40,11 +41,11 @@ class PredictionServiceSpec
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
 
   val modelService: ModelService[IO] =
-    new ModelService[IO](PageRequest(Some(0), Some(30)), tracingContextBuilder, transactor)
+    new ModelService[IO](PageRequest(Some(NonNegInt(0)), Some(PosInt(30))), tracingContextBuilder, transactor)
 
   val predictionService =
     new PredictionService[IO](
-      PageRequest(Some(0), Some(30)),
+      PageRequest(Some(NonNegInt(0)), Some(PosInt(30))),
       tracingContextBuilder,
       transactor,
       dataBucket,
