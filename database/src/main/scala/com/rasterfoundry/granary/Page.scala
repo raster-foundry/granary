@@ -12,8 +12,7 @@ object Page {
       lim  <- pageRequest.limit
       page <- pageRequest.page
     } yield {
-      fragment ++ fr"LIMIT $lim OFFSET ${page * lim}"
+      fragment ++ fr"ORDER BY id LIMIT ${lim.value} OFFSET ${page.value * lim.value}"
     }) getOrElse { fragment }
-
   }
 }

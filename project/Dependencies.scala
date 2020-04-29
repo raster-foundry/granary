@@ -15,6 +15,7 @@ object Versions {
   val Log4CatsVersion        = "1.0.1"
   val OpenTracingVersion     = "0.1.1"
   val PureConfig             = "0.12.3"
+  val RefinedVersion         = "0.9.14"
   val ScapegoatVersion       = "1.3.11"
   val ScalacheckVersion      = "1.14.3"
   val Specs2Version          = "4.9.4"
@@ -31,6 +32,7 @@ object Dependencies {
   val circeGeneric        = "io.circe"                    %% "circe-generic"         % Versions.CirceVersion
   val circeJsonSchema     = "io.circe"                    %% "circe-json-schema"     % Versions.CirceJsonSchemaVersion
   val circeLiteral        = "io.circe"                    %% "circe-literal"         % Versions.CirceVersion
+  val circeRefined        = "io.circe"                    %% "circe-refined"         % Versions.CirceVersion
   val doobie              = "org.tpolecat"                %% "doobie-core"           % Versions.DoobieVersion
   val doobieHikari        = "org.tpolecat"                %% "doobie-hikari"         % Versions.DoobieVersion
   val doobiePostgres      = "org.tpolecat"                %% "doobie-postgres"       % Versions.DoobieVersion
@@ -46,6 +48,7 @@ object Dependencies {
   val log4cats            = "io.chrisdavenport"           %% "log4cats-slf4j"        % Versions.Log4CatsVersion
   val openTracing         = "com.colisweb"                %% "scala-opentracing"     % Versions.OpenTracingVersion
   val pureConfig          = "com.github.pureconfig"       %% "pureconfig"            % Versions.PureConfig
+  val refined             = "eu.timepit"                  %% "refined"               % Versions.RefinedVersion
   val scalacheck          = "org.scalacheck"              %% "scalacheck"            % Versions.ScalacheckVersion % "test"
   val specs2Core          = "org.specs2"                  %% "specs2-core"           % Versions.Specs2Version % "test"
   val specs2Scalacheck    = "org.specs2"                  %% "specs2-scalacheck"     % Versions.Specs2Version % "test"
