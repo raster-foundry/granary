@@ -41,7 +41,11 @@ class PredictionServiceSpec
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
 
   val modelService: ModelService[IO] =
-    new ModelService[IO](PageRequest(Some(NonNegInt(0)), Some(PosInt(30))), tracingContextBuilder, transactor)
+    new ModelService[IO](
+      PageRequest(Some(NonNegInt(0)), Some(PosInt(30))),
+      tracingContextBuilder,
+      transactor
+    )
 
   val predictionService =
     new PredictionService[IO](
