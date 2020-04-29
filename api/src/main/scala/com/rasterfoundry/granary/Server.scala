@@ -9,6 +9,7 @@ import cats.implicits._
 import com.colisweb.tracing._
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
+import eu.timepit.refined.pureconfig._
 import io.chrisdavenport.log4cats.Logger
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import org.http4s.implicits._

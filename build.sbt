@@ -114,11 +114,13 @@ lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
   Dependencies.openTracing,
   Dependencies.pureConfig,
   Dependencies.refined,
+  Dependencies.refinedPureconfig,
   Dependencies.tapir,
   Dependencies.tapirCirce,
   Dependencies.tapirHttp4sServer,
   Dependencies.tapirOpenAPICirceYAML,
   Dependencies.tapirOpenAPIDocs,
+  Dependencies.tapirRefined,
   Dependencies.tapirSwaggerUIHttp4s
 )
 

@@ -4,6 +4,7 @@ import com.rasterfoundry.granary.api.error._
 import com.rasterfoundry.granary.datamodel._
 
 import sttp.tapir._
+import sttp.tapir.codec.refined._
 import sttp.tapir.json.circe._
 import sttp.model.StatusCode
 

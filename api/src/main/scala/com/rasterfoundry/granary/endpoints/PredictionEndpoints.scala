@@ -5,6 +5,7 @@ import com.rasterfoundry.granary.api.error._
 import com.rasterfoundry.granary.datamodel._
 import sttp.tapir.{ValidationError => _, _}
 import sttp.tapir.json.circe._
+
 import java.util.UUID
 
 import sttp.model.StatusCode
