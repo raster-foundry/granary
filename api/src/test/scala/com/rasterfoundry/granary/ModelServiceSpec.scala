@@ -95,7 +95,7 @@ class ModelServiceSpec
 
     val (inserted, listed) = listIO.value.unsafeRunSync.get
     println(s"Models length: ${inserted.size}")
-    println(s"Listed length: ${listed.size}")
+    println(s"Listed length: ${listed.results.size}")
 
 
     listed.results.intersect(inserted).toSet == inserted.toSet
