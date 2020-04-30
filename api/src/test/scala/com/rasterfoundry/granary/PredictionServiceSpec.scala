@@ -28,7 +28,7 @@ class PredictionServiceSpec
     with Teardown
     with Generators
     with TestDatabaseSpec {
-  def is = s2"""
+  def is = sequential ^ s2"""
   This specification verifies the functionality of the prediction service
 
   The prediction service should:

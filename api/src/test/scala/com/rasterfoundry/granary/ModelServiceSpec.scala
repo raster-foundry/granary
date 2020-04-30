@@ -24,7 +24,7 @@ class ModelServiceSpec
     with Teardown
     with TestDatabaseSpec {
 
-  def is = s2"""
+  def is = sequential ^ s2"""
   This specification verifies that the Model Service can run without crashing
 
   The model service should:
@@ -94,7 +94,7 @@ class ModelServiceSpec
     } yield (models, listed)
 
     val (inserted, listed) = listIO.value.unsafeRunSync.get
-    listed.results.intersect(inserted).toSet == inserted.toSet
+    listed.results.toSet.intersect(inserted.toSet) ==== inserted.toSet
   }
 
   def deleteModelExpectation = prop { (model: Model.Create) =>
