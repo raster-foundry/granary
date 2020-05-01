@@ -10,6 +10,7 @@ import com.rasterfoundry.granary.api.endpoints.DeleteMessage
 import com.rasterfoundry.granary.api.error.NotFound
 import com.rasterfoundry.granary.database.TestDatabaseSpec
 import com.rasterfoundry.granary.datamodel._
+import eu.timepit.refined.types.numeric.{NonNegInt, PosInt}
 import org.http4s._
 import org.http4s.circe.CirceEntityDecoder._
 import org.scalacheck._
@@ -23,7 +24,7 @@ class ModelServiceSpec
     with Teardown
     with TestDatabaseSpec {
 
-  def is = s2"""
+  def is = sequential ^ s2"""
   This specification verifies that the Model Service can run without crashing
 
   The model service should:
@@ -35,7 +36,12 @@ class ModelServiceSpec
 
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
 
-  def service: ModelService[IO] = new ModelService[IO](tracingContextBuilder, transactor)
+  def service: ModelService[IO] =
+    new ModelService[IO](
+      PageRequest(Some(NonNegInt(0)), Some(PosInt(30))),
+      tracingContextBuilder,
+      transactor
+    )
 
   def createExpectation = prop { (model: Model.Create) =>
     {
@@ -77,18 +83,18 @@ class ModelServiceSpec
   }
 
   def listModelsExpectation = {
-    val models = Arbitrary.arbitrary[List[Model.Create]].sample.get
+    val models = Arbitrary.arbitrary[List[Model.Create]].sample.get.take(30)
     val listIO = for {
       models <- models traverse { model => createModel(model, service) }
       listedRaw <- service.routes.run(
         Request[IO](method = Method.GET, uri = Uri.uri("/models"))
       )
-      listed <- OptionT.liftF { listedRaw.as[List[Model]] }
+      listed <- OptionT.liftF { listedRaw.as[PaginatedResponse[Model]] }
       _      <- models traverse { model => deleteModel(model, service) }
     } yield (models, listed)
 
     val (inserted, listed) = listIO.value.unsafeRunSync.get
-    listed.intersect(inserted).toSet == inserted.toSet
+    listed.results.toSet.intersect(inserted.toSet) ==== inserted.toSet
   }
 
   def deleteModelExpectation = prop { (model: Model.Create) =>

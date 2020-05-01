@@ -5,6 +5,7 @@ import com.rasterfoundry.granary.api.error._
 import com.rasterfoundry.granary.datamodel._
 import sttp.tapir.{ValidationError => _, _}
 import sttp.tapir.json.circe._
+
 import java.util.UUID
 
 import sttp.model.StatusCode
@@ -46,9 +47,10 @@ object PredictionEndpoints {
 
   val list =
     base.get
+      .in(Inputs.paginationInput)
       .in(query[Option[UUID]]("modelId"))
       .in(query[Option[JobStatus]]("status"))
-      .out(jsonBody[List[Prediction]])
+      .out(jsonBody[PaginatedResponse[Prediction]])
 
   val addResults =
     base.post

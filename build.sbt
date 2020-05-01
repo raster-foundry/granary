@@ -46,8 +46,10 @@ lazy val datamodelDependencies = commonDependencies ++ Seq(
   Dependencies.circeCore,
   Dependencies.circeGeneric,
   Dependencies.circeJsonSchema,
+  Dependencies.circeRefined,
   Dependencies.http4s,
   Dependencies.http4sCirce,
+  Dependencies.refined,
   Dependencies.scalacheck
 )
 
@@ -111,11 +113,14 @@ lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
   Dependencies.log4cats,
   Dependencies.openTracing,
   Dependencies.pureConfig,
+  Dependencies.refined,
+  Dependencies.refinedPureconfig,
   Dependencies.tapir,
   Dependencies.tapirCirce,
   Dependencies.tapirHttp4sServer,
   Dependencies.tapirOpenAPICirceYAML,
   Dependencies.tapirOpenAPIDocs,
+  Dependencies.tapirRefined,
   Dependencies.tapirSwaggerUIHttp4s
 )
 

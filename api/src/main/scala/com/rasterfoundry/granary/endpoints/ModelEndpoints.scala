@@ -2,13 +2,15 @@ package com.rasterfoundry.granary.api.endpoints
 
 import com.rasterfoundry.granary.api.error._
 import com.rasterfoundry.granary.datamodel._
+
 import sttp.tapir._
 import sttp.tapir.json.circe._
-import java.util.UUID
-
 import sttp.model.StatusCode
 
+import java.util.UUID
+
 object ModelEndpoints {
+
   val base = endpoint.in("models")
 
   val idLookup = base.get
@@ -33,7 +35,8 @@ object ModelEndpoints {
     .out(jsonBody[Model])
 
   val list = base.get
-    .out(jsonBody[List[Model]])
+    .in(Inputs.paginationInput)
+    .out(jsonBody[PaginatedResponse[Model]])
 
   val delete = base.delete
     .in(path[UUID])

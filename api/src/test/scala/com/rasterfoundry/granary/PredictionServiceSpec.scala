@@ -8,6 +8,7 @@ import cats.data.OptionT
 import cats.effect.IO
 import cats.implicits._
 import com.colisweb.tracing.NoOpTracingContext
+import eu.timepit.refined.types.numeric.{NonNegInt, PosInt}
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
@@ -27,7 +28,7 @@ class PredictionServiceSpec
     with Teardown
     with Generators
     with TestDatabaseSpec {
-  def is = s2"""
+  def is = sequential ^ s2"""
   This specification verifies the functionality of the prediction service
 
   The prediction service should:
@@ -40,10 +41,15 @@ class PredictionServiceSpec
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
 
   val modelService: ModelService[IO] =
-    new ModelService[IO](tracingContextBuilder, transactor)
+    new ModelService[IO](
+      PageRequest(Some(NonNegInt(0)), Some(PosInt(30))),
+      tracingContextBuilder,
+      transactor
+    )
 
   val predictionService =
     new PredictionService[IO](
+      PageRequest(Some(NonNegInt(0)), Some(PosInt(30))),
       tracingContextBuilder,
       transactor,
       dataBucket,
@@ -151,10 +157,10 @@ class PredictionServiceSpec
           model2Uri = Uri.fromString(s"/predictions?modelId=${createdModel2.id}").right.get
           listedForModel1 <- predictionService.routes.run(
             Request[IO](method = Method.GET, uri = model1Uri)
-          ) flatMap { resp => OptionT.liftF { resp.as[List[Prediction]] } }
+          ) flatMap { resp => OptionT.liftF { resp.as[PaginatedResponse[Prediction]] } }
           listedForModel2 <- predictionService.routes.run(
             Request[IO](method = Method.GET, uri = model2Uri)
-          ) flatMap { resp => OptionT.liftF { resp.as[List[Prediction]] } }
+          ) flatMap { resp => OptionT.liftF { resp.as[PaginatedResponse[Prediction]] } }
           _ <- List(
             PredictionSuccess("s3://center/of/the/universe.geojson"),
             PredictionFailure("wasn't set up to succeed")
@@ -166,10 +172,10 @@ class PredictionServiceSpec
           failureUri = Uri.fromString(s"/predictions?status=failed").right.get
           listedForSuccess <- predictionService.routes.run(
             Request[IO](method = Method.GET, uri = successUri)
-          ) flatMap { resp => OptionT.liftF { resp.as[List[Prediction]] } }
+          ) flatMap { resp => OptionT.liftF { resp.as[PaginatedResponse[Prediction]] } }
           listedForFailure <- predictionService.routes.run(
             Request[IO](method = Method.GET, uri = failureUri)
-          ) flatMap { resp => OptionT.liftF { resp.as[List[Prediction]] } }
+          ) flatMap { resp => OptionT.liftF { resp.as[PaginatedResponse[Prediction]] } }
           _ <- deleteModel(createdModel1, modelService)
           _ <- deleteModel(createdModel2, modelService)
         } yield {
@@ -195,12 +201,16 @@ class PredictionServiceSpec
         ) =
           testIO.value.unsafeRunSync.get
 
-        model1Preds.filter(_.modelId == model1Id) ==== model1Preds && model2Preds.filter(
-          _.modelId == model2Id
-        ) ==== model2Preds && (model1Preds ++ model2Preds).toSet ==== allCreatedPreds.toSet &&
-        (successResults map { _.status }) ==== (successResults map { _ => JobStatus.Successful }) && (failureResults map {
+        model1Preds.results
+          .filter(_.modelId == model1Id) ==== model1Preds.results && model2Preds.results
+          .filter(
+            _.modelId == model2Id
+          ) ==== model2Preds.results && (model1Preds.results ++ model2Preds.results).toSet ==== allCreatedPreds.toSet &&
+        (successResults.results map { _.status }) ==== (successResults.results map { _ =>
+          JobStatus.Successful
+        }) && (failureResults.results map {
           _.status
-        }) ==== (failureResults map { _ => JobStatus.Failed })
+        }) ==== (failureResults.results map { _ => JobStatus.Failed })
       }
   }
 
