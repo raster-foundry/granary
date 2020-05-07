@@ -5,7 +5,7 @@ import com.azavea.stac4s.StacItemAsset
 import io.circe._
 import io.circe.generic.semiauto._
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 import java.time.Instant
 import java.util.{Date, UUID}
@@ -22,19 +22,18 @@ case class Prediction(
 ) {
 
   def signS3OutputLocation(s3Client: AmazonS3): Prediction = {
-    val updatedLocation = outputLocation map {
-      case s3Location if s3Location.startsWith("s3://") =>
-        Try {
-          val s3Url      = new AmazonS3URI(s3Location)
+    val updatedResults = results map {
+      case asset if asset.href.startsWith("s3://") =>
+        (Try {
+          val s3Url      = new AmazonS3URI(asset.href)
           val expiryDate = Date.from(Instant.now().plusSeconds(60 * 60))
-          s3Client.generatePresignedUrl(s3Url.getBucket, s3Url.getKey, expiryDate)
-        } match {
-          case Success(v) => v.toString
-          case Failure(_) => s3Location
-        }
+          asset.copy(href =
+            s3Client.generatePresignedUrl(s3Url.getBucket, s3Url.getKey, expiryDate).toString
+          )
+        }).fold(_ => asset, identity)
       case location => location
     }
-    this.copy(outputLocation = updatedLocation)
+    this.copy(results = updatedResults)
   }
 }
 
