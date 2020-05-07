@@ -59,8 +59,9 @@ object ApiServer extends IOApp {
       }
       connectionEc <- ExecutionContexts.fixedThreadPool[IO](2)
       blocker      <- Blocker[IO]
-      transactor <- HikariTransactor
-        .fromHikariConfig[IO](DBConfig.hikariConfig, connectionEc, blocker)
+      transactor <-
+        HikariTransactor
+          .fromHikariConfig[IO](DBConfig.hikariConfig, connectionEc, blocker)
       allEndpoints = {
         ModelEndpoints.endpoints ++ PredictionEndpoints.endpoints ++ HealthcheckEndpoints.endpoints
       }
@@ -81,26 +82,28 @@ object ApiServer extends IOApp {
       )
       predictionRoutes  = predictionService.routes
       healthcheckRoutes = new HealthcheckService(tracingContextBuilder, transactor).healthcheck
-      router = RequestResponseLogger
-        .httpRoutes(false, false) {
-          CORS(
-            Router(
-              "/api" -> ((
-                Auth.customAuthMiddleware(
-                  modelRoutes <+> predictionRoutes,
-                  healthcheckRoutes <+> docRoutes,
-                  authConfig,
-                  transactor
-                )
-              ) <+> predictionService.addResultsRoutes)
+      router =
+        RequestResponseLogger
+          .httpRoutes(false, false) {
+            CORS(
+              Router(
+                "/api" -> ((
+                  Auth.customAuthMiddleware(
+                    modelRoutes <+> predictionRoutes,
+                    healthcheckRoutes <+> docRoutes,
+                    authConfig,
+                    transactor
+                  )
+                ) <+> predictionService.addResultsRoutes)
+              )
             )
-          )
-        }
-        .orNotFound
-      server <- BlazeServerBuilder[IO]
-        .bindHttp(8080, "0.0.0.0")
-        .withHttpApp(router)
-        .resource
+          }
+          .orNotFound
+      server <-
+        BlazeServerBuilder[IO]
+          .bindHttp(8080, "0.0.0.0")
+          .withHttpApp(router)
+          .resource
     } yield server
 
   def run(args: List[String]): IO[ExitCode] =

@@ -43,44 +43,46 @@ class ModelServiceSpec
       transactor
     )
 
-  def createExpectation = prop { (model: Model.Create) =>
-    {
-      val out = for {
-        created <- createModel(model, service)
-        _       <- deleteModel(created, service)
-      } yield created
+  def createExpectation =
+    prop { (model: Model.Create) =>
+      {
+        val out = for {
+          created <- createModel(model, service)
+          _       <- deleteModel(created, service)
+        } yield created
 
-      out.value.unsafeRunSync.get.toCreate ==== model
+        out.value.unsafeRunSync.get.toCreate ==== model
+      }
     }
-  }
 
-  def getByIdExpectation = prop { (model: Model.Create) =>
-    {
-      val getByIdAndBogus: OptionT[IO, (Model, Response[IO], NotFound)] = for {
-        decoded <- createModel(model, service)
-        successfulByIdRaw <- service.routes.run(
-          Request[IO](
-            method = Method.GET,
-            uri = Uri.fromString(s"/models/${decoded.id}").right.get
+  def getByIdExpectation =
+    prop { (model: Model.Create) =>
+      {
+        val getByIdAndBogus: OptionT[IO, (Model, Response[IO], NotFound)] = for {
+          decoded <- createModel(model, service)
+          successfulByIdRaw <- service.routes.run(
+            Request[IO](
+              method = Method.GET,
+              uri = Uri.fromString(s"/models/${decoded.id}").right.get
+            )
           )
-        )
-        successfulById <- OptionT.liftF { successfulByIdRaw.as[Model] }
-        missingByIdRaw <- service.routes.run(
-          Request[IO](
-            method = Method.GET,
-            uri = Uri.fromString(s"/models/${UUID.randomUUID}").right.get
+          successfulById <- OptionT.liftF { successfulByIdRaw.as[Model] }
+          missingByIdRaw <- service.routes.run(
+            Request[IO](
+              method = Method.GET,
+              uri = Uri.fromString(s"/models/${UUID.randomUUID}").right.get
+            )
           )
-        )
-        missingById <- OptionT.liftF { missingByIdRaw.as[NotFound] }
-        _           <- deleteModel(decoded, service)
-      } yield { (successfulById, missingByIdRaw, missingById) }
+          missingById <- OptionT.liftF { missingByIdRaw.as[NotFound] }
+          _           <- deleteModel(decoded, service)
+        } yield { (successfulById, missingByIdRaw, missingById) }
 
-      val (outModel, missingResp, missingBody) = getByIdAndBogus.value.unsafeRunSync.get
+        val (outModel, missingResp, missingBody) = getByIdAndBogus.value.unsafeRunSync.get
 
-      outModel.toCreate ==== model && missingResp.status.code ==== 404 && missingBody ==== NotFound()
+        outModel.toCreate ==== model && missingResp.status.code ==== 404 && missingBody ==== NotFound()
 
+      }
     }
-  }
 
   def listModelsExpectation = {
     val models = Arbitrary.arbitrary[List[Model.Create]].sample.get.take(30)
@@ -97,24 +99,27 @@ class ModelServiceSpec
     listed.results.toSet.intersect(inserted.toSet) ==== inserted.toSet
   }
 
-  def deleteModelExpectation = prop { (model: Model.Create) =>
-    {
-      val deleteIO = for {
-        decoded    <- createModel(model, service)
-        deleteById <- deleteModel(decoded, service)
-        missingByIdRaw <- service.routes.run(
-          Request[IO](
-            method = Method.DELETE,
-            uri = Uri.fromString(s"/models/${UUID.randomUUID}").right.get
+  def deleteModelExpectation =
+    prop { (model: Model.Create) =>
+      {
+        val deleteIO = for {
+          decoded    <- createModel(model, service)
+          deleteById <- deleteModel(decoded, service)
+          missingByIdRaw <- service.routes.run(
+            Request[IO](
+              method = Method.DELETE,
+              uri = Uri.fromString(s"/models/${UUID.randomUUID}").right.get
+            )
           )
-        )
-        missingById <- OptionT.liftF { missingByIdRaw.as[NotFound] }
-      } yield { (deleteById, missingByIdRaw, missingById) }
+          missingById <- OptionT.liftF { missingByIdRaw.as[NotFound] }
+        } yield { (deleteById, missingByIdRaw, missingById) }
 
-      val (outDeleted, missingResp, missingBody) =
-        deleteIO.value.unsafeRunSync.get
+        val (outDeleted, missingResp, missingBody) =
+          deleteIO.value.unsafeRunSync.get
 
-      outDeleted ==== DeleteMessage(1) && missingResp.status.code ==== 404 && missingBody ==== NotFound()
+        outDeleted ==== DeleteMessage(
+          1
+        ) && missingResp.status.code ==== 404 && missingBody ==== NotFound()
+      }
     }
-  }
 }

@@ -61,10 +61,11 @@ trait TestDatabaseSpec extends Specification with BeforeAll with AfterAll {
   // Transactor used by tests with rollback behavior and transactions
   def transactor: Transactor[IO] = Config.nonHikariTransactor[IO](dbName)
 
-  def sleepyTransactor: Transactor[IO] = Transactor.strategy.set(
-    transactor,
-    Strategy.default.copy(before = LiftIO[ConnectionIO].liftIO(IO.sleep(6.seconds)))
-  )
+  def sleepyTransactor: Transactor[IO] =
+    Transactor.strategy.set(
+      transactor,
+      Strategy.default.copy(before = LiftIO[ConnectionIO].liftIO(IO.sleep(6.seconds)))
+    )
 
   // this transactor has error handling and cleanup but no transaction/auto-commit behavior
   val setupXant: Transactor[IO] = Transactor.strategy

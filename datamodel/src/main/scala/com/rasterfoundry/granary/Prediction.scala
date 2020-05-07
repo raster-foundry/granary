@@ -1,13 +1,14 @@
 package com.rasterfoundry.granary.datamodel
 
+import com.amazonaws.services.s3.{AmazonS3, AmazonS3URI}
+import com.azavea.stac4s.StacItemAsset
 import io.circe._
 import io.circe.generic.semiauto._
-import java.time.Instant
-import java.util.{Date, UUID}
-
-import com.amazonaws.services.s3.{AmazonS3, AmazonS3URI}
 
 import scala.util.{Failure, Success, Try}
+
+import java.time.Instant
+import java.util.{Date, UUID}
 
 case class Prediction(
     id: UUID,
@@ -16,7 +17,7 @@ case class Prediction(
     arguments: Json,
     status: JobStatus,
     statusReason: Option[String],
-    outputLocation: Option[String],
+    results: List[StacItemAsset],
     webhookId: Option[UUID]
 ) {
 

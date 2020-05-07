@@ -14,12 +14,13 @@ case class Model(
 ) {
   def validate = validator.validate _
 
-  def toCreate: Model.Create = Model.Create(
-    name,
-    validator,
-    jobDefinition,
-    jobQueue
-  )
+  def toCreate: Model.Create =
+    Model.Create(
+      name,
+      validator,
+      jobDefinition,
+      jobQueue
+    )
 }
 
 object Model {

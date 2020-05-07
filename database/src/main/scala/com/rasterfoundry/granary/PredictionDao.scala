@@ -42,10 +42,15 @@ object PredictionDao {
       modelId: Option[UUID],
       status: Option[JobStatus]
   ): ConnectionIO[List[Prediction]] =
-    Page(selectF ++ Fragments.whereOrOpt(modelId map { id => fr"model_id = $id" }, status map { s =>
-      fr"status = $s"
-    }), pageRequest)
-      .query[Prediction]
+    Page(
+      selectF ++ Fragments.whereOrOpt(
+        modelId map { id => fr"model_id = $id" },
+        status map { s =>
+          fr"status = $s"
+        }
+      ),
+      pageRequest
+    ).query[Prediction]
       .to[List]
 
   def getPrediction(id: UUID): ConnectionIO[Option[Prediction]] =

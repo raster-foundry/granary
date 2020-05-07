@@ -22,8 +22,12 @@ object PaginatedResponse {
       pageRequest: PageRequest
   ): PaginatedResponse[T] =
     PaginatedResponse(
-      pageRequest.page map { _.value } getOrElse 0,   // ultimate fallback -- default value apparently wasn't applied
-      pageRequest.limit map { _.value } getOrElse 30, // ultimate fallback -- default value apparently wasn't applied
+      pageRequest.page map {
+        _.value
+      } getOrElse 0, // ultimate fallback -- default value apparently wasn't applied
+      pageRequest.limit map {
+        _.value
+      } getOrElse 30, // ultimate fallback -- default value apparently wasn't applied
       results
     )
 }

@@ -25,9 +25,9 @@ object TokenDao {
     (for {
       uuid <- LiftIO[ConnectionIO].liftIO(IO { UUID.fromString(id) })
       exists <- (
-        fr"SELECT EXISTS(" ++
-          selectF ++
-          Fragments.whereAnd(fr"id = $uuid") ++ fr")"
+          fr"SELECT EXISTS(" ++
+            selectF ++
+            Fragments.whereAnd(fr"id = $uuid") ++ fr")"
       ).query[Boolean].unique
     } yield exists).attempt.map {
       case Right(true) => true

@@ -17,10 +17,11 @@ object PredictionStatusUpdate {
   implicit val encStatusUpdate: Encoder[PredictionStatusUpdate] =
     new Encoder[PredictionStatusUpdate] {
 
-      def apply(t: PredictionStatusUpdate): Json = t match {
-        case ps: PredictionFailure => ps.asJson
-        case ps: PredictionSuccess => ps.asJson
-      }
+      def apply(t: PredictionStatusUpdate): Json =
+        t match {
+          case ps: PredictionFailure => ps.asJson
+          case ps: PredictionSuccess => ps.asJson
+        }
     }
 }
 
