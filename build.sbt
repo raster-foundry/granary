@@ -77,7 +77,8 @@ lazy val databaseDependencies = commonDependencies ++ Seq(
   Dependencies.doobieScalatest,
   Dependencies.flyway,
   Dependencies.pureConfig,
-  Dependencies.log4cats
+  Dependencies.log4cats,
+  Dependencies.stac4s
 )
 
 lazy val database = (project in file("database"))
