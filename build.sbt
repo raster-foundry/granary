@@ -50,6 +50,7 @@ lazy val datamodelDependencies = commonDependencies ++ Seq(
   Dependencies.http4s,
   Dependencies.http4sCirce,
   Dependencies.refined,
+  Dependencies.stac4s,
   Dependencies.scalacheck
 )
 
