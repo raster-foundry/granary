@@ -7,6 +7,7 @@ import com.rasterfoundry.granary.datamodel._
 import cats.data.OptionT
 import cats.effect.IO
 import cats.implicits._
+import com.azavea.stac4s.StacItemAsset
 import com.colisweb.tracing.NoOpTracingContext
 import eu.timepit.refined.types.numeric.{NonNegInt, PosInt}
 import io.circe._
@@ -164,7 +165,9 @@ class PredictionServiceSpec
               Request[IO](method = Method.GET, uri = model2Uri)
             ) flatMap { resp => OptionT.liftF { resp.as[PaginatedResponse[Prediction]] } }
             _ <- List(
-              PredictionSuccess("s3://center/of/the/universe.geojson"),
+              PredictionSuccess(
+                List(StacItemAsset("s3://center/of/the/universe.geojson", None, None, Nil, None))
+              ),
               PredictionFailure("wasn't set up to succeed")
             ).zip(allCreatedPreds) traverse {
               case (msg, prediction) =>
@@ -249,7 +252,8 @@ class PredictionServiceSpec
             predictionService
           )
           message =
-            if (Random.nextFloat > 0.5) PredictionSuccess("s3://foo/bar.geojson")
+            if (Random.nextFloat > 0.5)
+              PredictionSuccess(List(StacItemAsset("s3://foo/bar.geojson", None, None, Nil, None)))
             else PredictionFailure("model failed sorry sorry sorry")
           update1 <- updatePrediction[Prediction](
             message,
@@ -280,13 +284,13 @@ class PredictionServiceSpec
           msg match {
             case PredictionSuccess(_) =>
               List(
-                successfulUpdate.outputLocation !=== None,
+                successfulUpdate.results.headOption !=== None,
                 successfulUpdate.status ==== JobStatus.Successful,
                 successfulUpdate.statusReason ==== None
               )
             case PredictionFailure(_) =>
               List(
-                successfulUpdate.outputLocation ==== None,
+                successfulUpdate.results.headOption ==== None,
                 successfulUpdate.status ==== JobStatus.Failed,
                 successfulUpdate.statusReason !=== None
               )
