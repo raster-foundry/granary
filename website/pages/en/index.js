@@ -189,7 +189,6 @@ class Index extends React.Component {
           <LearnHow />
           <TryOut />
           <Description />
-          <Showcase />
         </div>
       </div>
     );
