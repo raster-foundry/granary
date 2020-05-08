@@ -107,9 +107,9 @@ class Index extends React.Component {
         {[
           {
             content:
-              "Granary associates prediction runs with your models and keeps track " +
-              "of where their results are stored. With signed urls, Granary makes " +
-              "serving predictions stored on S3 to client applications easy.",
+              "Associating data with the model run that produced it can be hard. " +
+              "With Granary tracking the arguments, outputs, and infrastructure for your tasks, " +
+              "you won't have to guess at which configuration produced which results.",
             image: `${baseUrl}img/undraw_predictive_analytics_kf9n.svg`,
             imageAlign: "left",
             title: "Keep track of your predictions and their results"
@@ -129,7 +129,7 @@ class Index extends React.Component {
             image: `${baseUrl}img/undraw_done_checking_ty9a.svg`,
             imageAlign: "right",
             title:
-              "Bring some sanity to your day-to-day modeling work in AWS Batch"
+              "Stop kicking off doomed models"
           }
         ]}
       </Block>
@@ -140,13 +140,15 @@ class Index extends React.Component {
         {[
           {
             content:
-              "Create a model with AWS resources configured once, then " +
-              "never worry about remembering the job definition or job queue names " +
-              "again for the rest of your life.",
+              "Configure your AWS resources once, then " +
+              "let Granary keep track of them. Granary associates models " +
+              "with specific execution environments so you don't have to remember " +
+              "what runs where. Coming soon: " +
+              "\n\n- AWS Lambda executor\n- HTTP executor",
             image: `${baseUrl}img/undraw_feeling_proud_qne1.svg`,
             imageAlign: "right",
             title:
-              "Run models in AWS Batch without worrying about infrastructure more than once"
+              "Focus on your data, not your infrastructure"
           }
         ]}
       </Block>
