@@ -64,7 +64,7 @@ class HomeSplash extends React.Component {
       <SplashContainer>
         <div className="inner">
           <img
-            src={`${baseUrl}img/franklin-logo-tagline@2x.png`}
+            src={`${baseUrl}img/granary-logo.png`}
             alt="Azavea"
             width="30%"
           />
@@ -111,7 +111,7 @@ class Index extends React.Component {
               "Granary associates prediction runs with your models and keeps track " +
               "of where their results are stored. With signed urls, Granary makes " +
               "serving predictions stored on S3 to client applications easy.",
-            image: `${baseUrl}img/franklin-startup.png`,
+            image: `${baseUrl}img/undraw_predictive_analytics_kf9n.svg`,
             imageAlign: "left",
             title: "Keep track of your predictions and their results"
           }
@@ -127,7 +127,7 @@ class Index extends React.Component {
               "Granary puts some guardrails in front of your interaction with Batch " +
               "so you don't fall in to common mistakes, like mis-formatted arguments," +
               "missing arguments, and bad string values for important AWS resources.",
-            image: `${baseUrl}img/annotation-tool.png`,
+            image: `${baseUrl}img/undraw_done_checking_ty9a.svg`,
             imageAlign: "right",
             title:
               "Bring some sanity to your day-to-day modeling work in AWS Batch"
@@ -144,29 +144,10 @@ class Index extends React.Component {
               "Create a model with AWS resources configured once, then " +
               "never worry about remembering the job definition or job queue names " +
               "again for the rest of your life.",
-            image: `${baseUrl}img/undraw_server_q2pb.svg`,
+            image: `${baseUrl}img/undraw_feeling_proud_qne1.svg`,
             imageAlign: "right",
             title:
               "Run models in AWS Batch without worrying about infrastructure more than once"
-          }
-        ]}
-      </Block>
-    );
-
-    const Features = () => (
-      <Block layout="twoColumn">
-        {[
-          {
-            content: "This is the content of my feature",
-            image: `${baseUrl}img/undraw_react.svg`,
-            imageAlign: "top",
-            title: "Feature One"
-          },
-          {
-            content: "The content of my second feature",
-            image: `${baseUrl}img/undraw_operating_system.svg`,
-            imageAlign: "top",
-            title: "Feature Two"
           }
         ]}
       </Block>

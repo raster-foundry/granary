@@ -49,8 +49,8 @@ const siteConfig = {
 
   /* Colors for website */
   colors: {
-    primaryColor: "#1da94a",
-    secondaryColor: "#147633"
+    primaryColor: "#075EC5",
+    secondaryColor: "#AC6007"
   },
 
   /* Custom fonts for website */
@@ -68,7 +68,7 @@ const siteConfig = {
   */
 
   // This copyright info is used in /core/Footer.js and blog RSS/Atom feeds.
-  copyright: `Copyright © ${new Date().getFullYear()} Your Name or Your Company Name`,
+  copyright: `Copyright © ${new Date().getFullYear()} Azavea`,
 
   // custom location where docs are located
   customDocsPath: "granary-docs/target/mdoc",
