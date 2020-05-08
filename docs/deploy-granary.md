@@ -17,19 +17,19 @@ AWS configuration based on values from your already deployed application.
 
 The values you'll need to fill in are:
 
-- [`aws_key_name`](#aws_key_name)
-- [`r53_public_hosted_zone`](#r53_public_hosted_zone)
-- [`r53_public_hosted_zone_record`](#r53_public_hosted_zone_record)
-- [`vpc_id`](#vpc_id)
-- [`vpc_private_subnet_ids`](#vpc_private_subnet_ids)
-- [`vpc_public_subnet_ids`](#vpc_public_subnet_ids)
-- [`rds_security_group_id`](#rds_security_group_id)
-- [`rds_database_hostname`](#rds_database_hostname)
-- [`rds_database_username`](#rds_database_username)
-- [`rds_database_password`](#rds_database_password)
-- [`rds_database_name`](#rds_database_name)
+- [`aws_key_name`](#aws-key-name)
+- [`r53_public_hosted_zone`](#r53-public-hosted-zone)
+- [`r53_public_hosted_zone_record`](#r53-public-hosted-zone-record)
+- [`vpc_id`](#vpc-id)
+- [`vpc_private_subnet_ids`](#vpc-private-subnet-ids)
+- [`vpc_public_subnet_ids`](#vpc-public-subnet-ids)
+- [`rds_security_group_id`](#rds-security-group-id)
+- [`rds_database_hostname`](#rds-database-hostname)
+- [`rds_database_username`](#rds-database-username)
+- [`rds_database_password`](#rds-database-password)
+- [`rds_database_name`](#rds-database-name)
 - [`project`](#project) if you don't want the name to be `GranaryDemo`
-- [`aws_region`](#aws_region) if you don't want to deploy in `us-east-1`
+- [`aws_region`](#aws-region) if you don't want to deploy in `us-east-1`
 
 A complete Terraform variables file containing the variables to be filled in
 and other necessary variables is shown below. Descriptions of each variable mentioned
