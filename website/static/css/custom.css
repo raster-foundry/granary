@@ -61,3 +61,7 @@ div .card {
 .navigationSlider .slidingNav ul {
     background: #F68D11;
 }
+
+a, a:hover, .toc .toggleNav ul li.navListItemActive a, .toc .toggleNav ul li a:focus, .toc .toggleNav ul li a:hover {
+    color: #BAA35F;
+}
