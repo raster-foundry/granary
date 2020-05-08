@@ -109,7 +109,7 @@ class Index extends React.Component {
             content:
               "Associating data with the model run that produced it can be hard. " +
               "With Granary tracking the arguments, outputs, and infrastructure for your tasks, " +
-              "you won't have to guess at which configuration produced which results.",
+              "you won't have to guess which configuration produced which results.",
             image: `${baseUrl}img/undraw_predictive_analytics_kf9n.svg`,
             imageAlign: "left",
             title: "Keep track of your predictions and their results"
