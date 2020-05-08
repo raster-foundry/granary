@@ -209,7 +209,8 @@ you'll receive a response that looks like this:</p>
   },
   <span class="hljs-attr">"status"</span> : <span class="hljs-string">"STARTED"</span>,
   <span class="hljs-attr">"statusReason"</span> : <span class="hljs-literal">null</span>,
-  <span class="hljs-attr">"outputLocation"</span> : <span class="hljs-literal">null</span>,
+  <span class="hljs-attr">"results"</span> : [
+  ],
   <span class="hljs-attr">"webhookId"</span> : <span class="hljs-string">"f0ff558a-f989-4648-b606-abcf8b977e6c"</span>
 }
 </code></pre>
@@ -223,7 +224,17 @@ accepts two kinds of messages.</p>
 </code></pre>
 <p>If the <code>prediction</code> succeeded, clients should send messages like this:</p>
 <pre><code class="hljs css language-json">{
-  <span class="hljs-attr">"outputLocation"</span> : <span class="hljs-string">"s3://where/the/results/live.json"</span>
+  <span class="hljs-attr">"results"</span> : [
+    {
+      <span class="hljs-attr">"href"</span> : <span class="hljs-string">"s3://where/the/results/live.json"</span>,
+      <span class="hljs-attr">"title"</span> : <span class="hljs-string">"Prediction Results"</span>,
+      <span class="hljs-attr">"description"</span> : <span class="hljs-string">"results for a very important prediction"</span>,
+      <span class="hljs-attr">"roles"</span> : [
+        <span class="hljs-string">"data"</span>
+      ],
+      <span class="hljs-attr">"type"</span> : <span class="hljs-string">"application/json"</span>
+    }
+  ]
 }
 </code></pre>
 <p>In the ideal case, the container for running the model in batch will submit results when it
