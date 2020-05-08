@@ -23,8 +23,8 @@ class PredictionService[F[_]: Sync](
     xa: Transactor[F],
     dataBucket: String,
     apiHost: String
-)(
-    implicit contextShift: ContextShift[F]
+)(implicit
+    contextShift: ContextShift[F]
 ) extends GranaryService {
   private val s3Client = AmazonS3ClientBuilder.defaultClient()
 

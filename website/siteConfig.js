@@ -37,7 +37,9 @@ const siteConfig = {
   //   organizationName: 'JoelMarcey'
 
   // For no header links in the top nav bar -> headerLinks: [],
-  headerLinks: [{ doc: "introduction", label: "Getting started" }],
+  headerLinks: [
+    { doc: "introduction", label: "Getting started" }
+  ],
 
   // If you have users set above, you add it here:
   users,
@@ -49,8 +51,8 @@ const siteConfig = {
 
   /* Colors for website */
   colors: {
-    primaryColor: "#1da94a",
-    secondaryColor: "#147633"
+    primaryColor: "#4B3B40",
+    secondaryColor: "#F68D11"
   },
 
   /* Custom fonts for website */
@@ -68,7 +70,7 @@ const siteConfig = {
   */
 
   // This copyright info is used in /core/Footer.js and blog RSS/Atom feeds.
-  copyright: `Copyright © ${new Date().getFullYear()} Your Name or Your Company Name`,
+  copyright: `Copyright © ${new Date().getFullYear()} Azavea`,
 
   // custom location where docs are located
   customDocsPath: "granary-docs/target/mdoc",

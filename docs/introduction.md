@@ -6,6 +6,7 @@ id: introduction
 
 ```scala mdoc:invisible
 import com.rasterfoundry.granary.datamodel._
+import com.azavea.stac4s._
 import io.circe.literal._
 import io.circe.syntax._
 import java.time.Instant
@@ -184,7 +185,7 @@ println {
     jsonPayload,
     JobStatus.Started,
     None,
-    None,
+    Nil,
     Some(webhookId)
   ).asJson.spaces2
 }
@@ -212,7 +213,17 @@ If the `prediction` succeeded, clients should send messages like this:
 // JSON of the message to send if the prediction succeeded
 println("```json")
 println {
-  PredictionSuccess("s3://where/the/results/live.json").asJson.spaces2
+  PredictionSuccess(
+    List(
+      StacItemAsset(
+        "s3://where/the/results/live.json",
+  	    Some("Prediction Results"),
+  	    Some("results for a very important prediction"),
+  	    List(StacAssetRole.Data),
+  	    Some(`application/json`)
+  	  )
+	)
+  ).asJson.spaces2
 }
 println("```")
 ```

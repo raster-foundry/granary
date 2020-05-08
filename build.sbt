@@ -50,6 +50,7 @@ lazy val datamodelDependencies = commonDependencies ++ Seq(
   Dependencies.http4s,
   Dependencies.http4sCirce,
   Dependencies.refined,
+  Dependencies.stac4s,
   Dependencies.scalacheck
 )
 
@@ -76,7 +77,8 @@ lazy val databaseDependencies = commonDependencies ++ Seq(
   Dependencies.doobieScalatest,
   Dependencies.flyway,
   Dependencies.pureConfig,
-  Dependencies.log4cats
+  Dependencies.log4cats,
+  Dependencies.stac4s
 )
 
 lazy val database = (project in file("database"))

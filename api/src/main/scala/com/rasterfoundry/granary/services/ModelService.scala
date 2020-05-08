@@ -22,8 +22,8 @@ class ModelService[F[_]: Sync](
     defaultPageRequest: PageRequest,
     contextBuilder: TracingContextBuilder[F],
     xa: Transactor[F]
-)(
-    implicit contextShift: ContextShift[F]
+)(implicit
+    contextShift: ContextShift[F]
 ) extends GranaryService {
 
   def createModel(model: Model.Create): F[Either[Unit, Model]] =

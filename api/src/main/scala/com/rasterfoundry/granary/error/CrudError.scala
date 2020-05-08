@@ -14,11 +14,12 @@ object CrudError {
 
   implicit val encCrudError: Encoder[CrudError] = new Encoder[CrudError] {
 
-    def apply(thing: CrudError): Json = thing match {
-      case t: NotFound        => t.asJson
-      case t: ValidationError => t.asJson
-      case t: Forbidden       => t.asJson
-    }
+    def apply(thing: CrudError): Json =
+      thing match {
+        case t: NotFound        => t.asJson
+        case t: ValidationError => t.asJson
+        case t: Forbidden       => t.asJson
+      }
   }
 }
 

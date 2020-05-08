@@ -18,8 +18,8 @@ import com.rasterfoundry.granary.datamodel.HealthcheckResult
 class HealthcheckService[F[_]: Sync: Logger: MonadError[*[_], Throwable]: Concurrent](
     contextBuilder: TracingContextBuilder[F],
     xa: Transactor[F]
-)(
-    implicit contextShift: ContextShift[F],
+)(implicit
+    contextShift: ContextShift[F],
     timer: Timer[F]
 ) extends GranaryService {
 
