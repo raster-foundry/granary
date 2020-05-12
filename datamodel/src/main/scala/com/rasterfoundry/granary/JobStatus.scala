@@ -14,13 +14,14 @@ object JobStatus {
   case object Successful extends JobStatus("SUCCESSFUL")
   case object Failed     extends JobStatus("FAILED")
 
-  def fromString(s: String): JobStatus = s.toUpperCase match {
-    case "CREATED"    => Created
-    case "STARTED"    => Started
-    case "SUCCESSFUL" => Successful
-    case "FAILED"     => Failed
-    case _            => throw new Exception(s"Invalid string: $s")
-  }
+  def fromString(s: String): JobStatus =
+    s.toUpperCase match {
+      case "CREATED"    => Created
+      case "STARTED"    => Started
+      case "SUCCESSFUL" => Successful
+      case "FAILED"     => Failed
+      case _            => throw new Exception(s"Invalid string: $s")
+    }
 
   implicit val jobStatusEncoder: Encoder[JobStatus] =
     Encoder.encodeString.contramap[JobStatus](_.toString)

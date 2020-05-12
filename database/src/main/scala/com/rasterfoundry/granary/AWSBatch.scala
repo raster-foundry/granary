@@ -24,47 +24,48 @@ object AWSBatch {
       parameters: Json,
       jobName: String,
       dataBucket: String
-  ): F[Either[Throwable, Unit]] = LiftIO[F].liftIO {
-    parameters.as[Map[String, Json]] traverse { params =>
-      val updatedParametersIO: IO[Map[String, String]] = params.get("TASK_GRID") match {
-        case Some(v) =>
-          IO {
-            val key = s"prediction-task-grids/$jobName/taskGrid.json"
-            s3Client.putObject(dataBucket, key, v.noSpaces)
-            val updated =
-              params
-                .mapValues(_.noSpaces.replace("\"", ""))
-                .updated("TASK_GRID", s"s3://${dataBucket}/$key")
-            updated
-          }
-        case _ => IO.pure(params.mapValues(_.noSpaces.replace("\"", "")))
-      }
+  ): F[Either[Throwable, Unit]] =
+    LiftIO[F].liftIO {
+      parameters.as[Map[String, Json]] traverse { params =>
+        val updatedParametersIO: IO[Map[String, String]] = params.get("TASK_GRID") match {
+          case Some(v) =>
+            IO {
+              val key = s"prediction-task-grids/$jobName/taskGrid.json"
+              s3Client.putObject(dataBucket, key, v.noSpaces)
+              val updated =
+                params
+                  .mapValues(_.noSpaces.replace("\"", ""))
+                  .updated("TASK_GRID", s"s3://${dataBucket}/$key")
+              updated
+            }
+          case _ => IO.pure(params.mapValues(_.noSpaces.replace("\"", "")))
+        }
 
-      val jobRequestIO = updatedParametersIO map { updatedParameters =>
-        new SubmitJobRequest()
-          .withJobName(jobName)
-          .withJobDefinition(jobDefinition)
-          .withJobQueue(jobQueueName)
-          .withParameters(updatedParameters.asJava)
-      }
+        val jobRequestIO = updatedParametersIO map { updatedParameters =>
+          new SubmitJobRequest()
+            .withJobName(jobName)
+            .withJobDefinition(jobDefinition)
+            .withJobQueue(jobQueueName)
+            .withParameters(updatedParameters.asJava)
+        }
 
-      val runJob = Config.environment.toUpperCase() === "PRODUCTION"
+        val runJob = Config.environment.toUpperCase() === "PRODUCTION"
 
-      jobRequestIO flatMap { jobRequest =>
-        (if (runJob) {
-           IO {
-             batchClient.submitJob(jobRequest)
-           }
-         } else
-           Logger[IO].debug(
-             s"Not running job because in development. Parameters to be sent: ${jobRequest.getParameters}"
-           )).attempt
+        jobRequestIO flatMap { jobRequest =>
+          (if (runJob) {
+             IO {
+               batchClient.submitJob(jobRequest)
+             }
+           } else
+             Logger[IO].debug(
+               s"Not running job because in development. Parameters to be sent: ${jobRequest.getParameters}"
+             )).attempt
+        }
+      } map {
+        case Left(e)        => Left(e)
+        case Right(Left(e)) => Left(e)
+        case Right(Right(_)) =>
+          Right(())
       }
-    } map {
-      case Left(e)        => Left(e)
-      case Right(Left(e)) => Left(e)
-      case Right(Right(_)) =>
-        Right(())
     }
-  }
 }

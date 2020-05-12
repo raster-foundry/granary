@@ -46,8 +46,11 @@ lazy val datamodelDependencies = commonDependencies ++ Seq(
   Dependencies.circeCore,
   Dependencies.circeGeneric,
   Dependencies.circeJsonSchema,
+  Dependencies.circeRefined,
   Dependencies.http4s,
   Dependencies.http4sCirce,
+  Dependencies.refined,
+  Dependencies.stac4s,
   Dependencies.scalacheck
 )
 
@@ -74,7 +77,8 @@ lazy val databaseDependencies = commonDependencies ++ Seq(
   Dependencies.doobieScalatest,
   Dependencies.flyway,
   Dependencies.pureConfig,
-  Dependencies.log4cats
+  Dependencies.log4cats,
+  Dependencies.stac4s
 )
 
 lazy val database = (project in file("database"))
@@ -111,11 +115,14 @@ lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
   Dependencies.log4cats,
   Dependencies.openTracing,
   Dependencies.pureConfig,
+  Dependencies.refined,
+  Dependencies.refinedPureconfig,
   Dependencies.tapir,
   Dependencies.tapirCirce,
   Dependencies.tapirHttp4sServer,
   Dependencies.tapirOpenAPICirceYAML,
   Dependencies.tapirOpenAPIDocs,
+  Dependencies.tapirRefined,
   Dependencies.tapirSwaggerUIHttp4s
 )
 

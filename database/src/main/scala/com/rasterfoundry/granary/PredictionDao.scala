@@ -33,18 +33,24 @@ object PredictionDao {
     fr"""
       SELECT
         id, model_id, invoked_at, arguments, status,
-        status_reason, output_location, webhook_id
+        status_reason, results, webhook_id
       FROM predictions
     """
 
   def listPredictions(
+      pageRequest: PageRequest,
       modelId: Option[UUID],
       status: Option[JobStatus]
   ): ConnectionIO[List[Prediction]] =
-    (selectF ++ Fragments.whereOrOpt(modelId map { id => fr"model_id = $id" }, status map { s =>
-      fr"status = $s"
-    }))
-      .query[Prediction]
+    Page(
+      selectF ++ Fragments.whereOrOpt(
+        modelId map { id => fr"model_id = $id" },
+        status map { s =>
+          fr"status = $s"
+        }
+      ),
+      pageRequest
+    ).query[Prediction]
       .to[List]
 
   def getPrediction(id: UUID): ConnectionIO[Option[Prediction]] =
@@ -101,7 +107,7 @@ object PredictionDao {
             "arguments",
             "status",
             "status_reason",
-            "output_location",
+            "results",
             "webhook_id"
           ) map { Right(_) }
       }
@@ -133,10 +139,10 @@ object PredictionDao {
   ): ConnectionIO[Either[PredictionDaoError, Prediction]] = {
     val fragment = fr"""
       INSERT INTO predictions
-        (id, model_id, invoked_at, arguments, status, status_reason, output_location, webhook_id)
+        (id, model_id, invoked_at, arguments, status, status_reason, results, webhook_id)
       VALUES
         (uuid_generate_v4(), ${prediction.modelId}, now(), ${prediction.arguments},
-        'CREATED', NULL, NULL, uuid_generate_v4())
+        'CREATED', NULL, '[]' :: jsonb, uuid_generate_v4())
     """
     val insertIO: OptionT[ConnectionIO, Either[PredictionDaoError, Prediction]] = for {
       model <- OptionT { ModelDao.getModel(prediction.modelId) }
@@ -153,7 +159,7 @@ object PredictionDao {
               "arguments",
               "status",
               "status_reason",
-              "output_location",
+              "results",
               "webhook_id"
             ) map { Right(_) }
         }
@@ -182,10 +188,10 @@ object PredictionDao {
         case _                                         => OptionT.none[ConnectionIO, Prediction]
       }
       newPrediction = status match {
-        case PredictionSuccess(output) =>
+        case PredictionSuccess(results) =>
           existingPrediction.copy(
             status = JobStatus.Successful,
-            outputLocation = Some(output),
+            results = results,
             webhookId = None
           )
         case PredictionFailure(reason) =>
@@ -201,7 +207,7 @@ object PredictionDao {
         SET
           status = ${newPrediction.status},
           status_reason = ${newPrediction.statusReason},
-          output_location = ${newPrediction.outputLocation},
+          results = ${newPrediction.results},
           webhook_id = ${newPrediction.webhookId}
         WHERE
           id = ${predictionId}
@@ -212,7 +218,7 @@ object PredictionDao {
           "arguments",
           "status",
           "status_reason",
-          "output_location",
+          "results",
           "webhook_id"
         )
       }

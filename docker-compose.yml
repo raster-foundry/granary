@@ -28,6 +28,7 @@ services:
       - "granary-api-assembly.jar"
     environment:
       - AWS_PROFILE
+      - AWS_REGION
       - ENVIRONMENT=development
       - GRANARY_API_HOST=http://granary.service.internal/api
       - GRANARY_LOG_LEVEL=DEBUG

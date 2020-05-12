@@ -6,12 +6,14 @@ import doobie.postgres.implicits._
 import com.rasterfoundry.granary.datamodel.Model
 
 import java.util.UUID
+import com.rasterfoundry.granary.datamodel.PageRequest
 
 object ModelDao {
   val selectF = fr"select id, name, validator, job_definition, job_queue FROM models"
 
-  def listModels: ConnectionIO[List[Model]] =
-    selectF.query[Model].to[List]
+  def listModels(pageRequest: PageRequest): ConnectionIO[List[Model]] = {
+    Page(selectF, pageRequest).query[Model].to[List]
+  }
 
   def getModel(id: UUID): ConnectionIO[Option[Model]] =
     (selectF ++ Fragments.whereOr(fr"id = ${id}")).query[Model].option
@@ -41,6 +43,4 @@ object ModelDao {
       case n => Some(n)
     }
 
-  def kickOffBatchJob(model: Model): ConnectionIO[Unit] =
-    ???
 }

@@ -20,23 +20,28 @@ p {
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Roboto Condensed', sans-serif;
+    font-family: 'Montserrat', 'Roboto Condensed', sans-serif;
+    font-size: 200%;
+}
+
+.blockContent {
+    font-size: 150%;
 }
 
 .lightBackground {
-    background: #B5E9D4;
+    background: #759FBC;
 }
 
 .darkBackground {
-    background: #104E64;
+    background: #1F5673;
 }
 
 .nav-footer {
-    background: #092c39;
+    background: #0752AC;
 }
 
 .projectTitle > small {
-    font-size: 50%;
+    font-size: 75%;
 }
 
 .projectTitleSmall {
@@ -54,5 +59,9 @@ div .card {
 }
 
 .navigationSlider .slidingNav ul {
-    background: #104E64;
+    background: #F68D11;
+}
+
+a, a:hover, .toc .toggleNav ul li.navListItemActive a, .toc .toggleNav ul li a:focus, .toc .toggleNav ul li a:hover {
+    color: #F68D11;
 }

@@ -1,6 +1,7 @@
 package com.rasterfoundry.granary.datamodel
 
 import cats.implicits._
+import com.azavea.stac4s.StacItemAsset
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.syntax._
@@ -17,10 +18,11 @@ object PredictionStatusUpdate {
   implicit val encStatusUpdate: Encoder[PredictionStatusUpdate] =
     new Encoder[PredictionStatusUpdate] {
 
-      def apply(t: PredictionStatusUpdate): Json = t match {
-        case ps: PredictionFailure => ps.asJson
-        case ps: PredictionSuccess => ps.asJson
-      }
+      def apply(t: PredictionStatusUpdate): Json =
+        t match {
+          case ps: PredictionFailure => ps.asJson
+          case ps: PredictionSuccess => ps.asJson
+        }
     }
 }
 
@@ -34,7 +36,7 @@ object PredictionFailure {
 }
 
 case class PredictionSuccess(
-    outputLocation: String
+    results: List[StacItemAsset]
 ) extends PredictionStatusUpdate
 
 object PredictionSuccess {

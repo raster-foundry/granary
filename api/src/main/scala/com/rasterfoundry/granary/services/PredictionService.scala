@@ -18,29 +18,33 @@ import org.http4s._
 import sttp.tapir.server.http4s._
 
 class PredictionService[F[_]: Sync](
+    defaultPageRequest: PageRequest,
     contextBuilder: TracingContextBuilder[F],
     xa: Transactor[F],
     dataBucket: String,
     apiHost: String
-)(
-    implicit contextShift: ContextShift[F]
+)(implicit
+    contextShift: ContextShift[F]
 ) extends GranaryService {
   private val s3Client = AmazonS3ClientBuilder.defaultClient()
 
   def listPredictions(
+      pageRequest: PageRequest,
       modelId: Option[UUID],
       status: Option[JobStatus]
-  ): F[Either[Unit, List[Prediction]]] =
+  ): F[Either[Unit, PaginatedResponse[Prediction]]] = {
+    val forPage = pageRequest `combine` defaultPageRequest
     mkContext("listPredictions", Map.empty, contextBuilder) use { _ =>
       Functor[F].map(
         PredictionDao
-          .listPredictions(modelId, status)
+          .listPredictions(forPage, modelId, status)
           .transact(xa)
       ) { predictions =>
         val updatedPredictions = predictions.map(_.signS3OutputLocation(s3Client))
-        Right(updatedPredictions)
+        Right(PaginatedResponse.forRequest(updatedPredictions, forPage))
       }
     }
+  }
 
   def getById(id: UUID): F[Either[CrudError, Prediction]] =
     mkContext("lookupPredictionById", Map("predictionId" -> s"$id"), contextBuilder) use { _ =>

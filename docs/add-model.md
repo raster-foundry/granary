@@ -272,10 +272,10 @@ prediction's arguments and you don't want to fix one thing at a time:
 Eventually, the prediction should complete. You'll be able to tell it's done, because one of two things will
 be the case when you hit `/api/predictions/<prediction id>/`
 
-- its status will be `"SUCCESSFUL"` and it will have a value in its `outputLocation` field
+- its status will be `"SUCCESSFUL"` and it will have items in its `results` array
 - its status will be `"FAILED"` and it will have a value in its `statusReason` field
 
-Because this is the demo model, it should be the first one. Inspect the `outputLocation` field to find the path
+Because this is the demo model, it should be the first one. Inspect the `href` of the item in the `results` field to find the path
 to the model's output, download it, and open it in QGIS. If you used the NIR and green bands from the example,
 you'll see that there's not a lot of water predicted in this image. If you toss the geojson output into
 [geojson.io](http://geojson.io) or [QGIS](https://www.qgis.org/en/site/), you can see that there's not too much
