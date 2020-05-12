@@ -12,7 +12,7 @@ object Versions {
   val Flyway                 = "6.4.2"
   val Http4sVersion          = "0.21.3"
   val LogbackVersion         = "1.2.3"
-  val Log4CatsVersion        = "1.0.1"
+  val Log4CatsVersion        = "1.1.1"
   val OpenTracingVersion     = "0.1.1"
   val PureConfig             = "0.12.3"
   val RefinedVersion         = "0.9.14"
