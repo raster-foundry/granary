@@ -36,8 +36,8 @@ object TaskDao {
     )
   }
 
-  def deleteTask(modelId: UUID): ConnectionIO[Option[Int]] =
-    fr"DELETE FROM tasks WHERE id = $modelId".update.run map {
+  def deleteTask(taskId: UUID): ConnectionIO[Option[Int]] =
+    fr"DELETE FROM tasks WHERE id = $taskId".update.run map {
       case 0 => None
       case n => Some(n)
     }

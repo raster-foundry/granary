@@ -48,7 +48,7 @@ object PredictionEndpoints {
   val list =
     base.get
       .in(Inputs.paginationInput)
-      .in(query[Option[UUID]]("modelId"))
+      .in(query[Option[UUID]]("taskId"))
       .in(query[Option[JobStatus]]("status"))
       .out(jsonBody[PaginatedResponse[Prediction]])
 
