@@ -12,7 +12,7 @@ import java.util.{Date, UUID}
 
 case class Prediction(
     id: UUID,
-    modelId: UUID,
+    taskId: UUID,
     invokedAt: Instant,
     arguments: Json,
     status: JobStatus,
@@ -42,7 +42,7 @@ object Prediction {
   implicit val decPrediction: Decoder[Prediction] = deriveDecoder
 
   case class Create(
-      modelId: UUID,
+      taskId: UUID,
       arguments: Json
   )
 

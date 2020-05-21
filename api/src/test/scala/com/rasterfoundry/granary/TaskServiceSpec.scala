@@ -16,7 +16,7 @@ import org.http4s.circe.CirceEntityDecoder._
 import org.scalacheck._
 import org.specs2.{ScalaCheck, Specification}
 
-class ModelServiceSpec
+class TaskServiceSpec
     extends Specification
     with ScalaCheck
     with Generators
@@ -25,90 +25,90 @@ class ModelServiceSpec
     with TestDatabaseSpec {
 
   def is = sequential ^ s2"""
-  This specification verifies that the Model Service can run without crashing
+  This specification verifies that the Task Service can run without crashing
 
-  The model service should:
-    - create models                           $createExpectation
-    - get models by id                        $getByIdExpectation
-    - list models                             $listModelsExpectation
-    - delete models                           $deleteModelExpectation
+  The task service should:
+    - create tasks                           $createExpectation
+    - get tasks by id                        $getByIdExpectation
+    - list tasks                             $listTasksExpectation
+    - delete tasks                           $deleteTaskExpectation
 """
 
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
 
-  def service: ModelService[IO] =
-    new ModelService[IO](
+  def service: TaskService[IO] =
+    new TaskService[IO](
       PageRequest(Some(NonNegInt(0)), Some(PosInt(30))),
       tracingContextBuilder,
       transactor
     )
 
   def createExpectation =
-    prop { (model: Model.Create) =>
+    prop { (task: Task.Create) =>
       {
         val out = for {
-          created <- createModel(model, service)
-          _       <- deleteModel(created, service)
+          created <- createTask(task, service)
+          _       <- deleteTask(created, service)
         } yield created
 
-        out.value.unsafeRunSync.get.toCreate ==== model
+        out.value.unsafeRunSync.get.toCreate ==== task
       }
     }
 
   def getByIdExpectation =
-    prop { (model: Model.Create) =>
+    prop { (task: Task.Create) =>
       {
-        val getByIdAndBogus: OptionT[IO, (Model, Response[IO], NotFound)] = for {
-          decoded <- createModel(model, service)
+        val getByIdAndBogus: OptionT[IO, (Task, Response[IO], NotFound)] = for {
+          decoded <- createTask(task, service)
           successfulByIdRaw <- service.routes.run(
             Request[IO](
               method = Method.GET,
-              uri = Uri.fromString(s"/models/${decoded.id}").right.get
+              uri = Uri.fromString(s"/tasks/${decoded.id}").right.get
             )
           )
-          successfulById <- OptionT.liftF { successfulByIdRaw.as[Model] }
+          successfulById <- OptionT.liftF { successfulByIdRaw.as[Task] }
           missingByIdRaw <- service.routes.run(
             Request[IO](
               method = Method.GET,
-              uri = Uri.fromString(s"/models/${UUID.randomUUID}").right.get
+              uri = Uri.fromString(s"/tasks/${UUID.randomUUID}").right.get
             )
           )
           missingById <- OptionT.liftF { missingByIdRaw.as[NotFound] }
-          _           <- deleteModel(decoded, service)
+          _           <- deleteTask(decoded, service)
         } yield { (successfulById, missingByIdRaw, missingById) }
 
-        val (outModel, missingResp, missingBody) = getByIdAndBogus.value.unsafeRunSync.get
+        val (outTask, missingResp, missingBody) = getByIdAndBogus.value.unsafeRunSync.get
 
-        outModel.toCreate ==== model && missingResp.status.code ==== 404 && missingBody ==== NotFound()
+        outTask.toCreate ==== task && missingResp.status.code ==== 404 && missingBody ==== NotFound()
 
       }
     }
 
-  def listModelsExpectation = {
-    val models = Arbitrary.arbitrary[List[Model.Create]].sample.get.take(30)
+  def listTasksExpectation = {
+    val tasks = Arbitrary.arbitrary[List[Task.Create]].sample.get.take(30)
     val listIO = for {
-      models <- models traverse { model => createModel(model, service) }
+      tasks <- tasks traverse { task => createTask(task, service) }
       listedRaw <- service.routes.run(
-        Request[IO](method = Method.GET, uri = Uri.uri("/models"))
+        Request[IO](method = Method.GET, uri = Uri.uri("/tasks"))
       )
-      listed <- OptionT.liftF { listedRaw.as[PaginatedResponse[Model]] }
-      _      <- models traverse { model => deleteModel(model, service) }
-    } yield (models, listed)
+      listed <- OptionT.liftF { listedRaw.as[PaginatedResponse[Task]] }
+      _      <- tasks traverse { task => deleteTask(task, service) }
+    } yield (tasks, listed)
 
     val (inserted, listed) = listIO.value.unsafeRunSync.get
     listed.results.toSet.intersect(inserted.toSet) ==== inserted.toSet
   }
 
-  def deleteModelExpectation =
-    prop { (model: Model.Create) =>
+  def deleteTaskExpectation =
+    prop { (task: Task.Create) =>
       {
         val deleteIO = for {
-          decoded    <- createModel(model, service)
-          deleteById <- deleteModel(decoded, service)
+          decoded    <- createTask(task, service)
+          deleteById <- deleteTask(decoded, service)
           missingByIdRaw <- service.routes.run(
             Request[IO](
               method = Method.DELETE,
-              uri = Uri.fromString(s"/models/${UUID.randomUUID}").right.get
+              uri = Uri.fromString(s"/tasks/${UUID.randomUUID}").right.get
             )
           )
           missingById <- OptionT.liftF { missingByIdRaw.as[NotFound] }

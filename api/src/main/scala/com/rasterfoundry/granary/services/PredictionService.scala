@@ -30,14 +30,14 @@ class PredictionService[F[_]: Sync](
 
   def listPredictions(
       pageRequest: PageRequest,
-      modelId: Option[UUID],
+      taskId: Option[UUID],
       status: Option[JobStatus]
   ): F[Either[Unit, PaginatedResponse[Prediction]]] = {
     val forPage = pageRequest `combine` defaultPageRequest
     mkContext("listPredictions", Map.empty, contextBuilder) use { _ =>
       Functor[F].map(
         PredictionDao
-          .listPredictions(forPage, modelId, status)
+          .listPredictions(forPage, taskId, status)
           .transact(xa)
       ) { predictions =>
         val updatedPredictions = predictions.map(_.signS3OutputLocation(s3Client))
@@ -66,14 +66,14 @@ class PredictionService[F[_]: Sync](
           .insertPrediction(prediction, dataBucket, apiHost)
           .transact(xa)
       )({
-        case Right(created)                    => Right(created)
-        case Left(PredictionDao.ModelNotFound) => Left(NotFound())
+        case Right(created)                   => Right(created)
+        case Left(PredictionDao.TaskNotFound) => Left(NotFound())
         case Left(PredictionDao.ArgumentsValidationFailed(errs)) =>
           Left(ValidationError(errs map { _.getMessage } reduce))
         case Left(PredictionDao.BatchSubmissionFailed(msg)) =>
           Left(
             ValidationError(
-              s"Batch resources for model ${prediction.modelId} may be misconfigured: $msg"
+              s"Batch resources for task ${prediction.taskId} may be misconfigured: $msg"
             )
           )
       })

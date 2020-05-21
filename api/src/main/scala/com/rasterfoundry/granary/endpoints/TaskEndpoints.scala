@@ -9,13 +9,13 @@ import sttp.model.StatusCode
 
 import java.util.UUID
 
-object ModelEndpoints {
+object TaskEndpoints {
 
-  val base = endpoint.in("models")
+  val base = endpoint.in("tasks")
 
   val idLookup = base.get
     .in(path[UUID])
-    .out(jsonBody[Model])
+    .out(jsonBody[Task])
     .errorOut(
       oneOf[CrudError](
         statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found")),
@@ -28,15 +28,15 @@ object ModelEndpoints {
 
   val create = base.post
     .in(
-      jsonBody[Model.Create].description(
+      jsonBody[Task.Create].description(
         "A name, a Json Schema and some AWS batch metadata for running a this model. The Schema should specify arguments as string -> string, even if they'll be parsed as ints or bools or whatever by the eventual model run"
       )
     )
-    .out(jsonBody[Model])
+    .out(jsonBody[Task])
 
   val list = base.get
     .in(Inputs.paginationInput)
-    .out(jsonBody[PaginatedResponse[Model]])
+    .out(jsonBody[PaginatedResponse[Task]])
 
   val delete = base.delete
     .in(path[UUID])

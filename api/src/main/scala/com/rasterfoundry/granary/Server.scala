@@ -63,12 +63,12 @@ object ApiServer extends IOApp {
         HikariTransactor
           .fromHikariConfig[IO](DBConfig.hikariConfig, connectionEc, blocker)
       allEndpoints = {
-        ModelEndpoints.endpoints ++ PredictionEndpoints.endpoints ++ HealthcheckEndpoints.endpoints
+        TaskEndpoints.endpoints ++ PredictionEndpoints.endpoints ++ HealthcheckEndpoints.endpoints
       }
       docs               = allEndpoints.toOpenAPI("Granary", "0.0.1")
       docRoutes          = new SwaggerHttp4s(docs.toYaml).routes
       defaultPageRequest = PageRequest.default(paginationConfig.defaultLimit)
-      modelRoutes = new ModelService(
+      taskRoutes = new TaskService(
         defaultPageRequest,
         tracingContextBuilder,
         transactor
@@ -89,7 +89,7 @@ object ApiServer extends IOApp {
               Router(
                 "/api" -> ((
                   Auth.customAuthMiddleware(
-                    modelRoutes <+> predictionRoutes,
+                    taskRoutes <+> predictionRoutes,
                     healthcheckRoutes <+> docRoutes,
                     authConfig,
                     transactor

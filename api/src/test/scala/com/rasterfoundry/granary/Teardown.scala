@@ -11,9 +11,9 @@ import com.rasterfoundry.granary.api.endpoints.DeleteMessage
 
 trait Teardown {
 
-  def deleteModel(model: Model, service: ModelService[IO]): OptionT[IO, DeleteMessage] = {
+  def deleteTask(task: Task, service: TaskService[IO]): OptionT[IO, DeleteMessage] = {
     val request =
-      Request[IO](method = Method.DELETE, uri = Uri.fromString(s"/models/${model.id}").right.get)
+      Request[IO](method = Method.DELETE, uri = Uri.fromString(s"/tasks/${task.id}").right.get)
     for {
       resp    <- service.routes.run(request)
       decoded <- OptionT.liftF { resp.as[DeleteMessage] }

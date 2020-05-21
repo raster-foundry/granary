@@ -5,7 +5,7 @@ import io.circe.generic.semiauto._
 
 import java.util.UUID
 
-case class Model(
+case class Task(
     id: UUID,
     name: String,
     validator: Validator,
@@ -14,8 +14,8 @@ case class Model(
 ) {
   def validate = validator.validate _
 
-  def toCreate: Model.Create =
-    Model.Create(
+  def toCreate: Task.Create =
+    Task.Create(
       name,
       validator,
       jobDefinition,
@@ -23,17 +23,17 @@ case class Model(
     )
 }
 
-object Model {
-  implicit val encModel: Encoder[Model] = deriveEncoder
+object Task {
+  implicit val encTask: Encoder[Task] = deriveEncoder
 
-  implicit val decModel: Decoder[Model] = Decoder.forProduct5(
+  implicit val decTask: Decoder[Task] = Decoder.forProduct5(
     "id",
     "name",
     "validator",
     "jobDefinition",
     "jobQueue"
   )(
-    Model.apply _
+    Task.apply _
   )
 
   case class Create(

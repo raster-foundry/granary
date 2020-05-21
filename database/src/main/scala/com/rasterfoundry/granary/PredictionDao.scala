@@ -20,7 +20,7 @@ import java.util.UUID
 object PredictionDao {
 
   sealed abstract class PredictionDaoError extends Throwable
-  case object ModelNotFound                extends PredictionDaoError
+  case object TaskNotFound                 extends PredictionDaoError
 
   case class ArgumentsValidationFailed(underlying: NonEmptyList[ValidationError])
       extends PredictionDaoError
@@ -32,19 +32,19 @@ object PredictionDao {
   val selectF =
     fr"""
       SELECT
-        id, model_id, invoked_at, arguments, status,
+        id, task_id, invoked_at, arguments, status,
         status_reason, results, webhook_id
       FROM predictions
     """
 
   def listPredictions(
       pageRequest: PageRequest,
-      modelId: Option[UUID],
+      taskId: Option[UUID],
       status: Option[JobStatus]
   ): ConnectionIO[List[Prediction]] =
     Page(
       selectF ++ Fragments.whereOrOpt(
-        modelId map { id => fr"model_id = $id" },
+        taskId map { id => fr"task_id = $id" },
         status map { s =>
           fr"status = $s"
         }
@@ -61,7 +61,7 @@ object PredictionDao {
 
   def kickOffPredictionJob(
       prediction: Prediction,
-      model: Model,
+      task: Task,
       dataBucket: String,
       apiHost: String
   ): EitherT[ConnectionIO, PredictionDaoError, Prediction] = {
@@ -102,7 +102,7 @@ object PredictionDao {
         )).update
           .withUniqueGeneratedKeys[Prediction](
             "id",
-            "model_id",
+            "task_id",
             "invoked_at",
             "arguments",
             "status",
@@ -116,8 +116,8 @@ object PredictionDao {
     EitherT(
       AWSBatch
         .submitJobRequest[ConnectionIO](
-          model.jobDefinition,
-          model.jobQueue,
+          task.jobDefinition,
+          task.jobQueue,
           prediction.arguments
             .deepMerge(
               prediction.webhookId map { webhookId =>
@@ -126,7 +126,7 @@ object PredictionDao {
                 ).asJson
               } getOrElse { ().asJson }
             ),
-          batchSafeJobName(s"${model.name}-${prediction.id}"),
+          batchSafeJobName(s"${task.name}-${prediction.id}"),
           dataBucket
         )
     ).biflatMap(updateFailure(prediction), updateSuccess(prediction))
@@ -139,14 +139,14 @@ object PredictionDao {
   ): ConnectionIO[Either[PredictionDaoError, Prediction]] = {
     val fragment = fr"""
       INSERT INTO predictions
-        (id, model_id, invoked_at, arguments, status, status_reason, results, webhook_id)
+        (id, task_id, invoked_at, arguments, status, status_reason, results, webhook_id)
       VALUES
-        (uuid_generate_v4(), ${prediction.modelId}, now(), ${prediction.arguments},
+        (uuid_generate_v4(), ${prediction.taskId}, now(), ${prediction.arguments},
         'CREATED', NULL, '[]' :: jsonb, uuid_generate_v4())
     """
     val insertIO: OptionT[ConnectionIO, Either[PredictionDaoError, Prediction]] = for {
-      model <- OptionT { ModelDao.getModel(prediction.modelId) }
-      argCheck = model.validator.validate(prediction.arguments)
+      task <- OptionT { TaskDao.getTask(prediction.taskId) }
+      argCheck = task.validator.validate(prediction.arguments)
       insert <- OptionT.liftF {
         argCheck match {
           case Invalid(errs) =>
@@ -154,7 +154,7 @@ object PredictionDao {
           case Valid(()) =>
             fragment.update.withUniqueGeneratedKeys[Prediction](
               "id",
-              "model_id",
+              "task_id",
               "invoked_at",
               "arguments",
               "status",
@@ -166,14 +166,14 @@ object PredictionDao {
       }
       updated <- OptionT.liftF {
         (EitherT.fromEither[ConnectionIO](insert) flatMap {
-          kickOffPredictionJob(_, model, dataBucket, apiHost)
+          kickOffPredictionJob(_, task, dataBucket, apiHost)
         }).value
       }
     } yield updated
 
     insertIO.value map {
       case Some(res) => res
-      case None      => Left(ModelNotFound)
+      case None      => Left(TaskNotFound)
     }
   }
 
@@ -213,7 +213,7 @@ object PredictionDao {
           id = ${predictionId}
       """.update.withUniqueGeneratedKeys[Prediction](
           "id",
-          "model_id",
+          "task_id",
           "invoked_at",
           "arguments",
           "status",

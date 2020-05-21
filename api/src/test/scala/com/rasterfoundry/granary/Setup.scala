@@ -13,12 +13,12 @@ trait Setup {
 
   lazy val dataBucket = "raster-foundry-development-data-us-east-1"
 
-  def createModel(model: Model.Create, service: ModelService[IO]): OptionT[IO, Model] = {
+  def createTask(task: Task.Create, service: TaskService[IO]): OptionT[IO, Task] = {
     val request =
-      Request[IO](method = Method.POST, uri = Uri.uri("/models")).withEntity(model)
+      Request[IO](method = Method.POST, uri = Uri.uri("/tasks")).withEntity(task)
     for {
       resp    <- service.routes.run(request)
-      decoded <- OptionT.liftF { resp.as[Model] }
+      decoded <- OptionT.liftF { resp.as[Task] }
     } yield decoded
   }
 
