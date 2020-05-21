@@ -21,12 +21,12 @@ trait Generators {
       Function.tupled(Task.Create.apply)
     }
 
-  val predictionGen: Gen[Prediction.Create] =
+  val predictionGen: Gen[Execution.Create] =
     (Gen.delay(UUID.randomUUID), Gen.const(Map.empty[String, String].asJson)).tupled map {
-      Function.tupled(Prediction.Create.apply)
+      Function.tupled(Execution.Create.apply)
     }
 
   implicit val arbModel: Arbitrary[Task.Create] = Arbitrary { modelGen }
 
-  implicit val arbPrediction: Arbitrary[Prediction.Create] = Arbitrary { predictionGen }
+  implicit val arbPrediction: Arbitrary[Execution.Create] = Arbitrary { predictionGen }
 }

@@ -13,7 +13,7 @@ import java.time.Instant
 import java.util.UUID
 
 val taskId = UUID.fromString("@TASK_ID@")
-val predictionId = UUID.fromString("@PREDICTION_ID@")
+val executionId = UUID.fromString("@EXECUTION_ID@")
 val webhookId = UUID.fromString("@WEBHOOK_ID@")
 val invocationTime = Instant.ofEpochMilli("@INVOCATION_TIME@".toLong)
 val jsonSchema = json"""
@@ -47,7 +47,7 @@ val jsonPayload = json"""{"foo": 4}"""
 
 Granary is a job runner for cloud-based geospatial machine learning.
 Its goal is to simplify running tasks and to track and serve
-the results of predictions. It puts a REST API between you and AWS Batch
+the results of executions. It puts a REST API between you and AWS Batch
 to simplify interactions that otherwise involve repeatedly checking AWS SDK
 documentation. You can see an
 [OpenAPI Spec](https://swagger.io/docs/specification/about/)
@@ -154,32 +154,32 @@ sense to make a new task with a different validator. Since writing JSON schema
 by hand is tedious, it's helpful to use [`json-schema.net`](https://jsonschema.net/)
 to generate schemas from examples, then edit those to match your needs.
 
-## What's a `Prediction`?
+## What's a `Execution`?
 
-A `Prediction` is a single run of a task with specific inputs. Predictions are
-created when you `POST` a task id and arguments to `/api/predictions`.
+A `Execution` is a single run of a task with specific inputs. Executions are
+created when you `POST` a task id and arguments to `/api/executions`.
 
 ```scala mdoc:passthrough
 println("```json")
 println {
-  Prediction.Create(
-    taskId, // the taskId to associate with this prediction
+  Execution.Create(
+    taskId, // the taskId to associate with this execution
     jsonPayload, // the arguments to pass to the task
   ).asJson.spaces2
 }
 println("```")
 ```
 
-The task's JSON schema is used to validate the prediction's arguments.
-If validation passes, Granary will insert a record for this prediction and submit
+The task's JSON schema is used to validate the execution's arguments.
+If validation passes, Granary will insert a record for this execution and submit
 a job to AWS Batch with the resources configured on the task. If that was successful,
 you'll receive a response that looks like this:
 
 ```scala mdoc:passthrough
 println("```json")
 println {
-  Prediction(
-    predictionId,
+  Execution(
+    executionId,
     taskId,
     invocationTime,
     jsonPayload,
@@ -192,33 +192,33 @@ println {
 println("```")
 ```
 
-The `webhookId` in the response points to a single-use webhook for updating the prediction.
-This webhook can be accessed at `/api/predictions/{predictionId}/results/{webhookId}` and
+The `webhookId` in the response points to a single-use webhook for updating the execution.
+This webhook can be accessed at `/api/executions/{executionId}/results/{webhookId}` and
 accepts two kinds of messages.
 
-If the `prediction` failed, clients should send messages like this:
+If the `execution` failed, clients should send messages like this:
 
 ```scala mdoc:passthrough
-// JSON of the message to send if the prediction failed
+// JSON of the message to send if the execution failed
 println("```json")
 println {
-  PredictionFailure("everything went wrong").asJson.spaces2
+  ExecutionFailure("everything went wrong").asJson.spaces2
 }
 println("```")
 ```
 
-If the `prediction` succeeded, clients should send messages like this:
+If the `execution` succeeded, clients should send messages like this:
 
 ```scala mdoc:passthrough
-// JSON of the message to send if the prediction succeeded
+// JSON of the message to send if the execution succeeded
 println("```json")
 println {
-  PredictionSuccess(
+  ExecutionSuccess(
     List(
       StacItemAsset(
         "s3://where/the/results/live.json",
-  	    Some("Prediction Results"),
-  	    Some("results for a very important prediction"),
+  	    Some("Execution Results"),
+  	    Some("results for a very important execution"),
   	    List(StacAssetRole.Data),
   	    Some(`application/json`)
   	  )
@@ -233,7 +233,7 @@ is done or fails. This strategy will not cover cases in which the task cannot pe
 error-handling though, for instance, `OutOfMemory` errors and cases in which a spot
 instance gets cycled out from under your running task. Because the space of things that
 can go wrong is nearly infinite, Granary itself doesn't provide any facilities for handling
-those sorts of errors or for retrying predictions. Additionally, if your task has retrying
+those sorts of errors or for retrying executions. Additionally, if your task has retrying
 logic, it's your responsibility to make sure that it doesn't `POST` to the results webhook
 until it has exhausted its retries, since the first `POST` to the webhook will make it
 inaccessible for the rest of time.

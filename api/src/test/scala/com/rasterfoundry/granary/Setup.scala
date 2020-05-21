@@ -22,15 +22,15 @@ trait Setup {
     } yield decoded
   }
 
-  def createPrediction(
-      prediction: Prediction.Create,
-      service: PredictionService[IO]
-  ): OptionT[IO, Prediction] = {
+  def createExecution(
+      execution: Execution.Create,
+      service: ExecutionService[IO]
+  ): OptionT[IO, Execution] = {
     val request =
-      Request[IO](method = Method.POST, uri = Uri.uri("/predictions")).withEntity(prediction)
+      Request[IO](method = Method.POST, uri = Uri.uri("/executions")).withEntity(execution)
     for {
       resp    <- service.routes.run(request)
-      decoded <- OptionT.liftF { resp.as[Prediction] }
+      decoded <- OptionT.liftF { resp.as[Execution] }
     } yield decoded
 
   }

@@ -4,6 +4,8 @@ services:
     image: quay.io/azavea/postgis:2.3-postgres9.6-slim
     volumes:
       - ./data/:/tmp/data/
+    ports:
+      - 5432:5432
     environment:
       - POSTGRES_USER=granary
       - POSTGRES_PASSWORD=granary
@@ -76,6 +78,7 @@ services:
       - database:database.service.internal
     environment:
       - AWS_PROFILE
+      - AWS_REGION
       - POSTGRES_URL=jdbc:postgresql://database.service.internal/
       - POSTGRES_NAME=granary
       - POSTGRES_USER=granary
