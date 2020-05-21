@@ -89,7 +89,7 @@ object ApiServer extends IOApp {
               Router(
                 "/api" -> ((
                   Auth.customAuthMiddleware(
-                    taskRoutes <+> predictionRoutes,
+                    taskRoutes <+> executionRoutes,
                     healthcheckRoutes <+> docRoutes,
                     authConfig,
                     transactor
