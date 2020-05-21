@@ -29,7 +29,7 @@ object TaskEndpoints {
   val create = base.post
     .in(
       jsonBody[Task.Create].description(
-        "A name, a Json Schema and some AWS batch metadata for running a this model. The Schema should specify arguments as string -> string, even if they'll be parsed as ints or bools or whatever by the eventual model run"
+        "A name, a Json Schema and some AWS batch metadata for running this task. The Schema should specify arguments as string -> string, even if they'll be parsed as ints or bools or whatever by the eventual task execution"
       )
     )
     .out(jsonBody[Task])

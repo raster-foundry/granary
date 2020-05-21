@@ -20,12 +20,12 @@ object TaskDao {
   def unsafeGetTask(id: UUID): ConnectionIO[Task] =
     (selectF ++ Fragments.whereOr(fr"id = ${id}")).query[Task].unique
 
-  def insertTask(model: Task.Create): ConnectionIO[Task] = {
+  def insertTask(task: Task.Create): ConnectionIO[Task] = {
     val fragment = fr"""
       INSERT INTO tasks
         (id, name, validator, job_definition, job_queue)
       VALUES
-        (uuid_generate_v4(), ${model.name}, ${model.validator}, ${model.jobDefinition}, ${model.jobQueue})
+        (uuid_generate_v4(), ${task.name}, ${task.validator}, ${task.jobDefinition}, ${task.jobQueue})
     """
     fragment.update.withUniqueGeneratedKeys[Task](
       "id",

@@ -30,7 +30,7 @@ object ExecutionEndpoints {
   val create = base.post
     .in(
       jsonBody[Execution.Create].description(
-        "A model ID and arguments to use to run a execution. Arguments must conform to the schema on the associated model"
+        "A task ID and arguments to use to run an execution. Arguments must conform to the schema on the associated task"
       )
     )
     .out(jsonBody[Execution])
@@ -40,7 +40,7 @@ object ExecutionEndpoints {
         statusMapping(
           StatusCode.BadRequest,
           jsonBody[ValidationError]
-            .description("execution arguments insufficient for running model")
+            .description("execution arguments insufficient for running task")
         )
       )
     )

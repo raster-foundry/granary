@@ -57,12 +57,12 @@ services:
 
   calculate-water:
     build:
-      context: example-models
+      context: example-tasks
       dockerfile: Dockerfile.calculate-water
     environment:
       - AWS_PROFILE
     volumes:
-      - ./example-models/:/opt/granary/
+      - ./example-tasks/:/opt/granary/
       - ./data/:/opt/data/
       - $HOME/.aws:/root/.aws:ro
     working_dir: /opt/granary/
