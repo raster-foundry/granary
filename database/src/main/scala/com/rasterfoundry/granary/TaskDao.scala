@@ -8,7 +8,7 @@ import com.rasterfoundry.granary.datamodel.{PageRequest, Task}
 import java.util.UUID
 
 object TaskDao {
-  val selectF = fr"select id, name, validator, job_definition, job_queue FROM tasks"
+  val selectF = fr"select id, name, validator, job_definition, job_queue, owner FROM tasks"
 
   def listTasks(pageRequest: PageRequest): ConnectionIO[List[Task]] = {
     Page(selectF, pageRequest).query[Task].to[List]
@@ -23,16 +23,17 @@ object TaskDao {
   def insertTask(task: Task.Create): ConnectionIO[Task] = {
     val fragment = fr"""
       INSERT INTO tasks
-        (id, name, validator, job_definition, job_queue)
+        (id, name, validator, job_definition, job_queue, owner)
       VALUES
-        (uuid_generate_v4(), ${task.name}, ${task.validator}, ${task.jobDefinition}, ${task.jobQueue})
+        (uuid_generate_v4(), ${task.name}, ${task.validator}, ${task.jobDefinition}, ${task.jobQueue}, NULL)
     """
     fragment.update.withUniqueGeneratedKeys[Task](
       "id",
       "name",
       "validator",
       "job_definition",
-      "job_queue"
+      "job_queue",
+      "owner"
     )
   }
 

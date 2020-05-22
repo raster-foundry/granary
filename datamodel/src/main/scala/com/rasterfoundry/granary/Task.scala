@@ -10,7 +10,8 @@ case class Task(
     name: String,
     validator: Validator,
     jobDefinition: String,
-    jobQueue: String
+    jobQueue: String,
+    owner: Option[UUID]
 ) {
   def validate = validator.validate _
 
@@ -26,12 +27,13 @@ case class Task(
 object Task {
   implicit val encTask: Encoder[Task] = deriveEncoder
 
-  implicit val decTask: Decoder[Task] = Decoder.forProduct5(
+  implicit val decTask: Decoder[Task] = Decoder.forProduct6(
     "id",
     "name",
     "validator",
     "jobDefinition",
-    "jobQueue"
+    "jobQueue",
+    "owner"
   )(
     Task.apply _
   )

@@ -18,7 +18,8 @@ case class Execution(
     status: JobStatus,
     statusReason: Option[String],
     results: List[StacItemAsset],
-    webhookId: Option[UUID]
+    webhookId: Option[UUID],
+    owner: Option[UUID]
 ) {
 
   def signS3OutputLocation(s3Client: AmazonS3): Execution = {

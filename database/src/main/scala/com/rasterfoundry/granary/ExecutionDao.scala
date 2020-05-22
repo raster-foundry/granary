@@ -33,7 +33,7 @@ object ExecutionDao {
     fr"""
       SELECT
         id, task_id, invoked_at, arguments, status,
-        status_reason, results, webhook_id
+        status_reason, results, webhook_id, owner
       FROM executions
     """
 
@@ -108,7 +108,8 @@ object ExecutionDao {
             "status",
             "status_reason",
             "results",
-            "webhook_id"
+            "webhook_id",
+            "owner"
           ) map { Right(_) }
       }
     }
@@ -139,10 +140,10 @@ object ExecutionDao {
   ): ConnectionIO[Either[ExecutionDaoError, Execution]] = {
     val fragment = fr"""
       INSERT INTO executions
-        (id, task_id, invoked_at, arguments, status, status_reason, results, webhook_id)
+        (id, task_id, invoked_at, arguments, status, status_reason, results, webhook_id, owner)
       VALUES
         (uuid_generate_v4(), ${execution.taskId}, now(), ${execution.arguments},
-        'CREATED', NULL, '[]' :: jsonb, uuid_generate_v4())
+        'CREATED', NULL, '[]' :: jsonb, uuid_generate_v4(), NULL)
     """
     val insertIO: OptionT[ConnectionIO, Either[ExecutionDaoError, Execution]] = for {
       task <- OptionT { TaskDao.getTask(execution.taskId) }
@@ -160,7 +161,8 @@ object ExecutionDao {
               "status",
               "status_reason",
               "results",
-              "webhook_id"
+              "webhook_id",
+              "owner"
             ) map { Right(_) }
         }
       }
@@ -219,7 +221,8 @@ object ExecutionDao {
           "status",
           "status_reason",
           "results",
-          "webhook_id"
+          "webhook_id",
+          "owner"
         )
       }
     } yield update
