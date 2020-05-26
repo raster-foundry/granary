@@ -1,68 +1,12 @@
-<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Add a new model · Granary</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="This tutorial will guide you through adding a new model to your deployed Granary"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Add a new model · Granary"/><meta property="og:type" content="website"/><meta property="og:url" content="https://rasterfoundry.github.io/granary/"/><meta property="og:description" content="This tutorial will guide you through adding a new model to your deployed Granary"/><meta property="og:image" content="https://rasterfoundry.github.io/granary/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://rasterfoundry.github.io/granary/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/granary/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/granary/js/scrollSpy.js"></script><link rel="stylesheet" href="/granary/css/main.css"/><script src="/granary/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/granary/"><img class="logo" src="/granary/img/favicon.ico" alt="Granary"/><h2 class="headerTitleWithLogo">Granary</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/granary/docs/introduction" target="_self">Getting started</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Overview</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Overview</h3><ul class=""><li class="navListItem"><a class="navItem" href="/granary/docs/introduction">Introduction</a></li><li class="navListItem"><a class="navItem" href="/granary/docs/deploy-granary">Deploy Granary alongside an existing application</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/granary/docs/add-a-new-model">Add a new model</a></li><li class="navListItem"><a class="navItem" href="/granary/docs/development">Development</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">ADRs</h3><ul class=""><li class="navListItem"><a class="navItem" href="/granary/docs/architecture/adr-0001-app-setup-and-goals">1 - Application Setup and Goals</a></li><li class="navListItem"><a class="navItem" href="/granary/docs/architecture/adr-0002-api-documentation">2 - API Documentation</a></li></ul></div></div></section></div><script>
-            var coll = document.getElementsByClassName('collapsible');
-            var checkActiveCategory = true;
-            for (var i = 0; i < coll.length; i++) {
-              var links = coll[i].nextElementSibling.getElementsByTagName('*');
-              if (checkActiveCategory){
-                for (var j = 0; j < links.length; j++) {
-                  if (links[j].classList.contains('navListItemActive')){
-                    coll[i].nextElementSibling.classList.toggle('hide');
-                    coll[i].childNodes[1].classList.toggle('rotate');
-                    checkActiveCategory = false;
-                    break;
-                  }
-                }
-              }
-
-              coll[i].addEventListener('click', function() {
-                var arrow = this.childNodes[1];
-                arrow.classList.toggle('rotate');
-                var content = this.nextElementSibling;
-                content.classList.toggle('hide');
-              });
-            }
-
-            document.addEventListener('DOMContentLoaded', function() {
-              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
-              createToggler('#tocToggler', 'body', 'tocActive');
-
-              var headings = document.querySelector('.toc-headings');
-              headings && headings.addEventListener('click', function(event) {
-                var el = event.target;
-                while(el !== headings){
-                  if (el.tagName === 'A') {
-                    document.body.classList.remove('tocActive');
-                    break;
-                  } else{
-                    el = el.parentNode;
-                  }
-                }
-              }, false);
-
-              function createToggler(togglerSelector, targetSelector, className) {
-                var toggler = document.querySelector(togglerSelector);
-                var target = document.querySelector(targetSelector);
-
-                if (!toggler) {
-                  return;
-                }
-
-                toggler.onclick = function(event) {
-                  event.preventDefault();
-
-                  target.classList.toggle(className);
-                };
-              }
-            });
-        </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Add a new model</h1></header><article><div><span><p>This tutorial will guide you through adding a new model to your deployed Granary
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Add a new task · Granary</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="This tutorial will guide you through adding a new task to your deployed Granary"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Add a new task · Granary"/><meta property="og:type" content="website"/><meta property="og:url" content="https://rasterfoundry.github.io/granary/"/><meta property="og:description" content="This tutorial will guide you through adding a new task to your deployed Granary"/><meta property="og:image" content="https://rasterfoundry.github.io/granary/img/undraw_online.svg"/><meta name="twitter:card" content="summary"/><meta name="twitter:image" content="https://rasterfoundry.github.io/granary/img/undraw_tweetstorm.svg"/><link rel="shortcut icon" href="/granary/img/favicon.ico"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/granary/js/scrollSpy.js"></script><link rel="stylesheet" href="/granary/css/main.css"/><script src="/granary/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/granary/"><img class="logo" src="/granary/img/favicon.ico" alt="Granary"/><h2 class="headerTitleWithLogo">Granary</h2></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class=""><a href="/granary/docs/introduction" target="_self">Getting started</a></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><h1 id="__docusaurus" class="postHeaderTitle">Add a new task</h1></header><article><div><span><p>This tutorial will guide you through adding a new task to your deployed Granary
 service.</p>
-<h2><a class="anchor" aria-hidden="true" id="create-a-job-definition-for-your-new-model"></a><a href="#create-a-job-definition-for-your-new-model" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Create a job definition for your new model</h2>
-<p>With a running Granary instance available, we'll add another model and kick
+<h2><a class="anchor" aria-hidden="true" id="create-a-job-definition-for-your-new-task"></a><a href="#create-a-job-definition-for-your-new-task" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Create a job definition for your new task</h2>
+<p>With a running Granary instance available, we'll add another task and kick
 off some predictions. We'll use a public container image to create a job definition,
-then create a model in Granary referring to that job definition. For this step, you'll
+then create a task in Granary referring to that job definition. For this step, you'll
 need to install the <a href="https://www.terraform.io/downloads.html"><code>terraform</code></a> CLI.</p>
-<p>Create a new directory called <code>granary-models</code> and a directory in that directory
-called <code>job-definitions</code>. In <code>granary-models/batch.tf</code>, add the following Terraform
+<p>Create a new directory called <code>granary-tasks</code> and a directory in that directory
+called <code>job-definitions</code>. In <code>granary-tasks/batch.tf</code>, add the following Terraform
 configuration to describe the AWS Batch job definition that we'd like to create.</p>
 <pre><code class="hljs css language-terraform">resource <span class="hljs-string">"aws_batch_job_definition"</span> <span class="hljs-string">"calculate_water"</span> {
   name = <span class="hljs-string">"job<span class="hljs-variable">${var.project}</span>CalculateWater"</span>
@@ -71,7 +15,7 @@ configuration to describe the AWS Batch job definition that we'd like to create.
   container_properties = templatefile(<span class="hljs-string">"<span class="hljs-variable">${path.module}</span>/job-definitions/granary-water.json"</span>, {})
 }
 </code></pre>
-<p>In <code>granary-models/config.tf</code>, add the following Terraform configuration that tells Terraform
+<p>In <code>granary-tasks/config.tf</code>, add the following Terraform configuration that tells Terraform
 what provider (you can mentally substitute &quot;cloud service&quot;) and backend to use.</p>
 <pre><code class="hljs css language-terraform"><span class="hljs-attribute">provider</span> <span class="hljs-string">"aws"</span> {
   <span class="hljs-attribute">version</span> = <span class="hljs-string">"~&gt; 2.44.0"</span>
@@ -85,7 +29,7 @@ terraform {
   }
 }
 </code></pre>
-<p>In <code>granary-models/variables.tf</code>, add the following variables to tell Terraform what project name
+<p>In <code>granary-tasks/variables.tf</code>, add the following variables to tell Terraform what project name
 to use to substitute in the names of resources and in what region to create and destroy AWS
 resources.</p>
 <pre><code class="hljs css language-terraform">variable <span class="hljs-string">"project"</span> {
@@ -101,7 +45,7 @@ variable <span class="hljs-string">"aws_region"</span> {
 <p>You can change them if you'd like, but the rest of this tutorial will assume that you used
 the default values.</p>
 <p>That configuration refers to a template file in <code>job-definitions</code> that doesn't
-exist yet. Let's create it! Put the following template in <code>granary-models/calculate-water.json</code>.</p>
+exist yet. Let's create it! Put the following template in <code>granary-tasks/calculate-water.json</code>.</p>
 <pre><code class="hljs css language-json">{
     <span class="hljs-attr">"image"</span>: <span class="hljs-string">"quay.io/raster-foundry/granary-calculate-water:eeec5da"</span>,
     <span class="hljs-attr">"vcpus"</span>: <span class="hljs-number">2</span>,
@@ -120,7 +64,7 @@ exist yet. Let's create it! Put the following template in <code>granary-models/c
     <span class="hljs-attr">"resourceRequirements"</span>: []
 }
 </code></pre>
-<p>Finally, we'll create the job definition for the water model. From the <code>granary-models</code> directory,
+<p>Finally, we'll create the job definition for the water task. From the <code>granary-tasks</code> directory,
 initialize Terraform with:</p>
 <pre><code class="hljs css language-bash">$ terraform init \
     -backend-config=<span class="hljs-string">"bucket=&lt;an s3 bucket you can write to&gt;"</span> \
@@ -134,11 +78,11 @@ initialize Terraform with:</p>
 new job definition), follow up with</p>
 <pre><code class="hljs css language-bash">$ terraform apply -plan=tfplan
 </code></pre>
-<h2><a class="anchor" aria-hidden="true" id="create-your-new-model-in-granary"></a><a href="#create-your-new-model-in-granary" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Create your new model in Granary</h2>
+<h2><a class="anchor" aria-hidden="true" id="create-your-new-task-in-granary"></a><a href="#create-your-new-task-in-granary" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Create your new task in Granary</h2>
 <p>This step will require the <a href="https://httpie.org/doc#installation"><code>httpie</code></a> command line HTTP
 client.</p>
 <p>With your <code>jobGranaryDemoCalculateWater</code> job definition now present in AWS Batch, you can
-create a Granary model that refers to it. The JSON representation of the Granary model
+create a Granary task that refers to it. The JSON representation of the Granary task
 we're going to create looks like this:</p>
 <pre><code class="hljs css language-json">{
   <span class="hljs-attr">"name"</span>: <span class="hljs-string">"Calculate Water"</span>,
@@ -180,7 +124,7 @@ we're going to create looks like this:</p>
           <span class="hljs-attr">"type"</span>: <span class="hljs-string">"string"</span>,
           <span class="hljs-attr">"format"</span>: <span class="hljs-string">"uri"</span>,
           <span class="hljs-attr">"title"</span>: <span class="hljs-string">"The output_location Schema"</span>,
-          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A uri pointing to where to store the result of running this model"</span>,
+          <span class="hljs-attr">"description"</span>: <span class="hljs-string">"A uri pointing to where to store the result of running this task"</span>,
           <span class="hljs-attr">"default"</span>: <span class="hljs-string">""</span>,
           <span class="hljs-attr">"examples"</span>: [
             <span class="hljs-string">"s3://cool-bucket/foo.tif"</span>
@@ -197,16 +141,16 @@ we're going to create looks like this:</p>
 will create an ID for the webhook when predictions are created. Since there's no way for a user to
 know that value in advance, the server fills it in and updates the parameters for the AWS Batch job
 accordingly.</p>
-<p>To create the model, save that json to <code>model.json</code>, then:</p>
-<pre><code class="hljs css language-bash">$ cat model.json | http https://granary.yourdomain.com/api/models
+<p>To create the task, save that json to <code>task.json</code>, then:</p>
+<pre><code class="hljs css language-bash">$ cat task.json | http https://granary.yourdomain.com/api/tasks
 </code></pre>
-<h2><a class="anchor" aria-hidden="true" id="create-a-prediction-for-your-model"></a><a href="#create-a-prediction-for-your-model" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Create a prediction for your model</h2>
-<p>In the last step, you created a model in your deployed Granary service. In this step, you'll
-use that model to create a prediction. You'll also see what happens if you try to create a prediction
-with arguments the model doesn't recognize or poorly formatted arguments. This step also requires
+<h2><a class="anchor" aria-hidden="true" id="create-a-prediction-for-your-task"></a><a href="#create-a-prediction-for-your-task" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Create a prediction for your task</h2>
+<p>In the last step, you created a task in your deployed Granary service. In this step, you'll
+use that task to create a prediction. You'll also see what happens if you try to create a prediction
+with arguments the task doesn't recognize or poorly formatted arguments. This step also requires
 <a href="https://httpie.org/doc#installation"><code>httpie</code></a>.</p>
-<p>Creating a prediction is simpler than creating a model. Predictions require only two arguments to create:
-a model ID and JSON of some arguments. Because of the <code>schema</code> of the model we created in the previous step,
+<p>Creating a prediction is simpler than creating a task. Predictions require only two arguments to create:
+a task ID and JSON of some arguments. Because of the <code>schema</code> of the task we created in the previous step,
 our arguments must conform to the shape:</p>
 <pre><code class="hljs css language-json">{
     <span class="hljs-attr">"NIR_BAND"</span>: <span class="hljs-string">"s3://foo/bar.tiff"</span>,
@@ -216,7 +160,7 @@ our arguments must conform to the shape:</p>
 </code></pre>
 <p>To create a prediction, we'll use the separated bands for an L2C Sentinel-2 image hosted on AWS:</p>
 <pre><code class="hljs css language-json">{
-    <span class="hljs-attr">"modelId"</span>: <span class="hljs-string">"id-of-the-model-you-created"</span>,
+    <span class="hljs-attr">"taskId"</span>: <span class="hljs-string">"id-of-the-task-you-created"</span>,
     <span class="hljs-attr">"arguments"</span>: {
         <span class="hljs-attr">"NIR_BAND"</span>: <span class="hljs-string">"s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B05.jp2"</span>,
         <span class="hljs-attr">"GREEN_BAND"</span>: <span class="hljs-string">"s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B03.jp2"</span>,
@@ -230,14 +174,14 @@ our arguments must conform to the shape:</p>
 <p>If everything went well, you'll get a response telling you that the job has started.</p>
 <p>Now let's make some things go wrong on purpose. One thing that AWS Batch will let you try to do is
 create <code>SubmitJob</code> requests without arguments that the job definition requires. Let's try to do something
-similar with the model from the first step. In <code>prediction.json</code>, let's make a simple typo and substitute
+similar with the task from the first step. In <code>prediction.json</code>, let's make a simple typo and substitute
 <code>GREN</code> for <code>GREEN</code>, so it now reads:</p>
 <pre><code class="hljs css language-json">{
-    <span class="hljs-attr">"modelId"</span>: <span class="hljs-string">"id-of-the-model-you-created"</span>,
+    <span class="hljs-attr">"taskId"</span>: <span class="hljs-string">"id-of-the-task-you-created"</span>,
     <span class="hljs-attr">"arguments"</span>: {
         <span class="hljs-attr">"NIR_BAND"</span>: <span class="hljs-string">"s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B05.jp2"</span>,
         <span class="hljs-attr">"GREN_BAND"</span>: <span class="hljs-string">"s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B03.jp2"</span>,
-        <span class="hljs-attr">"OUTPUT_LOCATION"</span>: <span class="hljs-string">"s3://your-bucket/your/prefix/water-model-output.geojson"</span>
+        <span class="hljs-attr">"OUTPUT_LOCATION"</span>: <span class="hljs-string">"s3://your-bucket/your/prefix/water-task-output.geojson"</span>
     }
 }
 </code></pre>
@@ -266,10 +210,10 @@ be the case when you hit <code>/api/predictions/&lt;prediction id&gt;/</code></p
 <li>its status will be <code>&quot;SUCCESSFUL&quot;</code> and it will have items in its <code>results</code> array</li>
 <li>its status will be <code>&quot;FAILED&quot;</code> and it will have a value in its <code>statusReason</code> field</li>
 </ul>
-<p>Because this is the demo model, it should be the first one. Inspect the <code>href</code> of the item in the <code>results</code> field to find the path
-to the model's output, download it, and open it in QGIS. If you used the NIR and green bands from the example,
+<p>Because this is the demo task, it should be the first one. Inspect the <code>href</code> of the item in the <code>results</code> field to find the path
+to the task's output, download it, and open it in QGIS. If you used the NIR and green bands from the example,
 you'll see that there's not a lot of water predicted in this image. If you toss the geojson output into
 <a href="http://geojson.io">geojson.io</a> or <a href="https://www.qgis.org/en/site/">QGIS</a>, you can see that there's not too much
-water on the Earth there either, though clearly the model is missing some though. However, model sophistication
+water on the Earth there either, though clearly the task is missing some though. However, task sophistication
 is not the point of this example.</p>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/granary/docs/deploy-granary"><span class="arrow-prev">← </span><span>Deploy Granary alongside an existing application</span></a><a class="docs-next button" href="/granary/docs/development"><span>Development</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#create-a-job-definition-for-your-new-model">Create a job definition for your new model</a></li><li><a href="#create-your-new-model-in-granary">Create your new model in Granary</a></li><li><a href="#create-a-prediction-for-your-model">Create a prediction for your model</a></li><li><a href="#inspect-the-prediction">Inspect the prediction</a></li></ul></nav></div></div></body></html>
+</span></div></article></div><div class="docs-prevnext"></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#create-a-job-definition-for-your-new-task">Create a job definition for your new task</a></li><li><a href="#create-your-new-task-in-granary">Create your new task in Granary</a></li><li><a href="#create-a-prediction-for-your-task">Create a prediction for your task</a></li><li><a href="#inspect-the-prediction">Inspect the prediction</a></li></ul></nav></div></div></body></html>

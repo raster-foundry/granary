@@ -1,20 +1,20 @@
 ---
-title: Add a new model
-id: add-a-new-model
+title: Add a new task
+id: add-a-new-task
 ---
 
-This tutorial will guide you through adding a new model to your deployed Granary
+This tutorial will guide you through adding a new task to your deployed Granary
 service.
 
-## Create a job definition for your new model
+## Create a job definition for your new task
 
-With a running Granary instance available, we'll add another model and kick
+With a running Granary instance available, we'll add another task and kick
 off some predictions. We'll use a public container image to create a job definition,
-then create a model in Granary referring to that job definition. For this step, you'll
+then create a task in Granary referring to that job definition. For this step, you'll
 need to install the [`terraform`](https://www.terraform.io/downloads.html) CLI.
 
-Create a new directory called `granary-models` and a directory in that directory
-called `job-definitions`. In `granary-models/batch.tf`, add the following Terraform
+Create a new directory called `granary-tasks` and a directory in that directory
+called `job-definitions`. In `granary-tasks/batch.tf`, add the following Terraform
 configuration to describe the AWS Batch job definition that we'd like to create.
 
 ```terraform
@@ -26,7 +26,7 @@ resource "aws_batch_job_definition" "calculate_water" {
 }
 ```
 
-In `granary-models/config.tf`, add the following Terraform configuration that tells Terraform
+In `granary-tasks/config.tf`, add the following Terraform configuration that tells Terraform
 what provider (you can mentally substitute "cloud service") and backend to use.
 
 ```terraform
@@ -43,7 +43,7 @@ terraform {
 }
 ```
 
-In `granary-models/variables.tf`, add the following variables to tell Terraform what project name
+In `granary-tasks/variables.tf`, add the following variables to tell Terraform what project name
 to use to substitute in the names of resources and in what region to create and destroy AWS
 resources.
 
@@ -63,7 +63,7 @@ You can change them if you'd like, but the rest of this tutorial will assume tha
 the default values.
 
 That configuration refers to a template file in `job-definitions` that doesn't
-exist yet. Let's create it! Put the following template in `granary-models/calculate-water.json`.
+exist yet. Let's create it! Put the following template in `granary-tasks/calculate-water.json`.
 
 ```json
 {
@@ -85,7 +85,7 @@ exist yet. Let's create it! Put the following template in `granary-models/calcul
 }
 ```
 
-Finally, we'll create the job definition for the water model. From the `granary-models` directory,
+Finally, we'll create the job definition for the water task. From the `granary-tasks` directory,
 initialize Terraform with:
 
 ```bash
@@ -109,13 +109,13 @@ new job definition), follow up with
 $ terraform apply -plan=tfplan
 ```
 
-## Create your new model in Granary
+## Create your new task in Granary
 
 This step will require the [`httpie`](https://httpie.org/doc#installation) command line HTTP
 client.
 
 With your `jobGranaryDemoCalculateWater` job definition now present in AWS Batch, you can
-create a Granary model that refers to it. The JSON representation of the Granary model
+create a Granary task that refers to it. The JSON representation of the Granary task
 we're going to create looks like this:
 
 ```json
@@ -159,7 +159,7 @@ we're going to create looks like this:
           "type": "string",
           "format": "uri",
           "title": "The output_location Schema",
-          "description": "A uri pointing to where to store the result of running this model",
+          "description": "A uri pointing to where to store the result of running this task",
           "default": "",
           "examples": [
             "s3://cool-bucket/foo.tif"
@@ -178,21 +178,21 @@ will create an ID for the webhook when predictions are created. Since there's no
 know that value in advance, the server fills it in and updates the parameters for the AWS Batch job
 accordingly.
 
-To create the model, save that json to `model.json`, then:
+To create the task, save that json to `task.json`, then:
 
 ```bash
-$ cat model.json | http https://granary.yourdomain.com/api/models
+$ cat task.json | http https://granary.yourdomain.com/api/tasks
 ```
 
-## Create a prediction for your model
+## Create a prediction for your task
 
-In the last step, you created a model in your deployed Granary service. In this step, you'll
-use that model to create a prediction. You'll also see what happens if you try to create a prediction
-with arguments the model doesn't recognize or poorly formatted arguments. This step also requires
+In the last step, you created a task in your deployed Granary service. In this step, you'll
+use that task to create a prediction. You'll also see what happens if you try to create a prediction
+with arguments the task doesn't recognize or poorly formatted arguments. This step also requires
 [`httpie`](https://httpie.org/doc#installation).
 
-Creating a prediction is simpler than creating a model. Predictions require only two arguments to create:
-a model ID and JSON of some arguments. Because of the `schema` of the model we created in the previous step,
+Creating a prediction is simpler than creating a task. Predictions require only two arguments to create:
+a task ID and JSON of some arguments. Because of the `schema` of the task we created in the previous step,
 our arguments must conform to the shape:
 
 ```json
@@ -207,7 +207,7 @@ To create a prediction, we'll use the separated bands for an L2C Sentinel-2 imag
 
 ```json
 {
-    "modelId": "id-of-the-model-you-created",
+    "taskId": "id-of-the-task-you-created",
     "arguments": {
         "NIR_BAND": "s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B05.jp2",
         "GREEN_BAND": "s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B03.jp2",
@@ -226,16 +226,16 @@ If everything went well, you'll get a response telling you that the job has star
 
 Now let's make some things go wrong on purpose. One thing that AWS Batch will let you try to do is
 create `SubmitJob` requests without arguments that the job definition requires. Let's try to do something
-similar with the model from the first step. In `prediction.json`, let's make a simple typo and substitute
+similar with the task from the first step. In `prediction.json`, let's make a simple typo and substitute
 `GREN` for `GREEN`, so it now reads:
 
 ```json
 {
-    "modelId": "id-of-the-model-you-created",
+    "taskId": "id-of-the-task-you-created",
     "arguments": {
         "NIR_BAND": "s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B05.jp2",
         "GREN_BAND": "s3://sentinel-s2-l2a/tiles/40/U/EB/2020/2/17/0/R20m/B03.jp2",
-        "OUTPUT_LOCATION": "s3://your-bucket/your/prefix/water-model-output.geojson"
+        "OUTPUT_LOCATION": "s3://your-bucket/your/prefix/water-task-output.geojson"
     }
 }
 ```
@@ -275,9 +275,9 @@ be the case when you hit `/api/predictions/<prediction id>/`
 - its status will be `"SUCCESSFUL"` and it will have items in its `results` array
 - its status will be `"FAILED"` and it will have a value in its `statusReason` field
 
-Because this is the demo model, it should be the first one. Inspect the `href` of the item in the `results` field to find the path
-to the model's output, download it, and open it in QGIS. If you used the NIR and green bands from the example,
+Because this is the demo task, it should be the first one. Inspect the `href` of the item in the `results` field to find the path
+to the task's output, download it, and open it in QGIS. If you used the NIR and green bands from the example,
 you'll see that there's not a lot of water predicted in this image. If you toss the geojson output into
 [geojson.io](http://geojson.io) or [QGIS](https://www.qgis.org/en/site/), you can see that there's not too much
-water on the Earth there either, though clearly the model is missing some though. However, model sophistication
+water on the Earth there either, though clearly the task is missing some though. However, task sophistication
 is not the point of this example.

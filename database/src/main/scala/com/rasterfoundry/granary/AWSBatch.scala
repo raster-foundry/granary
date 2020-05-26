@@ -30,7 +30,7 @@ object AWSBatch {
         val updatedParametersIO: IO[Map[String, String]] = params.get("TASK_GRID") match {
           case Some(v) =>
             IO {
-              val key = s"prediction-task-grids/$jobName/taskGrid.json"
+              val key = s"execution-task-grids/$jobName/taskGrid.json"
               s3Client.putObject(dataBucket, key, v.noSpaces)
               val updated =
                 params

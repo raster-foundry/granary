@@ -58,29 +58,29 @@ object ApiServer extends IOApp {
         IO(ConfigSource.default.at("pagination").loadOrThrow[PaginationConfig])
       }
       connectionEc <- ExecutionContexts.fixedThreadPool[IO](2)
-      blocker      <- Blocker[IO]
+      dbBlocker    <- Blocker[IO]
       transactor <-
         HikariTransactor
-          .fromHikariConfig[IO](DBConfig.hikariConfig, connectionEc, blocker)
+          .fromHikariConfig[IO](DBConfig.hikariConfig, connectionEc, dbBlocker)
       allEndpoints = {
-        ModelEndpoints.endpoints ++ PredictionEndpoints.endpoints ++ HealthcheckEndpoints.endpoints
+        TaskEndpoints.endpoints ++ ExecutionEndpoints.endpoints ++ HealthcheckEndpoints.endpoints
       }
       docs               = allEndpoints.toOpenAPI("Granary", "0.0.1")
       docRoutes          = new SwaggerHttp4s(docs.toYaml).routes
       defaultPageRequest = PageRequest.default(paginationConfig.defaultLimit)
-      modelRoutes = new ModelService(
+      taskRoutes = new TaskService(
         defaultPageRequest,
         tracingContextBuilder,
         transactor
       ).routes
-      predictionService = new PredictionService(
+      executionService = new ExecutionService(
         defaultPageRequest,
         tracingContextBuilder,
         transactor,
         s3Config.dataBucket,
         metaConfig.apiHost
       )
-      predictionRoutes  = predictionService.routes
+      executionRoutes   = executionService.routes
       healthcheckRoutes = new HealthcheckService(tracingContextBuilder, transactor).healthcheck
       router =
         RequestResponseLogger
@@ -89,21 +89,21 @@ object ApiServer extends IOApp {
               Router(
                 "/api" -> ((
                   Auth.customAuthMiddleware(
-                    modelRoutes <+> predictionRoutes,
+                    taskRoutes <+> executionRoutes,
                     healthcheckRoutes <+> docRoutes,
                     authConfig,
                     transactor
                   )
-                ) <+> predictionService.addResultsRoutes)
+                ) <+> executionService.addResultsRoutes)
               )
             )
           }
           .orNotFound
-      server <-
-        BlazeServerBuilder[IO]
-          .bindHttp(8080, "0.0.0.0")
-          .withHttpApp(router)
-          .resource
+      serverBuilderBlocker <- Blocker[IO]
+      server <- BlazeServerBuilder[IO](serverBuilderBlocker.blockingContext)
+        .bindHttp(8080, "0.0.0.0")
+        .withHttpApp(router)
+        .resource
     } yield server
 
   def run(args: List[String]): IO[ExitCode] =

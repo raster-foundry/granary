@@ -10,9 +10,9 @@ import scala.util.Try
 import java.time.Instant
 import java.util.{Date, UUID}
 
-case class Prediction(
+case class Execution(
     id: UUID,
-    modelId: UUID,
+    taskId: UUID,
     invokedAt: Instant,
     arguments: Json,
     status: JobStatus,
@@ -21,7 +21,7 @@ case class Prediction(
     webhookId: Option[UUID]
 ) {
 
-  def signS3OutputLocation(s3Client: AmazonS3): Prediction = {
+  def signS3OutputLocation(s3Client: AmazonS3): Execution = {
     val updatedResults = results map {
       case asset if asset.href.startsWith("s3://") =>
         (Try {
@@ -37,12 +37,12 @@ case class Prediction(
   }
 }
 
-object Prediction {
-  implicit val encPrediction: Encoder[Prediction] = deriveEncoder
-  implicit val decPrediction: Decoder[Prediction] = deriveDecoder
+object Execution {
+  implicit val encExecution: Encoder[Execution] = deriveEncoder
+  implicit val decExecution: Decoder[Execution] = deriveDecoder
 
   case class Create(
-      modelId: UUID,
+      taskId: UUID,
       arguments: Json
   )
 

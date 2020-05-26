@@ -13,24 +13,24 @@ trait Setup {
 
   lazy val dataBucket = "raster-foundry-development-data-us-east-1"
 
-  def createModel(model: Model.Create, service: ModelService[IO]): OptionT[IO, Model] = {
+  def createTask(task: Task.Create, service: TaskService[IO]): OptionT[IO, Task] = {
     val request =
-      Request[IO](method = Method.POST, uri = Uri.uri("/models")).withEntity(model)
+      Request[IO](method = Method.POST, uri = Uri.uri("/tasks")).withEntity(task)
     for {
       resp    <- service.routes.run(request)
-      decoded <- OptionT.liftF { resp.as[Model] }
+      decoded <- OptionT.liftF { resp.as[Task] }
     } yield decoded
   }
 
-  def createPrediction(
-      prediction: Prediction.Create,
-      service: PredictionService[IO]
-  ): OptionT[IO, Prediction] = {
+  def createExecution(
+      execution: Execution.Create,
+      service: ExecutionService[IO]
+  ): OptionT[IO, Execution] = {
     val request =
-      Request[IO](method = Method.POST, uri = Uri.uri("/predictions")).withEntity(prediction)
+      Request[IO](method = Method.POST, uri = Uri.uri("/executions")).withEntity(execution)
     for {
       resp    <- service.routes.run(request)
-      decoded <- OptionT.liftF { resp.as[Prediction] }
+      decoded <- OptionT.liftF { resp.as[Execution] }
     } yield decoded
 
   }

@@ -10,13 +10,13 @@ import java.util.UUID
 
 import sttp.model.StatusCode
 
-object PredictionEndpoints {
+object ExecutionEndpoints {
 
-  val base = endpoint.in("predictions")
+  val base = endpoint.in("executions")
 
   val idLookup = base.get
     .in(path[UUID])
-    .out(jsonBody[Prediction])
+    .out(jsonBody[Execution])
     .errorOut(
       oneOf[CrudError](
         statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("Not found")),
@@ -29,18 +29,18 @@ object PredictionEndpoints {
 
   val create = base.post
     .in(
-      jsonBody[Prediction.Create].description(
-        "A model ID and arguments to use to run a prediction. Arguments must conform to the schema on the associated model"
+      jsonBody[Execution.Create].description(
+        "A task ID and arguments to use to run an execution. Arguments must conform to the schema on the associated task"
       )
     )
-    .out(jsonBody[Prediction])
+    .out(jsonBody[Execution])
     .errorOut(
       oneOf[CrudError](
         statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("Not found")),
         statusMapping(
           StatusCode.BadRequest,
           jsonBody[ValidationError]
-            .description("prediction arguments insufficient for running model")
+            .description("execution arguments insufficient for running task")
         )
       )
     )
@@ -48,17 +48,17 @@ object PredictionEndpoints {
   val list =
     base.get
       .in(Inputs.paginationInput)
-      .in(query[Option[UUID]]("modelId"))
+      .in(query[Option[UUID]]("taskId"))
       .in(query[Option[JobStatus]]("status"))
-      .out(jsonBody[PaginatedResponse[Prediction]])
+      .out(jsonBody[PaginatedResponse[Execution]])
 
   val addResults =
     base.post
       .in(path[UUID])
       .in("results")
       .in(path[UUID])
-      .in(jsonBody[PredictionStatusUpdate])
-      .out(jsonBody[Prediction])
+      .in(jsonBody[ExecutionStatusUpdate])
+      .out(jsonBody[Execution])
       .errorOut(
         oneOf[CrudError](
           statusMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found")),
