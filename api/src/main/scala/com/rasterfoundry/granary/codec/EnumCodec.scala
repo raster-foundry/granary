@@ -14,6 +14,6 @@ trait EnumCodec {
       case Failure(err)    => DecodeResult.Error(err.getMessage(), err)
     }
 
-  implicit val jobStatusCodec: Codec[JobStatus, TextPlain, String] =
-    Codec.stringPlainCodecUtf8.mapDecode(decJobStatus)(_.toString)
+  implicit val jobStatusCodec: Codec[String, JobStatus, TextPlain] =
+    Codec.string.mapDecode(decJobStatus)(_.toString)
 }
