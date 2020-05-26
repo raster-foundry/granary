@@ -58,10 +58,10 @@ object ApiServer extends IOApp {
         IO(ConfigSource.default.at("pagination").loadOrThrow[PaginationConfig])
       }
       connectionEc <- ExecutionContexts.fixedThreadPool[IO](2)
-      blocker      <- Blocker[IO]
+      dbBlocker    <- Blocker[IO]
       transactor <-
         HikariTransactor
-          .fromHikariConfig[IO](DBConfig.hikariConfig, connectionEc, blocker)
+          .fromHikariConfig[IO](DBConfig.hikariConfig, connectionEc, dbBlocker)
       allEndpoints = {
         TaskEndpoints.endpoints ++ ExecutionEndpoints.endpoints ++ HealthcheckEndpoints.endpoints
       }
@@ -99,11 +99,11 @@ object ApiServer extends IOApp {
             )
           }
           .orNotFound
-      server <-
-        BlazeServerBuilder[IO]
-          .bindHttp(8080, "0.0.0.0")
-          .withHttpApp(router)
-          .resource
+      serverBuilderBlocker <- Blocker[IO]
+      server <- BlazeServerBuilder[IO](serverBuilderBlocker.blockingContext)
+        .bindHttp(8080, "0.0.0.0")
+        .withHttpApp(router)
+        .resource
     } yield server
 
   def run(args: List[String]): IO[ExitCode] =
