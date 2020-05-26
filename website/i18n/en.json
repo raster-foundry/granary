@@ -5,8 +5,8 @@
     "previous": "Previous",
     "tagline": "A job runner for geospatial machine learning",
     "docs": {
-      "add-a-new-model": {
-        "title": "Add a new model"
+      "add-a-new-task": {
+        "title": "Add a new task"
       },
       "architecture/adr-0001-app-setup-and-goals": {
         "title": "1 - Application Setup and Goals"

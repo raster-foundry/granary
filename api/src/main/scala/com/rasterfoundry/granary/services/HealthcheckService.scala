@@ -27,7 +27,7 @@ class HealthcheckService[F[_]: Sync: Logger: MonadError[*[_], Throwable]: Concur
     mkContext("healthcheck", Map.empty, contextBuilder).use { _ =>
       Concurrent
         .timeoutTo[F, HealthcheckResult](
-          fr"select 1 from models limit 1;".query[Int].option.transact(xa) map { _ =>
+          fr"select 1 from tasks limit 1;".query[Int].option.transact(xa) map { _ =>
             HealthyResult()
           },
           5.seconds,

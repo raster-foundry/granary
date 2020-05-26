@@ -63,24 +63,24 @@ object ApiServer extends IOApp {
         HikariTransactor
           .fromHikariConfig[IO](DBConfig.hikariConfig, connectionEc, blocker)
       allEndpoints = {
-        ModelEndpoints.endpoints ++ PredictionEndpoints.endpoints ++ HealthcheckEndpoints.endpoints
+        TaskEndpoints.endpoints ++ ExecutionEndpoints.endpoints ++ HealthcheckEndpoints.endpoints
       }
       docs               = allEndpoints.toOpenAPI("Granary", "0.0.1")
       docRoutes          = new SwaggerHttp4s(docs.toYaml).routes
       defaultPageRequest = PageRequest.default(paginationConfig.defaultLimit)
-      modelRoutes = new ModelService(
+      taskRoutes = new TaskService(
         defaultPageRequest,
         tracingContextBuilder,
         transactor
       ).routes
-      predictionService = new PredictionService(
+      executionService = new ExecutionService(
         defaultPageRequest,
         tracingContextBuilder,
         transactor,
         s3Config.dataBucket,
         metaConfig.apiHost
       )
-      predictionRoutes  = predictionService.routes
+      executionRoutes   = executionService.routes
       healthcheckRoutes = new HealthcheckService(tracingContextBuilder, transactor).healthcheck
       router =
         RequestResponseLogger
@@ -89,12 +89,12 @@ object ApiServer extends IOApp {
               Router(
                 "/api" -> ((
                   Auth.customAuthMiddleware(
-                    modelRoutes <+> predictionRoutes,
+                    taskRoutes <+> executionRoutes,
                     healthcheckRoutes <+> docRoutes,
                     authConfig,
                     transactor
                   )
-                ) <+> predictionService.addResultsRoutes)
+                ) <+> executionService.addResultsRoutes)
               )
             )
           }

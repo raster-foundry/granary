@@ -11,22 +11,22 @@ trait Generators {
 
   private val shortStringGen: Gen[String] = Gen.listOfN(20, Gen.alphaChar) map { _.mkString }
 
-  val modelGen: Gen[Model.Create] =
+  val taskGen: Gen[Task.Create] =
     (
       shortStringGen,
       Gen.delay(new Validator(Map.empty[String, String].asJson)),
       shortStringGen,
       shortStringGen
     ).tupled map {
-      Function.tupled(Model.Create.apply)
+      Function.tupled(Task.Create.apply)
     }
 
-  val predictionGen: Gen[Prediction.Create] =
+  val executionGen: Gen[Execution.Create] =
     (Gen.delay(UUID.randomUUID), Gen.const(Map.empty[String, String].asJson)).tupled map {
-      Function.tupled(Prediction.Create.apply)
+      Function.tupled(Execution.Create.apply)
     }
 
-  implicit val arbModel: Arbitrary[Model.Create] = Arbitrary { modelGen }
+  implicit val arbTask: Arbitrary[Task.Create] = Arbitrary { taskGen }
 
-  implicit val arbPrediction: Arbitrary[Prediction.Create] = Arbitrary { predictionGen }
+  implicit val arbExecution: Arbitrary[Execution.Create] = Arbitrary { executionGen }
 }
