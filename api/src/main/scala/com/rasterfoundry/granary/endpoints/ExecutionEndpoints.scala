@@ -54,6 +54,11 @@ object ExecutionEndpoints {
       .in(query[Option[UUID]]("taskId"))
       .in(query[Option[JobStatus]]("status"))
       .out(jsonBody[PaginatedResponse[Execution]])
+      .errorOut(
+        oneOf[CrudError](
+          statusMapping(StatusCode.Forbidden, jsonBody[Forbidden].description("Invalid token"))
+        )
+      )
 
   val addResults =
     base.post

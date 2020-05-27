@@ -38,26 +38,37 @@ object ExecutionDao {
     """
 
   def listExecutions(
+      token: Token,
       pageRequest: PageRequest,
       taskId: Option[UUID],
       status: Option[JobStatus]
   ): ConnectionIO[List[Execution]] =
     Page(
-      selectF ++ Fragments.whereOrOpt(
+      selectF ++ Fragments.whereAndOpt(
         taskId map { id => fr"task_id = $id" },
         status map { s =>
           fr"status = $s"
+        },
+        tokenToUserId(token) map { userId =>
+          fr"owner = $userId"
         }
       ),
       pageRequest
     ).query[Execution]
       .to[List]
 
-  def getExecution(id: UUID): ConnectionIO[Option[Execution]] =
-    (selectF ++ Fragments.whereOr(fr"id = $id")).query[Execution].option
+  def getQuery(token: Option[Token], id: UUID) =
+    (selectF ++ Fragments
+      .whereAndOpt(
+        Some(fr"id = $id"),
+        token flatMap { tokenToUserId } map { userId => fr"owner = $userId" }
+      )).query[Execution]
 
-  def unsafeGetExecution(id: UUID): ConnectionIO[Execution] =
-    (selectF ++ Fragments.whereOr(fr"id = $id")).query[Execution].unique
+  def getExecution(token: Option[Token], id: UUID): ConnectionIO[Option[Execution]] =
+    getQuery(token, id).option
+
+  def unsafeGetExecution(token: Option[Token], id: UUID): ConnectionIO[Execution] =
+    getQuery(token, id).unique
 
   def kickOffExecutionJob(
       execution: Execution,
@@ -134,16 +145,18 @@ object ExecutionDao {
   }
 
   def insertExecution(
+      token: Token,
       execution: Execution.Create,
       dataBucket: String,
       apiHost: String
   ): ConnectionIO[Either[ExecutionDaoError, Execution]] = {
+    val owner    = tokenToUserId(token)
     val fragment = fr"""
       INSERT INTO executions
         (id, task_id, invoked_at, arguments, status, status_reason, results, webhook_id, owner)
       VALUES
         (uuid_generate_v4(), ${execution.taskId}, now(), ${execution.arguments},
-        'CREATED', NULL, '[]' :: jsonb, uuid_generate_v4(), NULL)
+        'CREATED', NULL, '[]' :: jsonb, uuid_generate_v4(), $owner)
     """
     val insertIO: OptionT[ConnectionIO, Either[ExecutionDaoError, Execution]] = for {
       task <- OptionT { TaskDao.getTask(execution.taskId) }
@@ -185,7 +198,7 @@ object ExecutionDao {
       status: ExecutionStatusUpdate
   ): OptionT[ConnectionIO, Execution] =
     for {
-      existingExecution <- OptionT(getExecution(executionId)) flatMap {
+      existingExecution <- OptionT(getExecution(None, executionId)) flatMap {
         case pred if pred.webhookId == Some(webhookId) => OptionT.some(pred)
         case _                                         => OptionT.none[ConnectionIO, Execution]
       }

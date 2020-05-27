@@ -16,6 +16,7 @@ import doobie._
 import doobie.implicits._
 import io.circe.syntax._
 import org.http4s._
+import shapeless.syntax.std.tuple._
 import sttp.tapir.server.http4s._
 
 class ExecutionService[F[_]: Sync](
@@ -31,16 +32,16 @@ class ExecutionService[F[_]: Sync](
   private val s3Client = AmazonS3ClientBuilder.defaultClient()
 
   def listExecutions(
-      token: Option[Token],
+      token: Token,
       pageRequest: PageRequest,
       taskId: Option[UUID],
       status: Option[JobStatus]
-  ): F[Either[Unit, PaginatedResponse[Execution]]] = {
+  ): F[Either[CrudError, PaginatedResponse[Execution]]] = {
     val forPage = pageRequest `combine` defaultPageRequest
     mkContext("listExecutions", Map.empty, contextBuilder) use { _ =>
       Functor[F].map(
         ExecutionDao
-          .listExecutions(forPage, taskId, status)
+          .listExecutions(token, forPage, taskId, status)
           .transact(xa)
       ) { executions =>
         val updatedExecutions = executions.map(_.signS3OutputLocation(s3Client))
@@ -49,10 +50,10 @@ class ExecutionService[F[_]: Sync](
     }
   }
 
-  def getById(token: Option[Token], id: UUID): F[Either[CrudError, Execution]] =
+  def getById(token: Token, id: UUID): F[Either[CrudError, Execution]] =
     mkContext("lookupExecutionById", Map("executionId" -> s"$id"), contextBuilder) use { _ =>
       Functor[F].map(
-        ExecutionDao.getExecution(id).transact(xa)
+        ExecutionDao.getExecution(Some(token), id).transact(xa)
       ) {
         case Some(execution) =>
           Right(execution.signS3OutputLocation(s3Client))
@@ -61,13 +62,13 @@ class ExecutionService[F[_]: Sync](
     }
 
   def createExecution(
-      token: Option[Token],
+      token: Token,
       execution: Execution.Create
   ): F[Either[CrudError, Execution]] =
     mkContext("createExecution", Map.empty, contextBuilder) use { _ =>
       Functor[F].map(
         ExecutionDao
-          .insertExecution(execution, dataBucket, apiHost)
+          .insertExecution(token, execution, dataBucket, apiHost)
           .transact(xa)
       )({
         case Right(created)                  => Right(created)
@@ -106,9 +107,28 @@ class ExecutionService[F[_]: Sync](
       })
     }
 
-  val list   = ExecutionEndpoints.list.toRoutes(Function.tupled(listExecutions))
-  val detail = ExecutionEndpoints.idLookup.toRoutes(getById)
-  val create = ExecutionEndpoints.create.toRoutes(createExecution)
+  val list = ExecutionEndpoints.list
+    .serverLogicPart(auth.fallbackToForbidden)
+    .andThen({
+      case (token, rest) =>
+        val tupled = Function.tupled(listExecutions _)
+        tupled(token +: rest)
+    })
+    .toRoutes
+
+  val detail = ExecutionEndpoints.idLookup
+    .serverLogicPart(auth.fallbackToForbidden)
+    .andThen({
+      case (token, rest) => getById(token, rest)
+    })
+    .toRoutes
+
+  val create = ExecutionEndpoints.create
+    .serverLogicPart(auth.fallbackToForbidden)
+    .andThen({
+      case (token, rest) => createExecution(token, rest)
+    })
+    .toRoutes
 
   val addResultsRoutes =
     ExecutionEndpoints.addResults.toRoutes(Function.tupled(addExecutionResults))
