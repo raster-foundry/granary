@@ -30,7 +30,7 @@ class Auth[F[_]: Sync](authConfig: AuthConfig, xa: Transactor[F]) {
       Either.right[E, Token](anonymousToken).pure[F]
     } else {
       tokenHeaderO map { _.headerValue } traverse { token =>
-        TokenDao.validateToken(token).transact(xa)
+        TokenDao.validateToken(cleanToken(token)).transact(xa)
       } map { _.flatten } map { tokenO =>
         Either.fromOption(tokenO, fallback)
       }

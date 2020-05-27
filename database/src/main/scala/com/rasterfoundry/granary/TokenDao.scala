@@ -22,11 +22,12 @@ object TokenDao {
 
   def validateToken(
       tokenId: String
-  ): ConnectionIO[Option[Token]] =
+  ): ConnectionIO[Option[Token]] = {
     (for {
       uuid <- LiftIO[ConnectionIO].liftIO(IO { UUID.fromString(tokenId) })
       validated <- (
-          selectF ++ Fragments.whereAnd(fr"id = $uuid") ++ fr")"
+          selectF ++ Fragments.whereAnd(fr"id = $uuid")
       ).query[Token].option
     } yield validated) handleErrorWith { _ => Option.empty[Token].pure[ConnectionIO] }
+  }
 }
