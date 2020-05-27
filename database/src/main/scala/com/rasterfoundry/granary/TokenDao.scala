@@ -8,12 +8,14 @@ import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
 import doobie.refined.implicits._
+import io.chrisdavenport.log4cats.{Logger, SelfAwareStructuredLogger}
+import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 
 import java.util.UUID
 
 object TokenDao {
-  sealed abstract class TokenDaoError extends Throwable
-  case object InvalidToken            extends TokenDaoError
+
+  implicit def unsafeLogger: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLogger[IO]
 
   val selectF =
     fr"""
@@ -28,6 +30,12 @@ object TokenDao {
       validated <- (
           selectF ++ Fragments.whereAnd(fr"id = $uuid")
       ).query[Token].option
-    } yield validated) handleErrorWith { _ => Option.empty[Token].pure[ConnectionIO] }
+    } yield validated) handleErrorWith { e =>
+      LiftIO[ConnectionIO].liftIO {
+        Logger[IO].error(e)("Error validating token") map { _ =>
+          Option.empty[Token]
+        }
+      }
+    }
   }
 }
