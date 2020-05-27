@@ -22,9 +22,9 @@ lazy val commonSettings = Seq(
     "jitpack".at("https://jitpack.io")
   ),
   autoCompilerPlugins := true,
-  addCompilerPlugin("org.typelevel"   %% "kind-projector"     % "0.10.3"),
-  addCompilerPlugin("com.olegpy"      %% "better-monadic-for" % "0.3.1"),
-  addCompilerPlugin("org.scalamacros" % "paradise"            % "2.1.1" cross CrossVersion.full),
+  addCompilerPlugin("org.typelevel"  %% "kind-projector"     % "0.10.3"),
+  addCompilerPlugin("com.olegpy"     %% "better-monadic-for" % "0.3.1"),
+  addCompilerPlugin("org.scalamacros" % "paradise"           % "2.1.1" cross CrossVersion.full),
   addCompilerPlugin(scalafixSemanticdb)
 )
 
@@ -49,6 +49,7 @@ lazy val datamodelDependencies = commonDependencies ++ Seq(
   Dependencies.circeRefined,
   Dependencies.http4s,
   Dependencies.http4sCirce,
+  Dependencies.newtype,
   Dependencies.refined,
   Dependencies.stac4s,
   Dependencies.scalacheck
@@ -73,6 +74,7 @@ lazy val databaseDependencies = commonDependencies ++ Seq(
   Dependencies.doobieHikari,
   Dependencies.doobiePostgres,
   Dependencies.doobiePostgresCirce,
+  Dependencies.doobieRefined,
   Dependencies.doobieSpecs2,
   Dependencies.doobieScalatest,
   Dependencies.flyway,
@@ -113,6 +115,7 @@ lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
   Dependencies.http4sDsl,
   Dependencies.http4sServer,
   Dependencies.log4cats,
+  Dependencies.newtype,
   Dependencies.openTracing,
   Dependencies.pureConfig,
   Dependencies.refined,
@@ -139,9 +142,9 @@ lazy val docs = project // new documentation project
   .enablePlugins(MdocPlugin, DocusaurusPlugin)
   .settings(
     mdocVariables := Map(
-      "TASK_ID" -> "1d99bab2-1470-46c8-aa00-a8a2ced5c60c",
-      "EXECUTION_ID" -> "78d4345a-5c22-43ec-8a9a-fe354915c3eb",
-      "WEBHOOK_ID" -> "f0ff558a-f989-4648-b606-abcf8b977e6c",
+      "TASK_ID"         -> "1d99bab2-1470-46c8-aa00-a8a2ced5c60c",
+      "EXECUTION_ID"    -> "78d4345a-5c22-43ec-8a9a-fe354915c3eb",
+      "WEBHOOK_ID"      -> "f0ff558a-f989-4648-b606-abcf8b977e6c",
       "INVOCATION_TIME" -> "1583248611188"
     ),
     libraryDependencies ++= Seq(Dependencies.circeLiteral)

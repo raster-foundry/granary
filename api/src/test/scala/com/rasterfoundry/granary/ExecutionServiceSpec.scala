@@ -1,5 +1,7 @@
 package com.rasterfoundry.granary.api.services
 
+import com.rasterfoundry.granary.api.AuthConfig
+import com.rasterfoundry.granary.api.auth.Auth
 import com.rasterfoundry.granary.api.error.NotFound
 import com.rasterfoundry.granary.database.TestDatabaseSpec
 import com.rasterfoundry.granary.datamodel._
@@ -39,13 +41,16 @@ class ExecutionServiceSpec
     - store execution results only when expected to    $addExecutionResultsExpectation
   """
 
+  val auth = new Auth(AuthConfig(false, UUID.randomUUID, UUID.randomUUID), transactor)
+
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
 
   val taskService: TaskService[IO] =
     new TaskService[IO](
       PageRequest(Some(NonNegInt(0)), Some(PosInt(30))),
       tracingContextBuilder,
-      transactor
+      transactor,
+      auth
     )
 
   val executionService =
@@ -54,7 +59,8 @@ class ExecutionServiceSpec
       tracingContextBuilder,
       transactor,
       dataBucket,
-      "http://localhost:8080/api"
+      "http://localhost:8080/api",
+      auth
     )
 
   def updateExecutionRaw(

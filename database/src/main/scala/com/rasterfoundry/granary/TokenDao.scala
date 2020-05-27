@@ -1,36 +1,41 @@
 package com.rasterfoundry.granary.database
 
+import com.rasterfoundry.granary.datamodel._
+
+import cats.effect.{IO, LiftIO}
 import cats.implicits._
 import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
+import doobie.refined.implicits._
+import io.chrisdavenport.log4cats.{Logger, SelfAwareStructuredLogger}
+import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 
 import java.util.UUID
-import cats.effect.LiftIO
-import cats.effect.IO
 
 object TokenDao {
-  sealed abstract class TokenDaoError extends Throwable
-  case object InvalidToken            extends TokenDaoError
+
+  implicit def unsafeLogger: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLogger[IO]
 
   val selectF =
     fr"""
-  SELECT id
-  FROM tokens
+  SELECT id, email, user_id FROM tokens
   """
 
   def validateToken(
-      id: String
-  ): ConnectionIO[Boolean] =
+      tokenId: String
+  ): ConnectionIO[Option[Token]] = {
     (for {
-      uuid <- LiftIO[ConnectionIO].liftIO(IO { UUID.fromString(id) })
-      exists <- (
-          fr"SELECT EXISTS(" ++
-            selectF ++
-            Fragments.whereAnd(fr"id = $uuid") ++ fr")"
-      ).query[Boolean].unique
-    } yield exists).attempt.map {
-      case Right(true) => true
-      case _           => false
+      uuid <- LiftIO[ConnectionIO].liftIO(IO { UUID.fromString(tokenId) })
+      validated <- (
+          selectF ++ Fragments.whereAnd(fr"id = $uuid")
+      ).query[Token].option
+    } yield validated) handleErrorWith { e =>
+      LiftIO[ConnectionIO].liftIO {
+        Logger[IO].error(e)("Error validating token") map { _ =>
+          Option.empty[Token]
+        }
+      }
     }
+  }
 }
