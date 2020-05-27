@@ -49,9 +49,7 @@ object ExecutionDao {
         status map { s =>
           fr"status = $s"
         },
-        tokenToUserId(token) map { userId =>
-          fr"owner = $userId"
-        }
+        tokenToFilter(token)
       ),
       pageRequest
     ).query[Execution]
@@ -61,7 +59,7 @@ object ExecutionDao {
     (selectF ++ Fragments
       .whereAndOpt(
         Some(fr"id = $id"),
-        token flatMap { tokenToUserId } map { userId => fr"owner = $userId" }
+        token flatMap { tokenToFilter }
       )).query[Execution]
 
   def getExecution(token: Option[Token], id: UUID): ConnectionIO[Option[Execution]] =
@@ -159,7 +157,7 @@ object ExecutionDao {
         'CREATED', NULL, '[]' :: jsonb, uuid_generate_v4(), $owner)
     """
     val insertIO: OptionT[ConnectionIO, Either[ExecutionDaoError, Execution]] = for {
-      task <- OptionT { TaskDao.getTask(execution.taskId) }
+      task <- OptionT { TaskDao.getTask(token, execution.taskId) }
       argCheck = task.validator.validate(execution.arguments)
       insert <- OptionT.liftF {
         argCheck match {

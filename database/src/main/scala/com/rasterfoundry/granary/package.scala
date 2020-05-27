@@ -3,8 +3,10 @@ package com.rasterfoundry.granary
 import com.rasterfoundry.granary.database.meta.{CirceJsonbMeta, EnumMeta}
 import com.rasterfoundry.granary.datamodel._
 
-import io.estatico.newtype.Coercible
 import doobie._
+import doobie.implicits._
+import doobie.postgres.implicits._
+import io.estatico.newtype.Coercible
 
 package object database extends CirceJsonbMeta with EnumMeta {
 
@@ -18,5 +20,10 @@ package object database extends CirceJsonbMeta with EnumMeta {
       None
     } else {
       Some(token.userId)
+    }
+
+  def tokenToFilter(token: Token): Option[Fragment] =
+    tokenToUserId(token) map { userId =>
+      fr"owner = $userId"
     }
 }

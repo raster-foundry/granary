@@ -72,7 +72,8 @@ object ApiServer extends IOApp {
       taskRoutes = new TaskService(
         defaultPageRequest,
         tracingContextBuilder,
-        transactor
+        transactor,
+        auth
       ).routes
       executionService = new ExecutionService(
         defaultPageRequest,
