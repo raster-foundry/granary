@@ -6,6 +6,8 @@ import cats.data.OptionT
 import cats.effect.IO
 import cats.implicits._
 import com.colisweb.tracing.NoOpTracingContext
+import com.rasterfoundry.granary.api.AuthConfig
+import com.rasterfoundry.granary.api.auth.Auth
 import com.rasterfoundry.granary.api.endpoints.DeleteMessage
 import com.rasterfoundry.granary.api.error.NotFound
 import com.rasterfoundry.granary.database.TestDatabaseSpec
@@ -34,13 +36,16 @@ class TaskServiceSpec
     - delete tasks                           $deleteTaskExpectation
 """
 
+  val auth = new Auth(AuthConfig(false), transactor)
+
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
 
   def service: TaskService[IO] =
     new TaskService[IO](
       PageRequest(Some(NonNegInt(0)), Some(PosInt(30))),
       tracingContextBuilder,
-      transactor
+      transactor,
+      auth
     )
 
   def createExpectation =
