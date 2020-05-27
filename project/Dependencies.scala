@@ -13,6 +13,7 @@ object Versions {
   val Http4sVersion          = "0.21.3"
   val LogbackVersion         = "1.2.3"
   val Log4CatsVersion        = "1.1.1"
+  val NewtypeVersion         = "0.4.4"
   val OpenTracingVersion     = "0.1.1"
   val PureConfig             = "0.12.3"
   val RefinedVersion         = "0.9.14"
@@ -38,6 +39,7 @@ object Dependencies {
   val doobieHikari        = "org.tpolecat"                %% "doobie-hikari"         % Versions.DoobieVersion
   val doobiePostgres      = "org.tpolecat"                %% "doobie-postgres"       % Versions.DoobieVersion
   val doobiePostgresCirce = "org.tpolecat"                %% "doobie-postgres-circe" % Versions.DoobieVersion
+  val doobieRefined       = "org.tpolecat"                %% "doobie-refined"        % Versions.DoobieVersion
   val doobieScalatest     = "org.tpolecat"                %% "doobie-scalatest"      % Versions.DoobieVersion     % "test"
   val doobieSpecs2        = "org.tpolecat"                %% "doobie-specs2"         % Versions.DoobieVersion     % "test"
   val flyway              = "org.flywaydb"                 % "flyway-core"           % Versions.Flyway            % "test"
@@ -47,6 +49,7 @@ object Dependencies {
   val http4sServer        = "org.http4s"                  %% "http4s-blaze-server"   % Versions.Http4sVersion
   val logbackClassic      = "ch.qos.logback"               % "logback-classic"       % Versions.LogbackVersion
   val log4cats            = "io.chrisdavenport"           %% "log4cats-slf4j"        % Versions.Log4CatsVersion
+  val newtype             = "io.estatico"                 %% "newtype"               % Versions.NewtypeVersion
   val openTracing         = "com.colisweb"                %% "scala-opentracing"     % Versions.OpenTracingVersion
   val pureConfig          = "com.github.pureconfig"       %% "pureconfig"            % Versions.PureConfig
   val refined             = "eu.timepit"                  %% "refined"               % Versions.RefinedVersion

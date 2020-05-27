@@ -7,6 +7,7 @@ import cats.effect._
 import cats.implicits._
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.colisweb.tracing.TracingContextBuilder
+import com.rasterfoundry.granary.api.auth._
 import com.rasterfoundry.granary.api.endpoints._
 import com.rasterfoundry.granary.api.error._
 import com.rasterfoundry.granary.database.ExecutionDao
@@ -22,13 +23,15 @@ class ExecutionService[F[_]: Sync](
     contextBuilder: TracingContextBuilder[F],
     xa: Transactor[F],
     dataBucket: String,
-    apiHost: String
+    apiHost: String,
+    auth: Auth[F]
 )(implicit
     contextShift: ContextShift[F]
 ) extends GranaryService {
   private val s3Client = AmazonS3ClientBuilder.defaultClient()
 
   def listExecutions(
+      token: Option[Token],
       pageRequest: PageRequest,
       taskId: Option[UUID],
       status: Option[JobStatus]
@@ -46,7 +49,7 @@ class ExecutionService[F[_]: Sync](
     }
   }
 
-  def getById(id: UUID): F[Either[CrudError, Execution]] =
+  def getById(token: Option[Token], id: UUID): F[Either[CrudError, Execution]] =
     mkContext("lookupExecutionById", Map("executionId" -> s"$id"), contextBuilder) use { _ =>
       Functor[F].map(
         ExecutionDao.getExecution(id).transact(xa)
@@ -58,6 +61,7 @@ class ExecutionService[F[_]: Sync](
     }
 
   def createExecution(
+      token: Option[Token],
       execution: Execution.Create
   ): F[Either[CrudError, Execution]] =
     mkContext("createExecution", Map.empty, contextBuilder) use { _ =>

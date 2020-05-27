@@ -15,6 +15,7 @@ object ExecutionEndpoints {
   val base = endpoint.in("executions")
 
   val idLookup = base.get
+    .in(header[Option[TokenHeader]]("Authorization"))
     .in(path[UUID])
     .out(jsonBody[Execution])
     .errorOut(
@@ -28,6 +29,7 @@ object ExecutionEndpoints {
     )
 
   val create = base.post
+    .in(header[Option[TokenHeader]]("Authorization"))
     .in(
       jsonBody[Execution.Create].description(
         "A task ID and arguments to use to run an execution. Arguments must conform to the schema on the associated task"
@@ -47,6 +49,7 @@ object ExecutionEndpoints {
 
   val list =
     base.get
+      .in(header[Option[TokenHeader]]("Authorization"))
       .in(Inputs.paginationInput)
       .in(query[Option[UUID]]("taskId"))
       .in(query[Option[JobStatus]]("status"))

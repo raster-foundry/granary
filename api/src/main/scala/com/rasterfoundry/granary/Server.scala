@@ -1,6 +1,6 @@
 package com.rasterfoundry.granary.api
 
-import com.rasterfoundry.granary.api.middleware._
+import com.rasterfoundry.granary.api.auth._
 import com.rasterfoundry.granary.api.endpoints._
 import com.rasterfoundry.granary.api.services._
 import com.rasterfoundry.granary.database.{Config => DBConfig}
@@ -62,6 +62,7 @@ object ApiServer extends IOApp {
       transactor <-
         HikariTransactor
           .fromHikariConfig[IO](DBConfig.hikariConfig, connectionEc, dbBlocker)
+      auth = new Auth(authConfig, transactor)
       allEndpoints = {
         TaskEndpoints.endpoints ++ ExecutionEndpoints.endpoints ++ HealthcheckEndpoints.endpoints
       }
@@ -78,7 +79,8 @@ object ApiServer extends IOApp {
         tracingContextBuilder,
         transactor,
         s3Config.dataBucket,
-        metaConfig.apiHost
+        metaConfig.apiHost,
+        auth
       )
       executionRoutes   = executionService.routes
       healthcheckRoutes = new HealthcheckService(tracingContextBuilder, transactor).healthcheck
@@ -87,14 +89,9 @@ object ApiServer extends IOApp {
           .httpRoutes(false, false) {
             CORS(
               Router(
-                "/api" -> ((
-                  Auth.customAuthMiddleware(
-                    taskRoutes <+> executionRoutes,
-                    healthcheckRoutes <+> docRoutes,
-                    authConfig,
-                    transactor
-                  )
-                ) <+> executionService.addResultsRoutes)
+                "/api" ->
+                  (taskRoutes <+> executionRoutes <+>
+                    healthcheckRoutes <+> docRoutes <+> executionService.addResultsRoutes)
               )
             )
           }
