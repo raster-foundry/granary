@@ -41,7 +41,7 @@ class ExecutionServiceSpec
     - store execution results only when expected to    $addExecutionResultsExpectation
   """
 
-  val auth = new Auth(AuthConfig(false), transactor)
+  val auth = new Auth(AuthConfig(false, UUID.randomUUID, UUID.randomUUID), transactor)
 
   val tracingContextBuilder = NoOpTracingContext.getNoOpTracingContextBuilder[IO].unsafeRunSync
 

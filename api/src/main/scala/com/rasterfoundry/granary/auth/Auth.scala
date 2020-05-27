@@ -13,14 +13,12 @@ import doobie.implicits._
 import eu.timepit.refined._
 import eu.timepit.refined.auto._
 
-import java.util.UUID
-
 class Auth[F[_]: Sync](authConfig: AuthConfig, xa: Transactor[F]) {
 
   private val anonymousToken = Token(
-    TokenId(UUID.fromString("6a1988bd-2ac3-4836-860b-9607b60afd5c")),
+    TokenId(authConfig.anonymousTokenId),
     Email(refineMV("anonymous@granary.rasterfoundry.com")),
-    UserId(UUID.fromString("6a1988bd-2ac3-4836-860b-9607b60afd5c"))
+    UserId(authConfig.anonymousUserId)
   )
 
   def cleanToken(token: String): String = {
