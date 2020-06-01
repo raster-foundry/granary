@@ -1,49 +1,47 @@
 package com.rasterfoundry.granary.database
 
 import cats.effect.{Async, ContextShift}
+import com.zaxxer.hikari.HikariConfig
 import doobie.Transactor
-import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
+import eu.timepit.refined._
+import eu.timepit.refined.auto._
+import eu.timepit.refined.types.string.NonEmptyString
+import eu.timepit.refined.types.numeric.PosInt
 import scala.util.Properties
 
+case class DatabaseConfig(
+    driver: NonEmptyString = refineMV("org.postgresql.Driver"),
+    connectionUrl: NonEmptyString = refineMV("jdbc:postgresql://database.service.internal/"),
+    databaseName: NonEmptyString = refineMV("granary"),
+    databaseUser: NonEmptyString = refineMV("granary"),
+    databasePassword: NonEmptyString = refineMV("granary"),
+    statementTimeout: PosInt = refineMV(30000),
+    maximumPoolSize: PosInt = refineMV(5)
+)
+
 object Config {
-  var jdbcDriver: String = "org.postgresql.Driver"
 
-  val jdbcNoDBUrl: String =
-    Properties.envOrElse("POSTGRES_URL", "jdbc:postgresql://database.service.internal/")
-
-  val jdbcDBName: String =
-    Properties.envOrElse("POSTGRES_NAME", "granary")
-  val jdbcUrl: String = jdbcNoDBUrl + jdbcDBName
-  val dbUser: String  = Properties.envOrElse("POSTGRES_USER", "granary")
-
-  val dbPassword: String =
-    Properties.envOrElse("POSTGRES_PASSWORD", "granary")
-
-  val dbStatementTimeout: String =
-    Properties.envOrElse("POSTGRES_STATEMENT_TIMEOUT", "30000")
-
-  val dbMaximumPoolSize: Int =
-    Properties.envOrElse("POSTGRES_DB_POOL_SIZE", "5").toInt
-
-  val environment = Properties.envOrElse("ENVIRONMENT", "development")
-
-  def nonHikariTransactor[F[_]: Async](databaseName: String)(implicit cs: ContextShift[F]) = {
+  def nonHikariTransactor[F[_]: Async](
+      conf: DatabaseConfig
+  )(implicit contextShift: ContextShift[F]): Transactor[F] =
     Transactor.fromDriverManager[F](
-      "org.postgresql.Driver",
-      jdbcNoDBUrl + databaseName,
-      dbUser,
-      dbPassword
+      conf.driver,
+      conf.connectionUrl.value + conf.databaseName.value,
+      conf.databaseUser,
+      conf.databasePassword
     )
+
+  def hikariConfig(conf: DatabaseConfig): HikariConfig = {
+    val hikariConfig = new HikariConfig()
+    hikariConfig.setPoolName("granary-pool")
+    hikariConfig.setMaximumPoolSize(conf.maximumPoolSize)
+    hikariConfig.setConnectionInitSql(s"SET statement_timeout = ${conf.statementTimeout.value};")
+    hikariConfig.setJdbcUrl(conf.connectionUrl.value + conf.databaseName.value)
+    hikariConfig.setUsername(conf.databaseUser)
+    hikariConfig.setPassword(conf.databasePassword)
+    hikariConfig.setDriverClassName(conf.driver)
+    hikariConfig
   }
 
-  val hikariConfig = new HikariConfig()
-  hikariConfig.setPoolName("granary-pool")
-  hikariConfig.setMaximumPoolSize(dbMaximumPoolSize)
-  hikariConfig.setConnectionInitSql(s"SET statement_timeout = ${dbStatementTimeout};")
-  hikariConfig.setJdbcUrl(jdbcUrl)
-  hikariConfig.setUsername(dbUser)
-  hikariConfig.setPassword(dbPassword)
-  hikariConfig.setDriverClassName(jdbcDriver)
-
-  val hikariDS = new HikariDataSource(hikariConfig)
+  val environment = Properties.envOrElse("ENVIRONMENT", "development")
 }

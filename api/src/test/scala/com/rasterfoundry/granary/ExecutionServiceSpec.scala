@@ -172,7 +172,9 @@ class ExecutionServiceSpec
             ) flatMap { resp => OptionT.liftF { resp.as[PaginatedResponse[Execution]] } }
             _ <- List(
               ExecutionSuccess(
-                List(StacItemAsset("s3://center/of/the/universe.geojson", None, None, Set.empty, None))
+                List(
+                  StacItemAsset("s3://center/of/the/universe.geojson", None, None, Set.empty, None)
+                )
               ),
               ExecutionFailure("wasn't set up to succeed")
             ).zip(allCreatedPreds) traverse {
@@ -259,7 +261,9 @@ class ExecutionServiceSpec
           )
           message =
             if (Random.nextFloat > 0.5)
-              ExecutionSuccess(List(StacItemAsset("s3://foo/bar.geojson", None, None, Set.empty, None)))
+              ExecutionSuccess(
+                List(StacItemAsset("s3://foo/bar.geojson", None, None, Set.empty, None))
+              )
             else ExecutionFailure("task failed sorry sorry sorry")
           update1 <- updateExecution[Execution](
             message,

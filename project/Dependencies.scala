@@ -8,6 +8,7 @@ object Versions {
   val CatsScalacheckVersion  = "0.3.0"
   val CirceVersion           = "0.13.0"
   val CirceJsonSchemaVersion = "0.1.0"
+  val DeclineVersion         = "1.2.0"
   val DoobieVersion          = "0.9.0"
   val Flyway                 = "6.4.4"
   val Http4sVersion          = "0.21.4"
@@ -35,6 +36,8 @@ object Dependencies {
   val circeJsonSchema     = "io.circe"                    %% "circe-json-schema"     % Versions.CirceJsonSchemaVersion
   val circeLiteral        = "io.circe"                    %% "circe-literal"         % Versions.CirceVersion
   val circeRefined        = "io.circe"                    %% "circe-refined"         % Versions.CirceVersion
+  val decline             = "com.monovore"                %% "decline"               % Versions.DeclineVersion
+  val declineRefined      = "com.monovore"                %% "decline-refined"       % Versions.DeclineVersion
   val doobie              = "org.tpolecat"                %% "doobie-core"           % Versions.DoobieVersion
   val doobieHikari        = "org.tpolecat"                %% "doobie-hikari"         % Versions.DoobieVersion
   val doobiePostgres      = "org.tpolecat"                %% "doobie-postgres"       % Versions.DoobieVersion
