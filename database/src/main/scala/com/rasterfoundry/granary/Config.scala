@@ -31,7 +31,9 @@ object Config {
       conf.databasePassword
     )
 
-  private[database] def nonHikariTransactor[F[_]: Async](dbName: String)(implicit contextShift: ContextShift[F]): Transactor[F] =
+  private[database] def nonHikariTransactor[F[_]: Async](
+      dbName: String
+  )(implicit contextShift: ContextShift[F]): Transactor[F] =
     nonHikariTransactor[F](DatabaseConfig(databaseName = dbName))
 
   def hikariConfig(conf: DatabaseConfig): HikariConfig = {

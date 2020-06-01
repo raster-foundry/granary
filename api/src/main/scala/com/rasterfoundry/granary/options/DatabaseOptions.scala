@@ -28,11 +28,11 @@ trait DatabaseOptions {
 
   private val databaseNameHelp = "Name of the database to connect to"
 
-  private val databaseName: Opts[NonEmptyString] =
-    Opts.option[NonEmptyString]("db-name", help = databaseNameHelp) orElse Opts
-      .env[NonEmptyString]("POSTGRES_NAME", help = databaseNameHelp) withDefault (refineMV(
+  private val databaseName: Opts[String] =
+    (Opts.option[NonEmptyString]("db-name", help = databaseNameHelp) orElse Opts
+      .env[NonEmptyString]("POSTGRES_NAME", help = databaseNameHelp)) map { _.value } withDefault (
       "granary"
-    ))
+    )
 
   private val databaseUserHelp = "Username to use when connecting to the database"
 
