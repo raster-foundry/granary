@@ -23,8 +23,8 @@ then
             ;;
         *)
             echo "Starting API service"
-            docker-compose -f docker-compose.yml \
-                up api
-            ;;
+	    bloop run api -- \
+		  --with-auth \
+		  --db-url "jdbc:postgresql://localhost:5432/"
     esac
 fi
