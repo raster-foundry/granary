@@ -142,6 +142,7 @@ lazy val apiDependencies = commonDependencies ++ Seq(
   Dependencies.doobieHikari,
   Dependencies.hikariCP,
   Dependencies.http4sBlazeServer,
+  Dependencies.http4sCirce % "test",
   Dependencies.http4sCore,
   Dependencies.http4sServer,
   Dependencies.log4catsCore,
