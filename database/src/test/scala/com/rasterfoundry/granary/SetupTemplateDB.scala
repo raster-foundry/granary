@@ -6,6 +6,7 @@ import doobie._
 import doobie.free.connection.unit
 import doobie.implicits._
 import doobie.util.transactor.Strategy
+import eu.timepit.refined.auto._
 import org.flywaydb.core.Flyway
 import org.specs2._
 import org.specs2.specification.{AfterAll, BeforeAll}
@@ -35,13 +36,15 @@ object SetupTemplateDB {
     .transact(transactor)
     .unsafeRunSync
 
+  val databaseConfig = DatabaseConfig(databaseName = templateDbName)
+
   // run migrations using flyway
   Flyway
     .configure()
     .dataSource(
-      s"${Config.jdbcNoDBUrl}$templateDbName",
-      Config.dbUser,
-      Config.dbPassword
+      s"${databaseConfig.connectionUrl}$templateDbName",
+      databaseConfig.databaseUser,
+      databaseConfig.databasePassword
     )
     .locations("classpath:migrations/")
     .load()
