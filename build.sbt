@@ -2,11 +2,14 @@ cancelable in Global := true
 
 lazy val commonDependencies = Seq(
   Dependencies.specs2Core,
-  Dependencies.specs2Scalacheck,
-  Dependencies.logbackClassic
+  Dependencies.specs2Scalacheck
 )
 
 lazy val commonSettings = Seq(
+  unusedCompileDependenciesFilter -= moduleFilter(
+    "com.sksamuel.scapegoat",
+    "scalac-scapegoat-plugin"
+  ),
   organization := "com.rasterfoundry",
   name := "granary",
   version := "0.0.1-SNAPSHOT",
@@ -43,14 +46,14 @@ lazy val datamodelSettings = commonSettings ++ Seq(
 lazy val datamodelDependencies = commonDependencies ++ Seq(
   Dependencies.awsS3,
   Dependencies.catsScalacheck,
+  Dependencies.catsCore,
+  Dependencies.catsKernel,
   Dependencies.circeCore,
   Dependencies.circeGeneric,
   Dependencies.circeJsonSchema,
-  Dependencies.circeRefined,
-  Dependencies.http4s,
-  Dependencies.http4sCirce,
   Dependencies.newtype,
   Dependencies.refined,
+  Dependencies.shapeless,
   Dependencies.stac4s,
   Dependencies.scalacheck
 )
@@ -69,17 +72,30 @@ lazy val databaseSettings = commonSettings ++ Seq(
 
 lazy val databaseDependencies = commonDependencies ++ Seq(
   Dependencies.awsBatch,
+  Dependencies.awsCore,
   Dependencies.awsS3,
+  Dependencies.catsCore,
+  Dependencies.catsEffect,
+  Dependencies.catsFree,
+  Dependencies.catsKernel,
+  Dependencies.circeCore,
+  Dependencies.circeJsonSchema,
   Dependencies.doobie,
-  Dependencies.doobieHikari,
+  Dependencies.doobieFree,
   Dependencies.doobiePostgres,
   Dependencies.doobiePostgresCirce,
   Dependencies.doobieRefined,
   Dependencies.doobieSpecs2,
   Dependencies.doobieScalatest,
   Dependencies.flyway,
-  Dependencies.pureConfig,
-  Dependencies.log4cats,
+  Dependencies.hikariCP,
+  Dependencies.log4catsCore,
+  Dependencies.log4catsSlf4j,
+  Dependencies.newtype,
+  Dependencies.refined,
+  Dependencies.shapeless,
+  Dependencies.slf4jApi,
+  Dependencies.sourceCode,
   Dependencies.stac4s
 )
 
@@ -109,24 +125,44 @@ lazy val apiSettings = commonSettings ++ Seq(
   }
 )
 
-lazy val apiDependencies = commonDependencies ++ databaseDependencies ++ Seq(
+lazy val apiDependencies = commonDependencies ++ Seq(
+  Dependencies.awsS3,
+  Dependencies.catsCore,
+  Dependencies.catsEffect,
+  Dependencies.catsFree,
+  Dependencies.catsKernel,
+  Dependencies.circeCore,
+  Dependencies.circeGeneric,
+  Dependencies.circeJsonSchema,
+  Dependencies.circeNumbers,
   Dependencies.decline,
   Dependencies.declineRefined,
-  Dependencies.http4s,
-  Dependencies.http4sCirce,
-  Dependencies.http4sDsl,
+  Dependencies.doobie,
+  Dependencies.doobieFree,
+  Dependencies.doobieHikari,
+  Dependencies.hikariCP,
+  Dependencies.http4sBlazeServer,
+  Dependencies.http4sCore,
   Dependencies.http4sServer,
-  Dependencies.log4cats,
+  Dependencies.log4catsCore,
+  Dependencies.log4catsSlf4j,
+  Dependencies.magnolia,
   Dependencies.newtype,
   Dependencies.openTracing,
-  Dependencies.pureConfig,
+  Dependencies.pureConfigCore,
+  Dependencies.pureConfigGeneric,
   Dependencies.refined,
-  Dependencies.refinedPureconfig,
+  Dependencies.shapeless,
+  Dependencies.slf4jApi,
+  Dependencies.sourceCode,
+  Dependencies.stac4s,
+  Dependencies.sttpModel,
   Dependencies.tapir,
   Dependencies.tapirCirce,
   Dependencies.tapirHttp4sServer,
   Dependencies.tapirOpenAPICirceYAML,
   Dependencies.tapirOpenAPIDocs,
+  Dependencies.tapirOpenAPIModel,
   Dependencies.tapirRefined,
   Dependencies.tapirSwaggerUIHttp4s
 )

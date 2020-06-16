@@ -26,6 +26,6 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         echo "Executing Scala tests"
         docker-compose \
             run --rm sbt \
-            "; scalafix --check; test"
+            "; scalafix --check; scalafmtCheck; scalafmtSbtCheck; undeclaredCompileDependenciesTest; unusedCompileDependenciesTest; test"
     fi
 fi
