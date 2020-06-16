@@ -13,6 +13,7 @@ object Versions {
   val DeclineVersion         = "1.2.0"
   val DoobieVersion          = "0.9.0"
   val Flyway                 = "6.4.4"
+  val HikariVersion          = "3.4.5"
   val Http4sVersion          = "0.21.4"
   val LogbackVersion         = "1.2.3"
   val Log4CatsVersion        = "1.1.1"
@@ -28,6 +29,7 @@ object Versions {
   val SourceCodeVersion      = "0.2.1"
   val Specs2Version          = "4.9.4"
   val Stac4s                 = "0.0.9"
+  val SttpVersion            = "1.1.3"
   val TapirVersion           = "0.16.0"
 }
 
