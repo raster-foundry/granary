@@ -21,7 +21,7 @@ object Versions {
   val ScalacheckVersion      = "1.14.3"
   val Specs2Version          = "4.9.4"
   val Stac4s                 = "0.0.10"
-  val TapirVersion           = "0.16.0"
+  val TapirVersion           = "0.16.1"
 }
 
 object Dependencies {
