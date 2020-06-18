@@ -79,15 +79,14 @@ trait DatabaseOptions {
       databaseStatementTimeout,
       databasePoolSize
     ).mapN(
-        DatabaseConfig.apply
-      )
-      .validate(
-        "Unable to connect to database. Please ensure database is configured and listening on selected port"
-      )((config: DatabaseConfig) => {
-        val xa = Config.nonHikariTransactor[IO](config)
-        fr"SELECT 1".query[Int].unique.transact(xa).attempt.unsafeRunSync match {
-          case Right(_) => true
-          case _        => false
-        }
-      })
+      DatabaseConfig.apply
+    ).validate(
+      "Unable to connect to database. Please ensure database is configured and listening on selected port"
+    )((config: DatabaseConfig) => {
+      val xa = Config.nonHikariTransactor[IO](config)
+      fr"SELECT 1".query[Int].unique.transact(xa).attempt.unsafeRunSync match {
+        case Right(_) => true
+        case _        => false
+      }
+    })
 }
