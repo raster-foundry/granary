@@ -37,5 +37,6 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         generate_sbtopts
     else
         generate_sbtopts
+        ./sbt bloopInstall
     fi
 fi

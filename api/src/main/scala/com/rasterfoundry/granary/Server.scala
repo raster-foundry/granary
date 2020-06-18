@@ -1,15 +1,16 @@
 package com.rasterfoundry.granary.api
 
 import com.rasterfoundry.granary.api.auth._
+import com.rasterfoundry.granary.api.options.Options
 import com.rasterfoundry.granary.api.endpoints._
 import com.rasterfoundry.granary.api.services._
-import com.rasterfoundry.granary.database.{Config => DBConfig}
+import com.rasterfoundry.granary.database.{Config => DBConfig, DatabaseConfig}
 import cats.effect._
 import cats.implicits._
 import com.colisweb.tracing._
+import com.monovore.decline.Command
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
-import eu.timepit.refined.pureconfig._
 import io.chrisdavenport.log4cats.Logger
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import org.http4s.implicits._
@@ -37,7 +38,13 @@ object ApiServer extends IOApp {
       }
     }
 
-  def createServer: Resource[IO, Server[IO]] =
+  def createServer(
+      databaseConfig: DatabaseConfig,
+      metaConfig: MetaConfig,
+      s3Config: S3Config,
+      authConfig: AuthConfig,
+      paginationConfig: PaginationConfig
+  ): Resource[IO, Server[IO]] =
     for {
       tracingContextBuilder <- Resource.liftF {
         getTracingContextBuilder flatMap {
@@ -45,23 +52,11 @@ object ApiServer extends IOApp {
           case Right(builder) => IO.pure(builder)
         }
       }
-      s3Config <- Resource.liftF {
-        IO(ConfigSource.default.at("s3").loadOrThrow[S3Config])
-      }
-      metaConfig <- Resource.liftF {
-        IO(ConfigSource.default.at("meta").loadOrThrow[MetaConfig])
-      }
-      authConfig <- Resource.liftF {
-        IO(ConfigSource.default.at("auth").loadOrThrow[AuthConfig])
-      }
-      paginationConfig <- Resource.liftF {
-        IO(ConfigSource.default.at("pagination").loadOrThrow[PaginationConfig])
-      }
       connectionEc <- ExecutionContexts.fixedThreadPool[IO](2)
       dbBlocker    <- Blocker[IO]
       transactor <-
         HikariTransactor
-          .fromHikariConfig[IO](DBConfig.hikariConfig, connectionEc, dbBlocker)
+          .fromHikariConfig[IO](DBConfig.hikariConfig(databaseConfig), connectionEc, dbBlocker)
       auth = new Auth(authConfig, transactor)
       allEndpoints = {
         TaskEndpoints.endpoints ++ ExecutionEndpoints.endpoints ++ HealthcheckEndpoints.endpoints
@@ -104,6 +99,27 @@ object ApiServer extends IOApp {
         .resource
     } yield server
 
-  def run(args: List[String]): IO[ExitCode] =
-    createServer.use(_ => IO.never).as(ExitCode.Success)
+  def run(args: List[String]): IO[ExitCode] = {
+    val cmd = Command(name = "Granary", header = "A validating job runner for AWS Batch") {
+      (
+        Options.databaseConfig,
+        Options.metaConfig,
+        Options.s3Config,
+        Options.authConfig,
+        Options.paginationConfig
+      ).tupled
+    }
+    cmd.parse(args) map {
+      case (dbConfig, metaConfig, s3Config, authConfig, paginationConfig) =>
+        createServer(dbConfig, metaConfig, s3Config, authConfig, paginationConfig)
+          .use(_ => IO.never)
+          .as(ExitCode.Success)
+    } match {
+      case Right(s) => s
+      case Left(err) =>
+        IO {
+          println(err.toString)
+        } map { _ => ExitCode.Error }
+    }
+  }
 }
