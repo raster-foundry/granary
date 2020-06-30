@@ -28,7 +28,7 @@ object Versions {
   val Slf4jVersion           = "1.7.30"
   val SourceCodeVersion      = "0.2.1"
   val Specs2Version          = "4.10.0"
-  val Stac4s                 = "0.0.10"
+  val Stac4s                 = "0.0.11"
   val SttpVersion            = "1.1.3"
   val TapirVersion           = "0.16.1"
 }
