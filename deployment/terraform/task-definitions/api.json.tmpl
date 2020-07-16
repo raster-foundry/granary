@@ -2,26 +2,23 @@
   {
     "name": "api",
     "image": "${image}",
+    "command" : [
+      "-jar",
+      "granary-api-assembly.jar",
+      "--db-url",
+      "${postgres_url}",
+      "--db-password",
+      "${postgres_password}",
+      "--db-name",
+      "${postgres_name}",
+      "--db-user",
+      "${postgres_user}",
+      "--with-auth"
+    ],
     "environment": [
       {
         "name": "GRANARY_API_HOST",
         "value": "${api_host}"
-      },
-      {
-        "name": "POSTGRES_URL",
-        "value": "${postgres_url}"
-      },
-      {
-        "name": "POSTGRES_NAME",
-        "value": "${postgres_name}"
-      },
-      {
-        "name": "POSTGRES_USER",
-        "value": "${postgres_user}"
-      },
-      {
-        "name": "POSTGRES_PASSWORD",
-        "value": "${postgres_password}"
       },
       {
         "name": "GRANARY_LOG_LEVEL",
@@ -30,10 +27,6 @@
       {
         "name": "GRANARY_TRACING_SINK",
         "value": "${granary_tracing_sink}"
-      },
-      {
-        "name": "AUTH_ENABLED",
-        "value": "${granary_auth_enabled}"
       },
       {
         "name": "ENVIRONMENT",
