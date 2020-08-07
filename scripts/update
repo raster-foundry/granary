@@ -19,6 +19,10 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     else
         docker-compose build --pull
 
+	echo "Setting up frontend dependencies"
+	nvm use
+	npm install -g elm elm-format
+
         echo "Building Scala assembly JAR"
         docker-compose \
             run --rm --no-deps sbt \
