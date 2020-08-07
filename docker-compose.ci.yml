@@ -1,5 +1,10 @@
 version: "2.4"
 services:
+  frontend-builder:
+    build:
+      context: ./granary-ui
+      dockerfile: Dockerfile.ui
+
   api:
     image: "granary-api:${GIT_COMMIT}"
     build:

@@ -28,13 +28,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         ./scripts/test
 
         echo "Building optimized Elm application"
-        pushd granary-ui
-        elm-app make \
-            src/Main.elm \
-            --output ../api/src/main/resources/assets/index.html \
-            --optimize
-        cp -r public/* ../api/src/main/resources/assets/
-        popd
+        ./scripts/update --frontend-optimized
 
         echo "Building JAR for API subproject"
         docker-compose \

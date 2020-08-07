@@ -14,18 +14,33 @@ Setup external project dependencies.
 }
 
 function build_frontend() {
-    echo "Building frontend"
-    pushd granary-ui
-    elm-app make src/Main.elm --output ../api/src/main/resources/assets/index.html
-    cp -r public/* ../api/src/main/resources/assets/
-    popd
+    docker-compose -f docker-compose.ci.yml run \
+        -v "$(pwd)/granary-ui":/opt/granary-ui \
+        --workdir /opt/granary-ui \
+        --rm \
+        frontend-builder
+    cp -r granary-ui/public/* api/src/main/resources/assets/
+}
+
+function build_optimized_frontend() {
+    docker-compose -f docker-compose.ci.yml run \
+        -v "$(pwd)/granary-ui":/opt/granary-ui \
+        --workdir /opt/granary-ui \
+        --rm frontend-builder \
+        --optimize
+    cp -r granary-ui/public/* api/src/main/resources/assets/
+
 }
 
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     if [ "${1:-}" = "--help" ]; then
         usage
     elif [ "${1:-}" = "--frontend" ]; then
+        echo "Building frontend"
 	    build_frontend
+    elif [ "${1:-}" = "--frontend-optimized" ]; then
+        echo "Building optimized frontend"
+        build_optimized_frontend
     else
 	    build_frontend
 
