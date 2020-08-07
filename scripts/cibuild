@@ -29,7 +29,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
 
         echo "Building optimized Elm application"
         pushd granary-ui
-        elm-app elm-app make \
+        elm-app make \
             src/Main.elm \
             --output ../api/src/main/resources/assets/index.html \
             --optimize
