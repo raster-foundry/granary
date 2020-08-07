@@ -17,6 +17,7 @@ function build_frontend() {
     echo "Building frontend"
     pushd granary-ui
     elm-app make src/Main.elm --output ../api/src/main/resources/assets/index.html
+    cp -r public/* ../api/src/main/resources/assets/
     popd
 }
 
@@ -24,9 +25,9 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     if [ "${1:-}" = "--help" ]; then
         usage
     elif [ "${1:-}" = "--frontend" ]; then
-	build_frontend
+	    build_frontend
     else
-	build_frontend
+	    build_frontend
 
         docker-compose build --pull
 
@@ -34,18 +35,13 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         # configured service health checks.
         docker-compose up -d database
 
-	# Pull in development data
-	./scripts/load-development-data
+        # Pull in development data
+        ./scripts/load-development-data
 
         # Apply any outstanding migrations.
         docker-compose \
             -f docker-compose.yml \
             run --rm \
             api-migrations migrate
-
-        # Remove service associated with `docker-compose up`
-        # command above.
-        docker-compose kill api &&
-            docker-compose rm -f api
     fi
 fi

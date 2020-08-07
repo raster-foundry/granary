@@ -44,7 +44,7 @@ type alias PaginatedResponse a =
 
 
 type alias TaskDetail =
-    { executions  : List GranaryExecution
+    { executions : List GranaryExecution
     , task : GranaryTask
     , addingExecution : Bool
     , newExecution : Result (List Validation.Error) JD.Value
@@ -182,12 +182,12 @@ getExecutionCreate detail =
 
 modelUrl : Uuid.Uuid -> String
 modelUrl =
-    (++) "https://granary.rasterfoundry.com/api/tasks/" << Uuid.toString
+    (++) "/api/tasks/" << Uuid.toString
 
 
 executionsUrl : Uuid.Uuid -> String
 executionsUrl =
-    (++) "https://granary.rasterfoundry.com/api/executions?taskId=" << Uuid.toString
+    (++) "/api/executions?taskId=" << Uuid.toString
 
 
 fetchModels : Maybe GranaryToken -> Cmd.Cmd Msg
@@ -195,7 +195,7 @@ fetchModels token =
     token
         |> Maybe.map
             (\t ->
-                B.get "https://granary.rasterfoundry.com/api/tasks"
+                B.get "/api/tasks"
                     |> B.withExpect (Http.expectJson GotTasks (paginatedDecoder decoderGranaryModel))
                     |> B.withBearerToken t
                     |> B.request
@@ -233,7 +233,7 @@ fetchExecutions token modelId =
 
 postExecution : GranaryToken -> ExecutionCreate -> Cmd.Cmd Msg
 postExecution token executionCreate =
-    B.post "https://granary.rasterfoundry.com/api/executions"
+    B.post "/api/executions"
         |> B.withJsonBody (encodeExecutionCreate executionCreate)
         |> B.withBearerToken token
         |> B.withExpect (Http.expectJson CreatedExecution decoderGranaryExecution)

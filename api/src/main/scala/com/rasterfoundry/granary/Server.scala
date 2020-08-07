@@ -82,7 +82,7 @@ object ApiServer extends IOApp {
       )
       executionRoutes   = executionService.routes
       healthcheckRoutes = new HealthcheckService(tracingContextBuilder, transactor).healthcheck
-      staticRoutes = new StaticService[IO](staticAssetsBlocker).routes
+      staticRoutes      = new StaticService[IO](staticAssetsBlocker).routes
       router =
         RequestResponseLogger
           .httpRoutes(false, false) {

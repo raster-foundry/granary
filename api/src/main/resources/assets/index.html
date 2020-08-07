@@ -6535,7 +6535,7 @@ var $danyx23$elm_uuid$Uuid$toString = function (_v0) {
 };
 var $author$project$Main$executionsUrl = A2(
 	$elm$core$Basics$composeL,
-	$elm$core$Basics$append('https://granary.rasterfoundry.com/api/executions?taskId='),
+	$elm$core$Basics$append('/api/executions?taskId='),
 	$danyx23$elm_uuid$Uuid$toString);
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
@@ -8155,7 +8155,7 @@ var $author$project$Main$decoderGranaryModel = A6(
 	A2($elm$json$Json$Decode$field, 'jobQueue', $elm$json$Json$Decode$string));
 var $author$project$Main$modelUrl = A2(
 	$elm$core$Basics$composeL,
-	$elm$core$Basics$append('https://granary.rasterfoundry.com/api/tasks/'),
+	$elm$core$Basics$append('/api/tasks/'),
 	$danyx23$elm_uuid$Uuid$toString);
 var $author$project$Main$fetchModel = F2(
 	function (token, modelId) {
@@ -8197,7 +8197,7 @@ var $author$project$Main$fetchModels = function (token) {
 								$elm$http$Http$expectJson,
 								$author$project$Main$GotTasks,
 								$author$project$Main$paginatedDecoder($author$project$Main$decoderGranaryModel)),
-							$lukewestby$elm_http_builder$HttpBuilder$get('https://granary.rasterfoundry.com/api/tasks'))));
+							$lukewestby$elm_http_builder$HttpBuilder$get('/api/tasks'))));
 			},
 			token));
 };
@@ -8282,7 +8282,7 @@ var $author$project$Main$postExecution = F2(
 					A2(
 						$lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
 						$author$project$Main$encodeExecutionCreate(executionCreate),
-						$lukewestby$elm_http_builder$HttpBuilder$post('https://granary.rasterfoundry.com/api/executions')))));
+						$lukewestby$elm_http_builder$HttpBuilder$post('/api/executions')))));
 	});
 var $author$project$Main$maybePostExecution = F2(
 	function (tokenM, detailM) {
