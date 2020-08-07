@@ -30,12 +30,18 @@ function generate_sbtopts() {
     fi
 }
 
+function setup_elm() {
+	echo "Setting up frontend dependencies"
+	npm install -g elm elm-format create-elm-app
+}
+
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     if [ "${1:-}" = "--help" ]; then
         usage
     elif [ "${1:-}" = "--sbtopts" ]; then
         generate_sbtopts
     else
+        setup_elm
         generate_sbtopts
         ./sbt bloopInstall
     fi

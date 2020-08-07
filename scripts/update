@@ -13,24 +13,29 @@ Setup external project dependencies.
 "
 }
 
+function build_frontend() {
+    echo "Building frontend"
+    pushd granary-ui
+    elm-app make src/Main.elm --output public/index.html
+    popd
+}
+
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     if [ "${1:-}" = "--help" ]; then
         usage
+    elif [ "${1:-}" = "--frontend" ]; then
+	build_frontend
     else
+	build_frontend
+
         docker-compose build --pull
-
-	echo "Setting up frontend dependencies"
-	nvm use
-	npm install -g elm elm-format
-
-        echo "Building Scala assembly JAR"
-        docker-compose \
-            run --rm --no-deps sbt \
-            api/assembly
 
         # Bring up PostgreSQL and SBT in a way that respects
         # configured service health checks.
-        docker-compose up -d database api
+        docker-compose up -d database
+
+	# Pull in development data
+	./scripts/load-development-data
 
         # Apply any outstanding migrations.
         docker-compose \
