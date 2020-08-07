@@ -16,7 +16,7 @@ Setup external project dependencies.
 function build_frontend() {
     echo "Building frontend"
     pushd granary-ui
-    elm-app make src/Main.elm --output public/index.html
+    elm-app make src/Main.elm --output ../api/src/main/resources/assets/index.html
     popd
 }
 

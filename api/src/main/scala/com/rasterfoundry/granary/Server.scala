@@ -52,8 +52,9 @@ object ApiServer extends IOApp {
           case Right(builder) => IO.pure(builder)
         }
       }
-      connectionEc <- ExecutionContexts.fixedThreadPool[IO](2)
-      dbBlocker    <- Blocker[IO]
+      connectionEc        <- ExecutionContexts.fixedThreadPool[IO](2)
+      dbBlocker           <- Blocker[IO]
+      staticAssetsBlocker <- Blocker[IO]
       transactor <-
         HikariTransactor
           .fromHikariConfig[IO](DBConfig.hikariConfig(databaseConfig), connectionEc, dbBlocker)
@@ -70,6 +71,7 @@ object ApiServer extends IOApp {
         transactor,
         auth
       ).routes
+
       executionService = new ExecutionService(
         defaultPageRequest,
         tracingContextBuilder,
@@ -80,6 +82,7 @@ object ApiServer extends IOApp {
       )
       executionRoutes   = executionService.routes
       healthcheckRoutes = new HealthcheckService(tracingContextBuilder, transactor).healthcheck
+      staticRoutes = new StaticService[IO](staticAssetsBlocker).routes
       router =
         RequestResponseLogger
           .httpRoutes(false, false) {
@@ -87,7 +90,8 @@ object ApiServer extends IOApp {
               Router(
                 "/api" ->
                   (taskRoutes <+> executionRoutes <+>
-                    healthcheckRoutes <+> docRoutes <+> executionService.addResultsRoutes)
+                    healthcheckRoutes <+> docRoutes <+> executionService.addResultsRoutes),
+                "/" -> staticRoutes
               )
             )
           }
