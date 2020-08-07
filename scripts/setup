@@ -32,7 +32,7 @@ function generate_sbtopts() {
 
 function setup_elm() {
 	echo "Setting up frontend dependencies"
-	npm install -g elm elm-format create-elm-app
+	npm install -g elm elm-format
 }
 
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
