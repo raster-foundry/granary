@@ -144,6 +144,7 @@ lazy val apiDependencies = commonDependencies ++ Seq(
   Dependencies.http4sBlazeServer,
   Dependencies.http4sCirce % "test",
   Dependencies.http4sCore,
+  Dependencies.http4sDsl,
   Dependencies.http4sServer,
   Dependencies.log4catsCore,
   Dependencies.log4catsSlf4j,
