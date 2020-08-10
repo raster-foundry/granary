@@ -435,19 +435,6 @@ mkHeaderName s =
         (text s)
 
 
-mkRowElement : String -> Element msg
-mkRowElement s =
-    el [ Font.size 16 ] (text s)
-
-
-taskLink : GranaryTask -> Element msg
-taskLink grModel =
-    link []
-        { url = "/" ++ (grModel.id |> Uuid.toString)
-        , label = mkRowElement grModel.name
-        }
-
-
 newExecutionButton : Uuid.Uuid -> Schema.Schema -> Element Msg
 newExecutionButton modelId modelSchema =
     Input.button
@@ -456,27 +443,6 @@ newExecutionButton modelId modelSchema =
         ]
         { onPress = Just (NewExecution modelId modelSchema)
         , label = Element.el [ Font.bold ] (text "New!")
-        }
-
-
-taskTable : Model -> Element Msg
-taskTable model =
-    Element.table [ padding 3, spacing 10, Element.alignLeft ]
-        { data = model.granaryTasks
-        , columns =
-            [ { header = mkHeaderName "Task name"
-              , width = fill
-              , view = \granaryModel -> taskLink granaryModel
-              }
-            , { header = mkHeaderName "Job Definition"
-              , width = fill
-              , view = \granaryModel -> mkRowElement granaryModel.jobDefinition
-              }
-            , { header = mkHeaderName "Job Queue"
-              , width = fill
-              , view = \granaryModel -> mkRowElement granaryModel.jobQueue
-              }
-            ]
         }
 
 
@@ -707,7 +673,7 @@ view model =
                             , height fill
                             , padding 10
                             ]
-                            [ taskTable model ]
+                            [ text "cool" ]
                         ]
                 ]
             }

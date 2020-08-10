@@ -18428,61 +18428,6 @@ var $author$project$Main$taskDetailColumn = $mdgriffith$elm_ui$Element$column(
 			$mdgriffith$elm_ui$Element$padding(10),
 			$mdgriffith$elm_ui$Element$spacing(10)
 		]));
-var $author$project$Main$mkRowElement = function (s) {
-	return A2(
-		$mdgriffith$elm_ui$Element$el,
-		_List_fromArray(
-			[
-				$mdgriffith$elm_ui$Element$Font$size(16)
-			]),
-		$mdgriffith$elm_ui$Element$text(s));
-};
-var $author$project$Main$taskLink = function (grModel) {
-	return A2(
-		$mdgriffith$elm_ui$Element$link,
-		_List_Nil,
-		{
-			label: $author$project$Main$mkRowElement(grModel.name),
-			url: '/' + $danyx23$elm_uuid$Uuid$toString(grModel.id)
-		});
-};
-var $author$project$Main$taskTable = function (model) {
-	return A2(
-		$mdgriffith$elm_ui$Element$table,
-		_List_fromArray(
-			[
-				$mdgriffith$elm_ui$Element$padding(3),
-				$mdgriffith$elm_ui$Element$spacing(10),
-				$mdgriffith$elm_ui$Element$alignLeft
-			]),
-		{
-			columns: _List_fromArray(
-				[
-					{
-					header: $author$project$Main$mkHeaderName('Task name'),
-					view: function (granaryModel) {
-						return $author$project$Main$taskLink(granaryModel);
-					},
-					width: $mdgriffith$elm_ui$Element$fill
-				},
-					{
-					header: $author$project$Main$mkHeaderName('Job Definition'),
-					view: function (granaryModel) {
-						return $author$project$Main$mkRowElement(granaryModel.jobDefinition);
-					},
-					width: $mdgriffith$elm_ui$Element$fill
-				},
-					{
-					header: $author$project$Main$mkHeaderName('Job Queue'),
-					view: function (granaryModel) {
-						return $author$project$Main$mkRowElement(granaryModel.jobQueue);
-					},
-					width: $mdgriffith$elm_ui$Element$fill
-				}
-				]),
-			data: model.granaryTasks
-		});
-};
 var $mdgriffith$elm_ui$Element$Input$TextInputNode = function (a) {
 	return {$: 'TextInputNode', a: a};
 };
@@ -18587,7 +18532,7 @@ var $author$project$Main$view = function (model) {
 										]),
 									_List_fromArray(
 										[
-											$author$project$Main$taskTable(model)
+											$mdgriffith$elm_ui$Element$text('cool')
 										]))
 								])))
 					]),
