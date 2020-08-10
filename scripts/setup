@@ -30,12 +30,20 @@ function generate_sbtopts() {
     fi
 }
 
+function setup_elm() {
+	echo "Setting up frontend dependencies"
+    # make outside of the container to make sure that user owns elm-stuff
+    mkdir -p ./granary-ui/elm-stuff
+	npm install -g elm elm-format
+}
+
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     if [ "${1:-}" = "--help" ]; then
         usage
     elif [ "${1:-}" = "--sbtopts" ]; then
         generate_sbtopts
     else
+        setup_elm
         generate_sbtopts
         ./sbt bloopInstall
     fi

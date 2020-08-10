@@ -27,6 +27,9 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
 
         ./scripts/test
 
+        echo "Building optimized Elm application"
+        ./scripts/update --frontend-optimized
+
         echo "Building JAR for API subproject"
         docker-compose \
             run --rm sbt \

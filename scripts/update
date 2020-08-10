@@ -13,30 +13,50 @@ Setup external project dependencies.
 "
 }
 
+function build_frontend() {
+    docker-compose -f docker-compose.ci.yml run \
+        -v "$(pwd)/granary-ui":/opt/granary-ui \
+        --workdir /opt/granary-ui \
+        --rm \
+        frontend-builder
+    cp -r granary-ui/public/* api/src/main/resources/assets/
+}
+
+function build_optimized_frontend() {
+    docker-compose -f docker-compose.ci.yml run \
+        -v "$(pwd)/granary-ui":/opt/granary-ui \
+        --workdir /opt/granary-ui \
+        --rm frontend-builder \
+        --optimize
+    cp -r granary-ui/public/* api/src/main/resources/assets/
+
+}
+
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     if [ "${1:-}" = "--help" ]; then
         usage
+    elif [ "${1:-}" = "--frontend" ]; then
+        echo "Building frontend"
+	    build_frontend
+    elif [ "${1:-}" = "--frontend-optimized" ]; then
+        echo "Building optimized frontend"
+        build_optimized_frontend
     else
-        docker-compose build --pull
+	    build_frontend
 
-        echo "Building Scala assembly JAR"
-        docker-compose \
-            run --rm --no-deps sbt \
-            api/assembly
+        docker-compose build --pull
 
         # Bring up PostgreSQL and SBT in a way that respects
         # configured service health checks.
-        docker-compose up -d database api
+        docker-compose up -d database
+
+        # Pull in development data
+        ./scripts/load-development-data
 
         # Apply any outstanding migrations.
         docker-compose \
             -f docker-compose.yml \
             run --rm \
             api-migrations migrate
-
-        # Remove service associated with `docker-compose up`
-        # command above.
-        docker-compose kill api &&
-            docker-compose rm -f api
     fi
 fi
