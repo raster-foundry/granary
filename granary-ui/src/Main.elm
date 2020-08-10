@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
+import Dict exposing (Dict)
 import Element
     exposing
         ( Element
@@ -22,6 +23,8 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
+import Framework.Button as Button
+import Framework.Card as Card
 import Http as Http
 import HttpBuilder as B
 import Iso8601
@@ -29,7 +32,7 @@ import Json.Decode as JD
 import Json.Decode.Extra as JDE
 import Json.Encode as JE
 import Json.Schema as Schema
-import Json.Schema.Definitions as Schema
+import Json.Schema.Definitions as Schema exposing (Schema(..))
 import Json.Schema.Validation as Validation
 import Time
 import Url
@@ -66,6 +69,9 @@ type alias Model =
     { url : Url.Url
     , key : Nav.Key
     , granaryTasks : List GranaryTask
+    , taskValidationErrors : Dict String (List Validation.Error)
+    , formValues : Dict String String
+    , selectedTask : Maybe GranaryTask
     , taskDetail : Maybe TaskDetail
     , secrets : Maybe GranaryToken
     , secretsUnsubmitted : Maybe GranaryToken
@@ -75,7 +81,7 @@ type alias Model =
 type alias GranaryTask =
     { id : Uuid.Uuid
     , name : String
-    , validator : Schema.Schema
+    , validator : Schema
     , jobDefinition : String
     , jobQueue : String
     }
@@ -162,7 +168,10 @@ init _ url key =
     ( { url = url
       , key = key
       , granaryTasks = []
+      , selectedTask = Nothing
       , taskDetail = Nothing
+      , taskValidationErrors = Dict.empty
+      , formValues = Dict.empty
       , secrets = Nothing
       , secretsUnsubmitted = Nothing
       }
@@ -256,7 +265,7 @@ type Msg
     = GotTasks (Result Http.Error (PaginatedResponse GranaryTask))
     | GotTask (Result Http.Error GranaryTask)
     | GotExecutions (Result Http.Error (PaginatedResponse GranaryExecution))
-    | NewExecution Uuid.Uuid Schema.Schema
+    | NewExecution Uuid.Uuid Schema
     | Navigation Browser.UrlRequest
     | UrlChanged Url.Url
     | ExecutionInput String
@@ -264,6 +273,13 @@ type Msg
     | TokenSubmit
     | ExecutionSubmit
     | CreatedExecution (Result Http.Error GranaryExecution)
+    | TaskSelect GranaryTask
+    | ValidateWith
+        { schema : Schema
+        , fieldName : String
+        , fieldValue : String
+        }
+    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -299,6 +315,11 @@ update msg model =
                 , taskDetail = Just <| TaskDetail [] granaryTask False (Result.Err []) "{}"
               }
             , fetchExecutions model.secrets granaryTask.id
+            )
+
+        TaskSelect task ->
+            ( { model | selectedTask = Just task }
+            , Cmd.none
             )
 
         GotTask (Err _) ->
@@ -395,6 +416,48 @@ update msg model =
         ExecutionSubmit ->
             ( model, maybePostExecution model.secrets model.taskDetail )
 
+        NoOp ->
+            ( model, Cmd.none )
+
+        ValidateWith validateOpts ->
+            let
+                validation =
+                    Schema.validateValue
+                        { applyDefaults = True }
+                        (JE.string
+                            validateOpts.fieldValue
+                        )
+                        validateOpts.schema
+            in
+            case validation of
+                Result.Ok _ ->
+                    ( { model
+                        | taskValidationErrors =
+                            Dict.remove validateOpts.fieldName
+                                model.taskValidationErrors
+                        , formValues =
+                            Dict.union (Dict.singleton validateOpts.fieldName validateOpts.fieldValue)
+                                model.formValues
+                      }
+                    , Cmd.none
+                    )
+
+                Result.Err errs ->
+                    ( { model
+                        | taskValidationErrors =
+                            Dict.union
+                                (Dict.singleton
+                                    validateOpts.fieldName
+                                    errs
+                                )
+                                model.taskValidationErrors
+                        , formValues =
+                            Dict.union (Dict.singleton validateOpts.fieldName validateOpts.fieldValue)
+                                model.formValues
+                      }
+                    , Cmd.none
+                    )
+
 
 
 ---- VIEW ----
@@ -405,9 +468,24 @@ fontRed =
     rgb255 255 0 0 |> Font.color
 
 
-fuschia : Element.Color
-fuschia =
-    rgb255 255 0 255
+primary : Element.Color
+primary =
+    rgb255 75 59 64
+
+
+secondary : Element.Color
+secondary =
+    rgb255 246 141 17
+
+
+accent : Element.Color
+accent =
+    rgb255 253 233 135
+
+
+styledPrimaryText : List (Element.Attribute msg) -> String -> Element msg
+styledPrimaryText attrs s =
+    el (Font.color primary :: attrs) (text s)
 
 
 homeCrumb : Breadcrumb
@@ -438,8 +516,8 @@ mkHeaderName s =
 newExecutionButton : Uuid.Uuid -> Schema.Schema -> Element Msg
 newExecutionButton modelId modelSchema =
     Input.button
-        [ Background.color <| rgb255 0 255 255
-        , Element.focused [ Background.color fuschia ]
+        [ Background.color accent
+        , Element.focused [ Background.color secondary ]
         ]
         { onPress = Just (NewExecution modelId modelSchema)
         , label = Element.el [ Font.bold ] (text "New!")
@@ -480,20 +558,6 @@ executionsTable detail =
         }
 
 
-titleBar : String -> Element msg
-titleBar s =
-    row
-        [ width fill
-        , height (fillPortion 1)
-        , padding 10
-        , Background.color (rgb255 0 255 255)
-        , Font.bold
-        , Font.italic
-        , Font.size 32
-        ]
-        [ text s ]
-
-
 navBar : List Breadcrumb -> Element Msg
 navBar links =
     links
@@ -508,21 +572,110 @@ navBar links =
                     ]
             )
         |> List.intersperse (Element.text " :> ")
-        |> row [ spacing 3, Background.color fuschia, width fill ]
+        |> row [ spacing 3, Background.color secondary, width fill ]
 
 
 submitButton : Msg -> Element Msg
 submitButton msg =
     Input.button
-        [ Element.centerX
-        , Background.color (rgb255 0 255 255)
-        , Border.solid
-        , Border.color (rgb255 0 0 0)
-        , Border.width 1
-        ]
+        (Button.simple
+            ++ [ Background.color accent
+               , Element.centerX
+               , Border.color primary
+               ]
+        )
         { onPress = Just msg
-        , label = text "Submit"
+        , label = styledPrimaryText [] "Submit"
         }
+
+
+textInput : List (Element.Attribute msg) -> (String -> msg) -> Maybe String -> String -> String -> Element msg
+textInput attrs f maybeText placeholder label =
+    Input.text
+        (Element.focused
+            [ Border.shadow
+                { offset = ( 0.1, 0.1 )
+                , size = 2
+                , blur = 3
+                , color = secondary
+                }
+            ]
+            :: attrs
+        )
+        { onChange = f
+        , text = maybeText |> Maybe.withDefault ""
+        , placeholder = Input.placeholder [] (text placeholder) |> Just
+        , label = Input.labelHidden label
+        }
+
+
+logo : List (Element.Attribute msg) -> Int -> Element msg
+logo attrs maxSize =
+    Element.image
+        ([ fillPortion 1 |> Element.minimum 100 |> Element.maximum maxSize |> height
+         , padding 10
+         ]
+            ++ attrs
+        )
+        { src = "logo.svg"
+        , description = "Granary logo"
+        }
+
+
+taskCard : Maybe Uuid.Uuid -> GranaryTask -> Element Msg
+taskCard selectedId task =
+    row
+        (Font.color primary
+            :: (if Just task.id == selectedId then
+                    [ Background.color accent ]
+
+                else
+                    []
+               )
+        )
+        [ Input.button []
+            { onPress = TaskSelect task |> Just
+            , label = text task.name
+            }
+        ]
+        |> Element.el Card.simple
+
+
+schemaToForm : Dict String String -> Dict String (List Validation.Error) -> Schema.SubSchema -> List (Element Msg)
+schemaToForm formValues errors schema =
+    let
+        toInput ( k, v ) =
+            row []
+                (textInput []
+                    (\s ->
+                        ValidateWith
+                            { schema = v
+                            , fieldName = k
+                            , fieldValue = s
+                            }
+                    )
+                    (Dict.get k formValues)
+                    k
+                    k
+                    :: (Dict.get k errors |> Maybe.withDefault [] |> List.concatMap makeErr)
+                )
+
+        makeInput (Schema.Schemata definitions) =
+            List.map toInput definitions
+    in
+    schema.properties
+        |> Maybe.map makeInput
+        |> Maybe.withDefault []
+
+
+executionInput : Dict String String -> Dict String (List Validation.Error) -> GranaryTask -> List (Element Msg)
+executionInput formValues errors task =
+    case task.validator of
+        BooleanSchema _ ->
+            [ Element.el [] (text "oh no") ]
+
+        ObjectSchema subSchema ->
+            schemaToForm formValues errors subSchema
 
 
 boldKvPair : String -> String -> List (Element msg)
@@ -537,7 +690,13 @@ boldKvPair s1 s2 =
 
 taskDetailColumn : List (Element msg) -> Element msg
 taskDetailColumn =
-    column [ height (fillPortion 2), width fill, Element.alignTop, padding 10, spacing 10 ]
+    column
+        [ height (fillPortion 2)
+        , width fill
+        , Element.alignTop
+        , padding 10
+        , spacing 10
+        ]
 
 
 granaryTaskDetailPairs : TaskDetail -> List (Element msg)
@@ -582,13 +741,7 @@ makeErr err =
             [ row [] [ text "Invalid json" ] ]
 
         Validation.InvalidType t ->
-            [ row []
-                [ column []
-                    [ row [] [ text (t ++ " in ") ]
-                    , row [] [ Element.el [ fontRed ] (getErrField err |> text) ]
-                    ]
-                ]
-            ]
+            [ text t ]
 
         Validation.RequiredProperty ->
             []
@@ -651,7 +804,7 @@ view model =
             , body =
                 [ Element.layout [] <|
                     column [ width fill ]
-                        [ titleBar detail.task.name
+                        [ logo [ width fill ] 100
                         , navBar [ homeCrumb, taskCrumb detail.task ]
                         , row [ height fill, width fill ]
                             [ taskDetailColumn <| granaryTaskDetailPairs detail
@@ -666,14 +819,28 @@ view model =
             , body =
                 [ Element.layout [] <|
                     column [ width fill ]
-                        [ titleBar "Granary"
+                        [ logo [ width fill ] 100
                         , navBar [ homeCrumb ]
-                        , row
-                            [ width fill
-                            , height fill
-                            , padding 10
+                        , row []
+                            [ column
+                                [ fillPortion 1 |> width
+                                , height fill
+                                ]
+                                (model.granaryTasks
+                                    |> List.map
+                                        (taskCard
+                                            (Maybe.map .id model.selectedTask)
+                                        )
+                                )
+                            , column
+                                [ fillPortion 3 |> width
+                                , height fill
+                                ]
+                                (Maybe.withDefault
+                                    []
+                                    (model.selectedTask |> Maybe.map (executionInput model.formValues model.taskValidationErrors))
+                                )
                             ]
-                            [ text "cool" ]
                         ]
                 ]
             }
@@ -683,14 +850,9 @@ view model =
             , body =
                 [ Element.layout [] <|
                     column [ spacing 3, Element.centerX, Element.centerY, width Element.shrink ]
-                        [ titleBar "Granary"
+                        [ row [ width fill ] [ logo [] 200 ]
                         , row [ width fill ]
-                            [ Input.text []
-                                { onChange = TokenInput
-                                , text = model.secretsUnsubmitted |> Maybe.withDefault ""
-                                , placeholder = Input.placeholder [] (text "Enter a token") |> Just
-                                , label = Input.labelHidden "Token input"
-                                }
+                            [ textInput [] TokenInput model.secretsUnsubmitted "Enter a token" "Token input"
                             ]
                         , row [ width fill ] [ submitButton TokenSubmit ]
                         ]
