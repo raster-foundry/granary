@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Array
 import Browser
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
@@ -11,7 +12,6 @@ import Element
         , fill
         , fillPortion
         , height
-        , link
         , padding
         , rgb255
         , row
@@ -24,16 +24,15 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Framework.Button as Button
-import Framework.Card as Card
 import Http as Http
 import HttpBuilder as B
-import Iso8601
 import Json.Decode as JD
 import Json.Decode.Extra as JDE
 import Json.Encode as JE
 import Json.Schema as Schema
-import Json.Schema.Definitions as Schema exposing (Schema(..))
+import Json.Schema.Definitions as Schema exposing (Schema(..), SingleType(..), Type(..))
 import Json.Schema.Validation as Validation
+import Result
 import Time
 import Url
 import Uuid as Uuid
@@ -59,18 +58,13 @@ type alias GranaryToken =
     String
 
 
-type alias Breadcrumb =
-    { url : String
-    , name : String
-    }
-
-
 type alias Model =
     { url : Url.Url
     , key : Nav.Key
     , granaryTasks : List GranaryTask
+    , activeSchema : Maybe Schema
     , taskValidationErrors : Dict String (List Validation.Error)
-    , formValues : Dict String String
+    , formValues : Dict String (Result String JD.Value)
     , selectedTask : Maybe GranaryTask
     , taskDetail : Maybe TaskDetail
     , secrets : Maybe GranaryToken
@@ -170,6 +164,7 @@ init _ url key =
       , granaryTasks = []
       , selectedTask = Nothing
       , taskDetail = Nothing
+      , activeSchema = Nothing
       , taskValidationErrors = Dict.empty
       , formValues = Dict.empty
       , secrets = Nothing
@@ -268,18 +263,15 @@ type Msg
     | NewExecution Uuid.Uuid Schema
     | Navigation Browser.UrlRequest
     | UrlChanged Url.Url
-    | ExecutionInput String
     | TokenInput String
     | TokenSubmit
-    | ExecutionSubmit
     | CreatedExecution (Result Http.Error GranaryExecution)
     | TaskSelect GranaryTask
     | ValidateWith
-        { schema : Schema
+        { schema : Schema.SubSchema
         , fieldName : String
-        , fieldValue : String
+        , fieldValue : Result String JD.Value
         }
-    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -318,7 +310,12 @@ update msg model =
             )
 
         TaskSelect task ->
-            ( { model | selectedTask = Just task }
+            ( { model
+                | selectedTask = Just task
+                , taskValidationErrors = Dict.empty
+                , formValues = Dict.empty
+                , activeSchema = Just task.validator
+              }
             , Cmd.none
             )
 
@@ -354,43 +351,6 @@ update msg model =
             in
             ( { model | taskDetail = updatedTaskDetail }, Cmd.none )
 
-        ExecutionInput s ->
-            let
-                baseTaskDetail =
-                    model.taskDetail
-
-                valueDecodeResult =
-                    JD.decodeString JD.value s
-                        |> Result.mapError
-                            (always
-                                [ { details = Validation.AlwaysFail
-                                  , jsonPointer =
-                                        { ns = ""
-                                        , path = []
-                                        }
-                                  }
-                                ]
-                            )
-
-                updatedTaskDetail =
-                    baseTaskDetail
-                        |> Maybe.map
-                            (\rec ->
-                                { rec
-                                    | newExecutionRaw = s
-                                    , newExecution =
-                                        valueDecodeResult
-                                            |> Result.andThen
-                                                (\value ->
-                                                    Schema.validateValue { applyDefaults = True }
-                                                        value
-                                                        rec.task.validator
-                                                )
-                                }
-                            )
-            in
-            ( { model | taskDetail = updatedTaskDetail }, Cmd.none )
-
         TokenInput s ->
             ( { model | secretsUnsubmitted = Just s }, Cmd.none )
 
@@ -413,21 +373,22 @@ update msg model =
         CreatedExecution _ ->
             ( model, Cmd.none )
 
-        ExecutionSubmit ->
-            ( model, maybePostExecution model.secrets model.taskDetail )
-
-        NoOp ->
-            ( model, Cmd.none )
-
         ValidateWith validateOpts ->
             let
                 validation =
-                    Schema.validateValue
-                        { applyDefaults = True }
-                        (JE.string
-                            validateOpts.fieldValue
-                        )
-                        validateOpts.schema
+                    case validateOpts.fieldValue of
+                        Result.Ok jsonValue ->
+                            Schema.validateValue
+                                { applyDefaults = True }
+                                jsonValue
+                                (ObjectSchema validateOpts.schema)
+
+                        Result.Err _ ->
+                            [ { jsonPointer = Validation.JsonPointer "" [ validateOpts.fieldName ]
+                              , details = Validation.InvalidType ("Expected " ++ showType validateOpts.schema.type_)
+                              }
+                            ]
+                                |> Result.Err
             in
             case validation of
                 Result.Ok _ ->
@@ -483,96 +444,19 @@ accent =
     rgb255 253 233 135
 
 
+secondaryShadow : Element.Attr deco msg
+secondaryShadow =
+    Border.shadow
+        { offset = ( 0.1, 0.1 )
+        , size = 2
+        , blur = 3
+        , color = secondary
+        }
+
+
 styledPrimaryText : List (Element.Attribute msg) -> String -> Element msg
 styledPrimaryText attrs s =
     el (Font.color primary :: attrs) (text s)
-
-
-homeCrumb : Breadcrumb
-homeCrumb =
-    Breadcrumb "/" "Home"
-
-
-taskCrumb : GranaryTask -> Breadcrumb
-taskCrumb granaryModel =
-    Breadcrumb ("/" ++ Uuid.toString granaryModel.id) granaryModel.name
-
-
-mkHeaderName : String -> Element msg
-mkHeaderName s =
-    el
-        [ Font.bold
-        , Font.size 24
-        , Border.widthEach
-            { bottom = 1
-            , left = 0
-            , right = 0
-            , top = 0
-            }
-        ]
-        (text s)
-
-
-newExecutionButton : Uuid.Uuid -> Schema.Schema -> Element Msg
-newExecutionButton modelId modelSchema =
-    Input.button
-        [ Background.color accent
-        , Element.focused [ Background.color secondary ]
-        ]
-        { onPress = Just (NewExecution modelId modelSchema)
-        , label = Element.el [ Font.bold ] (text "New!")
-        }
-
-
-executionsTable : TaskDetail -> Element msg
-executionsTable detail =
-    Element.table [ padding 3, spacing 10, Element.alignLeft ]
-        { data = detail.executions
-        , columns =
-            [ { header = mkHeaderName "Invocation time"
-              , width = fill
-              , view =
-                    \execution ->
-                        let
-                            invokedAt =
-                                execution.invokedAt
-                        in
-                        text <| Iso8601.fromTime invokedAt
-              }
-            , { header = mkHeaderName "Status"
-              , width = fill
-              , view =
-                    \execution ->
-                        text <|
-                            case ( execution.statusReason, execution.results ) of
-                                ( Nothing, [] ) ->
-                                    "In progress"
-
-                                ( Just _, _ ) ->
-                                    "Failed"
-
-                                ( _, _ ) ->
-                                    "Succeeded"
-              }
-            ]
-        }
-
-
-navBar : List Breadcrumb -> Element Msg
-navBar links =
-    links
-        |> List.map
-            (\crumb ->
-                column [ spacing 3 ]
-                    [ link
-                        []
-                        { url = crumb.url
-                        , label = text crumb.name
-                        }
-                    ]
-            )
-        |> List.intersperse (Element.text " :> ")
-        |> row [ spacing 3, Background.color secondary, width fill ]
 
 
 submitButton : Msg -> Element Msg
@@ -593,13 +477,7 @@ textInput : List (Element.Attribute msg) -> (String -> msg) -> Maybe String -> S
 textInput attrs f maybeText placeholder label =
     Input.text
         (Element.focused
-            [ Border.shadow
-                { offset = ( 0.1, 0.1 )
-                , size = 2
-                , blur = 3
-                , color = secondary
-                }
-            ]
+            [ secondaryShadow ]
             :: attrs
         )
         { onChange = f
@@ -627,48 +505,227 @@ taskCard selectedId task =
     row
         (Font.color primary
             :: (if Just task.id == selectedId then
-                    [ Background.color accent ]
+                    [ secondaryShadow ]
 
                 else
                     []
                )
         )
-        [ Input.button []
-            { onPress = TaskSelect task |> Just
-            , label = text task.name
+        [ Input.button
+            Button.simple
+            { label = text task.name
+            , onPress = TaskSelect task |> Just
             }
         ]
-        |> Element.el Card.simple
 
 
-schemaToForm : Dict String String -> Dict String (List Validation.Error) -> Schema.SubSchema -> List (Element Msg)
+isOk : Result e a -> Bool
+isOk res =
+    case res of
+        Result.Ok _ ->
+            True
+
+        Result.Err _ ->
+            False
+
+
+numProperties : Schema -> Int
+numProperties schema =
+    let
+        schemataLength (Schema.Schemata props) =
+            List.length props
+    in
+    case schema of
+        ObjectSchema subSchema ->
+            subSchema.properties |> Maybe.map schemataLength |> Maybe.withDefault 0
+
+        BooleanSchema _ ->
+            0
+
+
+allowModelSubmit : Maybe Schema -> Dict String (Result String JD.Value) -> Bool
+allowModelSubmit schema enteredValues =
+    case schema of
+        Just schm ->
+            List.foldl (\x y -> x && y) True (List.map isOk (Dict.values enteredValues))
+                && (Dict.size enteredValues
+                        == numProperties schm
+                   )
+
+        Nothing ->
+            False
+
+
+toResult : String -> Maybe JD.Value -> Result String JD.Value
+toResult s m =
+    case m of
+        Just v ->
+            Result.Ok v
+
+        Nothing ->
+            Result.Err s
+
+
+showType : Schema.Type -> String
+showType t =
+    case t of
+        SingleType IntegerType ->
+            "int"
+
+        SingleType NumberType ->
+            "float"
+
+        SingleType StringType ->
+            "string"
+
+        SingleType BooleanType ->
+            "boolean"
+
+        SingleType ArrayType ->
+            "array"
+
+        SingleType ObjectType ->
+            "object"
+
+        SingleType NullType ->
+            "null"
+
+        AnyType ->
+            "any"
+
+        NullableType st ->
+            "Maybe " ++ showType (SingleType st)
+
+        UnionType sts ->
+            List.map (showType << SingleType) sts
+                |> List.intersperse ", "
+                |> List.foldl (++) ""
+                |> (++) "one of "
+
+
+encodeValue : Schema.Type -> String -> Result String JD.Value
+encodeValue t s =
+    let
+        defaulter =
+            toResult s
+    in
+    case t of
+        SingleType IntegerType ->
+            String.toInt s |> Maybe.map JE.int |> defaulter
+
+        SingleType NumberType ->
+            String.toFloat s |> Maybe.map JE.float |> defaulter
+
+        SingleType StringType ->
+            Just (JE.string s) |> defaulter
+
+        SingleType BooleanType ->
+            (case s of
+                "true" ->
+                    Just (JE.bool True)
+
+                "false" ->
+                    Just (JE.bool False)
+
+                _ ->
+                    Nothing
+            )
+                |> defaulter
+
+        SingleType ArrayType ->
+            Just (JE.array JE.string (String.split "," s |> Array.fromList)) |> defaulter
+
+        SingleType ObjectType ->
+            (case JD.decodeString (JD.dict JD.value) s of
+                Result.Ok v ->
+                    Just (JE.dict identity identity v)
+
+                _ ->
+                    Nothing
+            )
+                |> defaulter
+
+        SingleType NullType ->
+            Just JE.null |> defaulter
+
+        AnyType ->
+            Just (JE.string s) |> defaulter
+
+        NullableType st ->
+            case s of
+                "null" ->
+                    Just JE.null
+                        |> defaulter
+
+                _ ->
+                    encodeValue (SingleType st) s
+
+        UnionType sts ->
+            List.map (\st -> encodeValue (SingleType st) s) sts
+                |> List.filter isOk
+                |> List.head
+                |> Maybe.withDefault (Result.Err s)
+
+
+toValue : Schema.SubSchema -> String -> Result String JD.Value
+toValue schema s =
+    encodeValue schema.type_ s
+
+
+schemaToForm : Dict String (Result String JD.Value) -> Dict String (List Validation.Error) -> Schema.SubSchema -> List (Element Msg)
 schemaToForm formValues errors schema =
     let
+        errs ( k, _ ) =
+            Dict.get k errors |> Maybe.withDefault [] |> List.concatMap makeErr
+
         toInput ( k, v ) =
-            row []
-                (textInput []
+            if String.toLower k /= "task_grid" then
+                textInput [ width (Element.minimum 300 fill) ]
                     (\s ->
                         ValidateWith
                             { schema = v
                             , fieldName = k
-                            , fieldValue = s
+                            , fieldValue = toValue v s
                             }
                     )
-                    (Dict.get k formValues)
+                    (case Dict.get k formValues of
+                        Just (Result.Ok jsonValue) ->
+                            Just
+                                (JE.encode 0 jsonValue
+                                    |> String.toList
+                                    |> List.filter ((/=) '"')
+                                    |> String.fromList
+                                )
+
+                        Just (Result.Err s) ->
+                            Just s
+
+                        _ ->
+                            Nothing
+                    )
                     k
                     k
-                    :: (Dict.get k errors |> Maybe.withDefault [] |> List.concatMap makeErr)
-                )
+
+            else
+                row [] [ text "file input goes here" ]
+
+        inputRow ( k, propSchema ) =
+            case propSchema of
+                ObjectSchema subSchema ->
+                    row [ spacing 5 ] (toInput ( k, subSchema ) :: errs ( k, subSchema ))
+
+                BooleanSchema _ ->
+                    row [ spacing 5 ] [ toInput ( k, Schema.blankSubSchema ) ]
 
         makeInput (Schema.Schemata definitions) =
-            List.map toInput definitions
+            List.map inputRow definitions
     in
     schema.properties
         |> Maybe.map makeInput
         |> Maybe.withDefault []
 
 
-executionInput : Dict String String -> Dict String (List Validation.Error) -> GranaryTask -> List (Element Msg)
+executionInput : Dict String (Result String JD.Value) -> Dict String (List Validation.Error) -> GranaryTask -> List (Element Msg)
 executionInput formValues errors task =
     case task.validator of
         BooleanSchema _ ->
@@ -747,53 +804,9 @@ makeErr err =
             []
 
         _ ->
-            [ row []
-                [ text "I can't tell what else is wrong with "
-                , err.jsonPointer.path
-                    |> List.head
-                    |> Maybe.withDefault "ROOT"
-                    |> (Element.el [ fontRed ] << text)
-                ]
+            [ ("I can't tell what else is wrong with " ++ getErrField err)
+                |> text
             ]
-
-
-getErrorElem : Result (List Validation.Error) JD.Value -> String -> Element Msg
-getErrorElem result rawValue =
-    case ( result, rawValue ) of
-        ( _, "" ) ->
-            row [] [ text "Enter JSON for this model's schema" ]
-
-        -- should be a button, but _soon_
-        ( Result.Ok _, _ ) ->
-            row [] [ Element.el [] (submitButton ExecutionSubmit) ]
-
-        ( Err errs, _ ) ->
-            column [ spacing 3 ] (errs |> List.concatMap makeErr)
-
-
-executionsPane : TaskDetail -> List (Element Msg)
-executionsPane detail =
-    if detail.addingExecution then
-        [ row []
-            [ Input.multiline
-                []
-                { onChange = ExecutionInput
-                , text = detail.newExecutionRaw
-                , placeholder = Input.placeholder [] (text "{}") |> Just
-                , label = Input.labelAbove [] (text "Execution input")
-                , spellcheck = True
-                }
-            ]
-        , getErrorElem detail.newExecution detail.newExecutionRaw
-        ]
-
-    else
-        [ row [ Font.bold ]
-            [ text "Executions: "
-            , newExecutionButton detail.task.id detail.task.validator
-            ]
-        , executionsTable detail
-        ]
 
 
 view : Model -> Browser.Document Msg
@@ -805,10 +818,8 @@ view model =
                 [ Element.layout [] <|
                     column [ width fill ]
                         [ logo [ width fill ] 100
-                        , navBar [ homeCrumb, taskCrumb detail.task ]
                         , row [ height fill, width fill ]
                             [ taskDetailColumn <| granaryTaskDetailPairs detail
-                            , taskDetailColumn <| executionsPane detail
                             ]
                         ]
                 ]
@@ -820,11 +831,12 @@ view model =
                 [ Element.layout [] <|
                     column [ width fill ]
                         [ logo [ width fill ] 100
-                        , navBar [ homeCrumb ]
                         , row []
                             [ column
                                 [ fillPortion 1 |> width
-                                , height fill
+                                , spacing 10
+                                , padding 10
+                                , Element.alignTop
                                 ]
                                 (model.granaryTasks
                                     |> List.map
@@ -835,10 +847,24 @@ view model =
                             , column
                                 [ fillPortion 3 |> width
                                 , height fill
+                                , spacing 10
+                                , padding 10
                                 ]
                                 (Maybe.withDefault
-                                    []
-                                    (model.selectedTask |> Maybe.map (executionInput model.formValues model.taskValidationErrors))
+                                    [ styledPrimaryText [] "👈 Choose a model on the left" ]
+                                    (model.selectedTask
+                                        |> Maybe.map (executionInput model.formValues model.taskValidationErrors)
+                                        |> Maybe.map
+                                            (\el ->
+                                                el
+                                                    ++ [ if allowModelSubmit model.activeSchema model.formValues then
+                                                            Element.el [] (text "button here")
+
+                                                         else
+                                                            Element.el [] (text "no button here")
+                                                       ]
+                                            )
+                                    )
                                 )
                             ]
                         ]
