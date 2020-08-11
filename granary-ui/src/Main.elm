@@ -378,7 +378,7 @@ update msg model =
 
                         Result.Err _ ->
                             [ { jsonPointer = Validation.JsonPointer "" [ validateOpts.fieldName ]
-                              , details = Validation.InvalidType ("Expected " ++ showType validateOpts.schema.type_)
+                              , details = Validation.InvalidType ("Expected " ++ showType validateOpts.schema.type_ ++ " 😟")
                               }
                             ]
                                 |> Result.Err
@@ -455,18 +455,43 @@ styledPrimaryText attrs s =
     el (Font.color primary :: attrs) (text s)
 
 
-submitButton : (a -> Bool) -> a -> Msg -> Element Msg
-submitButton predicate value msg =
-    Input.button
-        (Button.simple
-            ++ [ Background.color accent
-               , Element.centerX
-               , Border.color primary
-               ]
+styledSecondaryText : List (Element.Attribute msg) -> String -> Element msg
+styledSecondaryText attrs s =
+    el (Font.color secondary :: attrs) (text s)
+
+
+submitButton : (a -> Bool) -> a -> String -> Msg -> Element Msg
+submitButton predicate value hint msg =
+    let
+        allowSubmit =
+            predicate value
+    in
+    Element.el
+        []
+        (Input.button
+            (Button.simple
+                ++ [ Background.color accent
+                   , Element.centerX
+                   , Border.color primary
+                   ]
+            )
+            { onPress =
+                if allowSubmit then
+                    Just msg
+
+                else
+                    Nothing
+            , label = styledPrimaryText [] "Submit"
+            }
         )
-        { onPress = Just msg
-        , label = styledPrimaryText [] "Submit"
-        }
+        :: (if allowSubmit then
+                []
+
+            else
+                [ styledSecondaryText [] hint
+                ]
+           )
+        |> column [ spacing 5 ]
 
 
 textInput : List (Element.Attribute msg) -> (String -> msg) -> Maybe String -> String -> String -> Element msg
@@ -708,7 +733,10 @@ schemaToForm formValues errors schema =
         inputRow ( k, propSchema ) =
             case propSchema of
                 ObjectSchema subSchema ->
-                    row [ spacing 5 ] (toInput ( k, subSchema ) :: errs ( k, subSchema ))
+                    column [ spacing 10 ]
+                        [ row [] [ toInput ( k, subSchema ) ]
+                        , row [] (errs ( k, subSchema ))
+                        ]
 
                 BooleanSchema _ ->
                     row [ spacing 5 ] [ toInput ( k, Schema.blankSubSchema ) ]
@@ -801,6 +829,7 @@ view model =
                                                     ++ [ row []
                                                             [ submitButton (allowModelSubmit model.activeSchema)
                                                                 model.formValues
+                                                                "Some inputs are invalid"
                                                                 (toExecutionCreate selected.id model.formValues |> CreateExecution)
                                                             ]
                                                        ]
@@ -824,6 +853,7 @@ view model =
                         , row [ width fill ]
                             [ submitButton (not << String.isEmpty)
                                 (Maybe.withDefault "" model.secretsUnsubmitted)
+                                "Please enter a token"
                                 TokenSubmit
                             ]
                         ]

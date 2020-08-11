@@ -10594,7 +10594,7 @@ var $author$project$Main$update = F2(
 								[
 									{
 									details: $1602$json_schema$Json$Schema$Validation$InvalidType(
-										'Expected ' + $author$project$Main$showType(validateOpts.schema.type_)),
+										'Expected ' + ($author$project$Main$showType(validateOpts.schema.type_) + ' 😟')),
 									jsonPointer: A2(
 										$1602$json_schema$Json$Schema$Validation$JsonPointer,
 										'',
@@ -17643,17 +17643,27 @@ var $author$project$Main$schemaToForm = F3(
 			if (propSchema.$ === 'ObjectSchema') {
 				var subSchema = propSchema.a;
 				return A2(
-					$mdgriffith$elm_ui$Element$row,
+					$mdgriffith$elm_ui$Element$column,
 					_List_fromArray(
 						[
-							$mdgriffith$elm_ui$Element$spacing(5)
+							$mdgriffith$elm_ui$Element$spacing(10)
 						]),
-					A2(
-						$elm$core$List$cons,
-						toInput(
-							_Utils_Tuple2(k, subSchema)),
-						errs(
-							_Utils_Tuple2(k, subSchema))));
+					_List_fromArray(
+						[
+							A2(
+							$mdgriffith$elm_ui$Element$row,
+							_List_Nil,
+							_List_fromArray(
+								[
+									toInput(
+									_Utils_Tuple2(k, subSchema))
+								])),
+							A2(
+							$mdgriffith$elm_ui$Element$row,
+							_List_Nil,
+							errs(
+								_Utils_Tuple2(k, subSchema)))
+						]));
 			} else {
 				return A2(
 					$mdgriffith$elm_ui$Element$row,
@@ -18233,22 +18243,48 @@ var $Orasund$elm_ui_framework$Framework$Button$simple = _Utils_ap(
 					])),
 				A2($mdgriffith$elm_ui$Element$paddingXY, 16, 12)
 			])));
-var $author$project$Main$submitButton = F3(
-	function (predicate, value, msg) {
+var $author$project$Main$styledSecondaryText = F2(
+	function (attrs, s) {
 		return A2(
-			$mdgriffith$elm_ui$Element$Input$button,
-			_Utils_ap(
-				$Orasund$elm_ui_framework$Framework$Button$simple,
-				_List_fromArray(
+			$mdgriffith$elm_ui$Element$el,
+			A2(
+				$elm$core$List$cons,
+				$mdgriffith$elm_ui$Element$Font$color($author$project$Main$secondary),
+				attrs),
+			$mdgriffith$elm_ui$Element$text(s));
+	});
+var $author$project$Main$submitButton = F4(
+	function (predicate, value, hint, msg) {
+		var allowSubmit = predicate(value);
+		return A2(
+			$mdgriffith$elm_ui$Element$column,
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$spacing(5)
+				]),
+			A2(
+				$elm$core$List$cons,
+				A2(
+					$mdgriffith$elm_ui$Element$el,
+					_List_Nil,
+					A2(
+						$mdgriffith$elm_ui$Element$Input$button,
+						_Utils_ap(
+							$Orasund$elm_ui_framework$Framework$Button$simple,
+							_List_fromArray(
+								[
+									$mdgriffith$elm_ui$Element$Background$color($author$project$Main$accent),
+									$mdgriffith$elm_ui$Element$centerX,
+									$mdgriffith$elm_ui$Element$Border$color($author$project$Main$primary)
+								])),
+						{
+							label: A2($author$project$Main$styledPrimaryText, _List_Nil, 'Submit'),
+							onPress: allowSubmit ? $elm$core$Maybe$Just(msg) : $elm$core$Maybe$Nothing
+						})),
+				allowSubmit ? _List_Nil : _List_fromArray(
 					[
-						$mdgriffith$elm_ui$Element$Background$color($author$project$Main$accent),
-						$mdgriffith$elm_ui$Element$centerX,
-						$mdgriffith$elm_ui$Element$Border$color($author$project$Main$primary)
-					])),
-			{
-				label: A2($author$project$Main$styledPrimaryText, _List_Nil, 'Submit'),
-				onPress: $elm$core$Maybe$Just(msg)
-			});
+						A2($author$project$Main$styledSecondaryText, _List_Nil, hint)
+					])));
 	});
 var $author$project$Main$TaskSelect = function (a) {
 	return {$: 'TaskSelect', a: a};
@@ -18378,10 +18414,11 @@ var $author$project$Main$view = function (model) {
 																_List_Nil,
 																_List_fromArray(
 																	[
-																		A3(
+																		A4(
 																		$author$project$Main$submitButton,
 																		$author$project$Main$allowModelSubmit(model.activeSchema),
 																		model.formValues,
+																		'Some inputs are invalid',
 																		$author$project$Main$CreateExecution(
 																			A2($author$project$Main$toExecutionCreate, selected.id, model.formValues)))
 																	]))
@@ -18439,10 +18476,11 @@ var $author$project$Main$view = function (model) {
 									]),
 								_List_fromArray(
 									[
-										A3(
+										A4(
 										$author$project$Main$submitButton,
 										A2($elm$core$Basics$composeL, $elm$core$Basics$not, $elm$core$String$isEmpty),
 										A2($elm$core$Maybe$withDefault, '', model.secretsUnsubmitted),
+										'Please enter a token',
 										$author$project$Main$TokenSubmit)
 									]))
 							])))
