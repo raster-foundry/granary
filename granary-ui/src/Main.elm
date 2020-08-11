@@ -178,10 +178,18 @@ init _ url key =
 ---- UPDATE ----
 
 
-getExecutionCreate : TaskDetail -> Maybe ExecutionCreate
-getExecutionCreate detail =
-    (Result.toMaybe << .newExecution) detail
-        |> Maybe.map (ExecutionCreate detail.task.id)
+toExecutionCreate : Uuid.Uuid -> Dict String (Result String JD.Value) -> ExecutionCreate
+toExecutionCreate taskId validatedFields =
+    let
+        goodFields =
+            Dict.toList validatedFields
+                |> List.filterMap
+                    (\( k, v ) ->
+                        Result.toMaybe v
+                            |> Maybe.map (\goodVal -> ( k, goodVal ))
+                    )
+    in
+    ExecutionCreate taskId (JE.object goodFields)
 
 
 modelUrl : Uuid.Uuid -> String
@@ -244,23 +252,17 @@ postExecution token executionCreate =
         |> B.request
 
 
-maybePostExecution : Maybe GranaryToken -> Maybe TaskDetail -> Cmd.Cmd Msg
-maybePostExecution tokenM detailM =
-    case ( tokenM, detailM ) of
-        ( Just token, Just detail ) ->
-            getExecutionCreate detail
-                |> Maybe.map (postExecution token)
-                |> Maybe.withDefault Cmd.none
-
-        _ ->
-            Cmd.none
+maybePostExecution : Maybe GranaryToken -> ExecutionCreate -> Cmd.Cmd Msg
+maybePostExecution tokenM executionCreate =
+    tokenM
+        |> Maybe.map (\token -> postExecution token executionCreate)
+        |> Maybe.withDefault Cmd.none
 
 
 type Msg
     = GotTasks (Result Http.Error (PaginatedResponse GranaryTask))
     | GotTask (Result Http.Error GranaryTask)
     | GotExecutions (Result Http.Error (PaginatedResponse GranaryExecution))
-    | NewExecution Uuid.Uuid Schema
     | Navigation Browser.UrlRequest
     | UrlChanged Url.Url
     | TokenInput String
@@ -272,6 +274,7 @@ type Msg
         , fieldName : String
         , fieldValue : Result String JD.Value
         }
+    | CreateExecution ExecutionCreate
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -341,16 +344,6 @@ update msg model =
         GotExecutions (Err _) ->
             ( model, Cmd.none )
 
-        NewExecution _ _ ->
-            let
-                baseTaskDetail =
-                    model.taskDetail
-
-                updatedTaskDetail =
-                    Maybe.map (\rec -> { rec | addingExecution = True }) baseTaskDetail
-            in
-            ( { model | taskDetail = updatedTaskDetail }, Cmd.none )
-
         TokenInput s ->
             ( { model | secretsUnsubmitted = Just s }, Cmd.none )
 
@@ -362,9 +355,9 @@ update msg model =
         CreatedExecution (Ok _) ->
             ( model
             , Nav.pushUrl model.key
-                ("/"
-                    ++ (model.taskDetail
-                            |> Maybe.map (Uuid.toString << .id << .task)
+                ("/executions?modelId="
+                    ++ (model.selectedTask
+                            |> Maybe.map (Uuid.toString << .id)
                             |> Maybe.withDefault ""
                        )
                 )
@@ -419,6 +412,9 @@ update msg model =
                     , Cmd.none
                     )
 
+        CreateExecution executionCreate ->
+            ( model, maybePostExecution model.secrets executionCreate )
+
 
 
 ---- VIEW ----
@@ -459,8 +455,8 @@ styledPrimaryText attrs s =
     el (Font.color primary :: attrs) (text s)
 
 
-submitButton : Msg -> Element Msg
-submitButton msg =
+submitButton : (a -> Bool) -> a -> Msg -> Element Msg
+submitButton predicate value msg =
     Input.button
         (Button.simple
             ++ [ Background.color accent
@@ -735,47 +731,6 @@ executionInput formValues errors task =
             schemaToForm formValues errors subSchema
 
 
-boldKvPair : String -> String -> List (Element msg)
-boldKvPair s1 s2 =
-    [ Element.el
-        [ Font.bold
-        ]
-        (text s1)
-    , Element.el [] (text s2)
-    ]
-
-
-taskDetailColumn : List (Element msg) -> Element msg
-taskDetailColumn =
-    column
-        [ height (fillPortion 2)
-        , width fill
-        , Element.alignTop
-        , padding 10
-        , spacing 10
-        ]
-
-
-granaryTaskDetailPairs : TaskDetail -> List (Element msg)
-granaryTaskDetailPairs detail =
-    [ row [ Font.bold ]
-        [ Element.el
-            [ Border.widthEach
-                { bottom = 1
-                , left = 0
-                , right = 0
-                , top = 0
-                }
-            ]
-            (text "Model Details")
-        ]
-    , row [] <| boldKvPair "Name: " detail.task.name
-    , row [] <| boldKvPair "Task ID: " (Uuid.toString detail.task.id)
-    , row [] <| boldKvPair "Job Definition: " detail.task.jobDefinition
-    , row [] <| boldKvPair "Job Queue: " detail.task.jobQueue
-    ]
-
-
 getErrField : Validation.Error -> String
 getErrField err =
     case err.jsonPointer.path of
@@ -811,27 +766,14 @@ makeErr err =
 
 view : Model -> Browser.Document Msg
 view model =
-    case ( model.secrets, model.taskDetail ) of
-        ( Just _, Just detail ) ->
-            { title = detail.task.name
-            , body =
-                [ Element.layout [] <|
-                    column [ width fill ]
-                        [ logo [ width fill ] 100
-                        , row [ height fill, width fill ]
-                            [ taskDetailColumn <| granaryTaskDetailPairs detail
-                            ]
-                        ]
-                ]
-            }
-
-        ( Just _, Nothing ) ->
+    case model.secrets of
+        Just _ ->
             { title = "Available Models"
             , body =
                 [ Element.layout [] <|
                     column [ width fill ]
                         [ logo [ width fill ] 100
-                        , row []
+                        , row [ Element.centerX ]
                             [ column
                                 [ fillPortion 1 |> width
                                 , spacing 10
@@ -853,15 +795,14 @@ view model =
                                 (Maybe.withDefault
                                     [ styledPrimaryText [] "👈 Choose a model on the left" ]
                                     (model.selectedTask
-                                        |> Maybe.map (executionInput model.formValues model.taskValidationErrors)
                                         |> Maybe.map
-                                            (\el ->
-                                                el
-                                                    ++ [ if allowModelSubmit model.activeSchema model.formValues then
-                                                            Element.el [] (text "button here")
-
-                                                         else
-                                                            Element.el [] (text "no button here")
+                                            (\selected ->
+                                                executionInput model.formValues model.taskValidationErrors selected
+                                                    ++ [ row []
+                                                            [ submitButton (allowModelSubmit model.activeSchema)
+                                                                model.formValues
+                                                                (toExecutionCreate selected.id model.formValues |> CreateExecution)
+                                                            ]
                                                        ]
                                             )
                                     )
@@ -871,7 +812,7 @@ view model =
                 ]
             }
 
-        ( Nothing, _ ) ->
+        Nothing ->
             { title = "Granary Model Dashboard"
             , body =
                 [ Element.layout [] <|
@@ -880,7 +821,11 @@ view model =
                         , row [ width fill ]
                             [ textInput [] TokenInput model.secretsUnsubmitted "Enter a token" "Token input"
                             ]
-                        , row [ width fill ] [ submitButton TokenSubmit ]
+                        , row [ width fill ]
+                            [ submitButton (not << String.isEmpty)
+                                (Maybe.withDefault "" model.secretsUnsubmitted)
+                                TokenSubmit
+                            ]
                         ]
                 ]
             }

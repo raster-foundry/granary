@@ -8208,6 +8208,77 @@ var $author$project$Main$fetchModels = function (token) {
 			token));
 };
 var $elm$browser$Browser$Navigation$load = _Browser_load;
+var $author$project$Main$CreatedExecution = function (a) {
+	return {$: 'CreatedExecution', a: a};
+};
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $danyx23$elm_uuid$Uuid$encode = A2($elm$core$Basics$composeR, $danyx23$elm_uuid$Uuid$toString, $elm$json$Json$Encode$string);
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var $author$project$Main$encodeExecutionCreate = function (executionCreate) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'taskId',
+				$danyx23$elm_uuid$Uuid$encode(executionCreate.taskId)),
+				_Utils_Tuple2('arguments', executionCreate._arguments)
+			]));
+};
+var $lukewestby$elm_http_builder$HttpBuilder$post = $lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('POST');
+var $elm$http$Http$jsonBody = function (value) {
+	return A2(
+		_Http_pair,
+		'application/json',
+		A2($elm$json$Json$Encode$encode, 0, value));
+};
+var $lukewestby$elm_http_builder$HttpBuilder$withBody = F2(
+	function (body, builder) {
+		return _Utils_update(
+			builder,
+			{body: body});
+	});
+var $lukewestby$elm_http_builder$HttpBuilder$withJsonBody = function (value) {
+	return $lukewestby$elm_http_builder$HttpBuilder$withBody(
+		$elm$http$Http$jsonBody(value));
+};
+var $author$project$Main$postExecution = F2(
+	function (token, executionCreate) {
+		return $lukewestby$elm_http_builder$HttpBuilder$request(
+			A2(
+				$lukewestby$elm_http_builder$HttpBuilder$withExpect,
+				A2($elm$http$Http$expectJson, $author$project$Main$CreatedExecution, $author$project$Main$decoderGranaryExecution),
+				A2(
+					$lukewestby$elm_http_builder$HttpBuilder$withBearerToken,
+					token,
+					A2(
+						$lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+						$author$project$Main$encodeExecutionCreate(executionCreate),
+						$lukewestby$elm_http_builder$HttpBuilder$post('/api/executions')))));
+	});
+var $author$project$Main$maybePostExecution = F2(
+	function (tokenM, executionCreate) {
+		return A2(
+			$elm$core$Maybe$withDefault,
+			$elm$core$Platform$Cmd$none,
+			A2(
+				$elm$core$Maybe$map,
+				function (token) {
+					return A2($author$project$Main$postExecution, token, executionCreate);
+				},
+				tokenM));
+	});
 var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
 var $elm$core$List$intersperse = F2(
 	function (sep, xs) {
@@ -8602,19 +8673,6 @@ var $1602$json_schema$Json$Schema$Helpers$collectIds = F2(
 			return _Utils_Tuple2(pool, '');
 		}
 	});
-var $elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v0, obj) {
-					var k = _v0.a;
-					var v = _v0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
 var $1602$json_schema$Json$Schema$Definitions$blankSubSchema = {
 	additionalItems: $elm$core$Maybe$Nothing,
 	additionalProperties: $elm$core$Maybe$Nothing,
@@ -9021,7 +9079,6 @@ var $1602$json_schema$Ref$resolveReference = F4(
 			});
 		return A4(resolveRecursively, rootNs, 10, schema, ref);
 	});
-var $elm$json$Json$Encode$string = _Json_wrap;
 var $1602$json_schema$Json$Schema$Validation$validate = F5(
 	function (validationOptions, pool, value, rootSchema, schema) {
 		var whenSubschema = F5(
@@ -10483,21 +10540,6 @@ var $author$project$Main$update = F2(
 				} else {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
-			case 'NewExecution':
-				var baseTaskDetail = model.taskDetail;
-				var updatedTaskDetail = A2(
-					$elm$core$Maybe$map,
-					function (rec) {
-						return _Utils_update(
-							rec,
-							{addingExecution: true});
-					},
-					baseTaskDetail);
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{taskDetail: updatedTaskDetail}),
-					$elm$core$Platform$Cmd$none);
 			case 'TokenInput':
 				var s = msg.a;
 				return _Utils_Tuple2(
@@ -10520,29 +10562,22 @@ var $author$project$Main$update = F2(
 						A2(
 							$elm$browser$Browser$Navigation$pushUrl,
 							model.key,
-							'/' + A2(
+							'/executions?modelId=' + A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2(
 									$elm$core$Maybe$map,
 									A2(
 										$elm$core$Basics$composeL,
-										A2(
-											$elm$core$Basics$composeL,
-											$danyx23$elm_uuid$Uuid$toString,
-											function ($) {
-												return $.id;
-											}),
+										$danyx23$elm_uuid$Uuid$toString,
 										function ($) {
-											return $.task;
+											return $.id;
 										}),
-									model.taskDetail))));
+									model.selectedTask))));
 				} else {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
-			case 'NoOp':
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-			default:
+			case 'ValidateWith':
 				var validateOpts = msg.a;
 				var validation = function () {
 					var _v4 = validateOpts.fieldValue;
@@ -10598,8 +10633,16 @@ var $author$project$Main$update = F2(
 							}),
 						$elm$core$Platform$Cmd$none);
 				}
+			default:
+				var executionCreate = msg.a;
+				return _Utils_Tuple2(
+					model,
+					A2($author$project$Main$maybePostExecution, model.secrets, executionCreate));
 		}
 	});
+var $author$project$Main$CreateExecution = function (a) {
+	return {$: 'CreateExecution', a: a};
+};
 var $author$project$Main$TokenInput = function (a) {
 	return {$: 'TokenInput', a: a};
 };
@@ -17651,91 +17694,6 @@ var $author$project$Main$executionInput = F3(
 		}
 	});
 var $mdgriffith$elm_ui$Element$fillPortion = $mdgriffith$elm_ui$Internal$Model$Fill;
-var $mdgriffith$elm_ui$Internal$Flag$fontWeight = $mdgriffith$elm_ui$Internal$Flag$flag(13);
-var $mdgriffith$elm_ui$Element$Font$bold = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$fontWeight, $mdgriffith$elm_ui$Internal$Style$classes.bold);
-var $author$project$Main$boldKvPair = F2(
-	function (s1, s2) {
-		return _List_fromArray(
-			[
-				A2(
-				$mdgriffith$elm_ui$Element$el,
-				_List_fromArray(
-					[$mdgriffith$elm_ui$Element$Font$bold]),
-				$mdgriffith$elm_ui$Element$text(s1)),
-				A2(
-				$mdgriffith$elm_ui$Element$el,
-				_List_Nil,
-				$mdgriffith$elm_ui$Element$text(s2))
-			]);
-	});
-var $mdgriffith$elm_ui$Element$Border$widthXY = F2(
-	function (x, y) {
-		return A2(
-			$mdgriffith$elm_ui$Internal$Model$StyleClass,
-			$mdgriffith$elm_ui$Internal$Flag$borderWidth,
-			A5(
-				$mdgriffith$elm_ui$Internal$Model$BorderWidth,
-				'b-' + ($elm$core$String$fromInt(x) + ('-' + $elm$core$String$fromInt(y))),
-				y,
-				x,
-				y,
-				x));
-	});
-var $mdgriffith$elm_ui$Element$Border$widthEach = function (_v0) {
-	var bottom = _v0.bottom;
-	var top = _v0.top;
-	var left = _v0.left;
-	var right = _v0.right;
-	return (_Utils_eq(top, bottom) && _Utils_eq(left, right)) ? (_Utils_eq(top, right) ? $mdgriffith$elm_ui$Element$Border$width(top) : A2($mdgriffith$elm_ui$Element$Border$widthXY, left, top)) : A2(
-		$mdgriffith$elm_ui$Internal$Model$StyleClass,
-		$mdgriffith$elm_ui$Internal$Flag$borderWidth,
-		A5(
-			$mdgriffith$elm_ui$Internal$Model$BorderWidth,
-			'b-' + ($elm$core$String$fromInt(top) + ('-' + ($elm$core$String$fromInt(right) + ('-' + ($elm$core$String$fromInt(bottom) + ('-' + $elm$core$String$fromInt(left))))))),
-			top,
-			right,
-			bottom,
-			left));
-};
-var $author$project$Main$granaryTaskDetailPairs = function (detail) {
-	return _List_fromArray(
-		[
-			A2(
-			$mdgriffith$elm_ui$Element$row,
-			_List_fromArray(
-				[$mdgriffith$elm_ui$Element$Font$bold]),
-			_List_fromArray(
-				[
-					A2(
-					$mdgriffith$elm_ui$Element$el,
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$Border$widthEach(
-							{bottom: 1, left: 0, right: 0, top: 0})
-						]),
-					$mdgriffith$elm_ui$Element$text('Model Details'))
-				])),
-			A2(
-			$mdgriffith$elm_ui$Element$row,
-			_List_Nil,
-			A2($author$project$Main$boldKvPair, 'Name: ', detail.task.name)),
-			A2(
-			$mdgriffith$elm_ui$Element$row,
-			_List_Nil,
-			A2(
-				$author$project$Main$boldKvPair,
-				'Task ID: ',
-				$danyx23$elm_uuid$Uuid$toString(detail.task.id))),
-			A2(
-			$mdgriffith$elm_ui$Element$row,
-			_List_Nil,
-			A2($author$project$Main$boldKvPair, 'Job Definition: ', detail.task.jobDefinition)),
-			A2(
-			$mdgriffith$elm_ui$Element$row,
-			_List_Nil,
-			A2($author$project$Main$boldKvPair, 'Job Queue: ', detail.task.jobQueue))
-		]);
-};
 var $mdgriffith$elm_ui$Internal$Model$OnlyDynamic = F2(
 	function (a, b) {
 		return {$: 'OnlyDynamic', a: a, b: b};
@@ -18275,22 +18233,23 @@ var $Orasund$elm_ui_framework$Framework$Button$simple = _Utils_ap(
 					])),
 				A2($mdgriffith$elm_ui$Element$paddingXY, 16, 12)
 			])));
-var $author$project$Main$submitButton = function (msg) {
-	return A2(
-		$mdgriffith$elm_ui$Element$Input$button,
-		_Utils_ap(
-			$Orasund$elm_ui_framework$Framework$Button$simple,
-			_List_fromArray(
-				[
-					$mdgriffith$elm_ui$Element$Background$color($author$project$Main$accent),
-					$mdgriffith$elm_ui$Element$centerX,
-					$mdgriffith$elm_ui$Element$Border$color($author$project$Main$primary)
-				])),
-		{
-			label: A2($author$project$Main$styledPrimaryText, _List_Nil, 'Submit'),
-			onPress: $elm$core$Maybe$Just(msg)
-		});
-};
+var $author$project$Main$submitButton = F3(
+	function (predicate, value, msg) {
+		return A2(
+			$mdgriffith$elm_ui$Element$Input$button,
+			_Utils_ap(
+				$Orasund$elm_ui_framework$Framework$Button$simple,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$Background$color($author$project$Main$accent),
+						$mdgriffith$elm_ui$Element$centerX,
+						$mdgriffith$elm_ui$Element$Border$color($author$project$Main$primary)
+					])),
+			{
+				label: A2($author$project$Main$styledPrimaryText, _List_Nil, 'Submit'),
+				onPress: $elm$core$Maybe$Just(msg)
+			});
+	});
 var $author$project$Main$TaskSelect = function (a) {
 	return {$: 'TaskSelect', a: a};
 };
@@ -18317,150 +18276,124 @@ var $author$project$Main$taskCard = F2(
 					})
 				]));
 	});
-var $author$project$Main$taskDetailColumn = $mdgriffith$elm_ui$Element$column(
-	_List_fromArray(
-		[
-			$mdgriffith$elm_ui$Element$height(
-			$mdgriffith$elm_ui$Element$fillPortion(2)),
-			$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
-			$mdgriffith$elm_ui$Element$alignTop,
-			$mdgriffith$elm_ui$Element$padding(10),
-			$mdgriffith$elm_ui$Element$spacing(10)
-		]));
+var $author$project$Main$ExecutionCreate = F2(
+	function (taskId, _arguments) {
+		return {_arguments: _arguments, taskId: taskId};
+	});
+var $author$project$Main$toExecutionCreate = F2(
+	function (taskId, validatedFields) {
+		var goodFields = A2(
+			$elm$core$List$filterMap,
+			function (_v0) {
+				var k = _v0.a;
+				var v = _v0.b;
+				return A2(
+					$elm$core$Maybe$map,
+					function (goodVal) {
+						return _Utils_Tuple2(k, goodVal);
+					},
+					$elm$core$Result$toMaybe(v));
+			},
+			$elm$core$Dict$toList(validatedFields));
+		return A2(
+			$author$project$Main$ExecutionCreate,
+			taskId,
+			$elm$json$Json$Encode$object(goodFields));
+	});
 var $author$project$Main$view = function (model) {
-	var _v0 = _Utils_Tuple2(model.secrets, model.taskDetail);
-	if (_v0.a.$ === 'Just') {
-		if (_v0.b.$ === 'Just') {
-			var detail = _v0.b.a;
-			return {
-				body: _List_fromArray(
-					[
-						A2(
-						$mdgriffith$elm_ui$Element$layout,
-						_List_Nil,
-						A2(
-							$mdgriffith$elm_ui$Element$column,
-							_List_fromArray(
-								[
-									$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$author$project$Main$logo,
-									_List_fromArray(
-										[
-											$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-										]),
-									100),
-									A2(
-									$mdgriffith$elm_ui$Element$row,
-									_List_fromArray(
-										[
-											$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
-											$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-										]),
-									_List_fromArray(
-										[
-											$author$project$Main$taskDetailColumn(
-											$author$project$Main$granaryTaskDetailPairs(detail))
-										]))
-								])))
-					]),
-				title: detail.task.name
-			};
-		} else {
-			var _v1 = _v0.b;
-			return {
-				body: _List_fromArray(
-					[
-						A2(
-						$mdgriffith$elm_ui$Element$layout,
-						_List_Nil,
-						A2(
-							$mdgriffith$elm_ui$Element$column,
-							_List_fromArray(
-								[
-									$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$author$project$Main$logo,
-									_List_fromArray(
-										[
-											$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-										]),
-									100),
-									A2(
-									$mdgriffith$elm_ui$Element$row,
-									_List_Nil,
-									_List_fromArray(
-										[
-											A2(
-											$mdgriffith$elm_ui$Element$column,
-											_List_fromArray(
-												[
-													$mdgriffith$elm_ui$Element$width(
-													$mdgriffith$elm_ui$Element$fillPortion(1)),
-													$mdgriffith$elm_ui$Element$spacing(10),
-													$mdgriffith$elm_ui$Element$padding(10),
-													$mdgriffith$elm_ui$Element$alignTop
-												]),
-											A2(
-												$elm$core$List$map,
-												$author$project$Main$taskCard(
-													A2(
-														$elm$core$Maybe$map,
-														function ($) {
-															return $.id;
-														},
-														model.selectedTask)),
-												model.granaryTasks)),
-											A2(
-											$mdgriffith$elm_ui$Element$column,
-											_List_fromArray(
-												[
-													$mdgriffith$elm_ui$Element$width(
-													$mdgriffith$elm_ui$Element$fillPortion(3)),
-													$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
-													$mdgriffith$elm_ui$Element$spacing(10),
-													$mdgriffith$elm_ui$Element$padding(10)
-												]),
-											A2(
-												$elm$core$Maybe$withDefault,
-												_List_fromArray(
-													[
-														A2($author$project$Main$styledPrimaryText, _List_Nil, '👈 Choose a model on the left')
-													]),
+	var _v0 = model.secrets;
+	if (_v0.$ === 'Just') {
+		return {
+			body: _List_fromArray(
+				[
+					A2(
+					$mdgriffith$elm_ui$Element$layout,
+					_List_Nil,
+					A2(
+						$mdgriffith$elm_ui$Element$column,
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$author$project$Main$logo,
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
+									]),
+								100),
+								A2(
+								$mdgriffith$elm_ui$Element$row,
+								_List_fromArray(
+									[$mdgriffith$elm_ui$Element$centerX]),
+								_List_fromArray(
+									[
+										A2(
+										$mdgriffith$elm_ui$Element$column,
+										_List_fromArray(
+											[
+												$mdgriffith$elm_ui$Element$width(
+												$mdgriffith$elm_ui$Element$fillPortion(1)),
+												$mdgriffith$elm_ui$Element$spacing(10),
+												$mdgriffith$elm_ui$Element$padding(10),
+												$mdgriffith$elm_ui$Element$alignTop
+											]),
+										A2(
+											$elm$core$List$map,
+											$author$project$Main$taskCard(
 												A2(
 													$elm$core$Maybe$map,
-													function (el) {
-														return _Utils_ap(
-															el,
-															_List_fromArray(
-																[
-																	A2($author$project$Main$allowModelSubmit, model.activeSchema, model.formValues) ? A2(
-																	$mdgriffith$elm_ui$Element$el,
-																	_List_Nil,
-																	$mdgriffith$elm_ui$Element$text('button here')) : A2(
-																	$mdgriffith$elm_ui$Element$el,
-																	_List_Nil,
-																	$mdgriffith$elm_ui$Element$text('no button here'))
-																]));
+													function ($) {
+														return $.id;
 													},
-													A2(
-														$elm$core$Maybe$map,
-														A2($author$project$Main$executionInput, model.formValues, model.taskValidationErrors),
-														model.selectedTask))))
-										]))
-								])))
-					]),
-				title: 'Available Models'
-			};
-		}
+													model.selectedTask)),
+											model.granaryTasks)),
+										A2(
+										$mdgriffith$elm_ui$Element$column,
+										_List_fromArray(
+											[
+												$mdgriffith$elm_ui$Element$width(
+												$mdgriffith$elm_ui$Element$fillPortion(3)),
+												$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+												$mdgriffith$elm_ui$Element$spacing(10),
+												$mdgriffith$elm_ui$Element$padding(10)
+											]),
+										A2(
+											$elm$core$Maybe$withDefault,
+											_List_fromArray(
+												[
+													A2($author$project$Main$styledPrimaryText, _List_Nil, '👈 Choose a model on the left')
+												]),
+											A2(
+												$elm$core$Maybe$map,
+												function (selected) {
+													return _Utils_ap(
+														A3($author$project$Main$executionInput, model.formValues, model.taskValidationErrors, selected),
+														_List_fromArray(
+															[
+																A2(
+																$mdgriffith$elm_ui$Element$row,
+																_List_Nil,
+																_List_fromArray(
+																	[
+																		A3(
+																		$author$project$Main$submitButton,
+																		$author$project$Main$allowModelSubmit(model.activeSchema),
+																		model.formValues,
+																		$author$project$Main$CreateExecution(
+																			A2($author$project$Main$toExecutionCreate, selected.id, model.formValues)))
+																	]))
+															]));
+												},
+												model.selectedTask)))
+									]))
+							])))
+				]),
+			title: 'Available Models'
+		};
 	} else {
-		var _v2 = _v0.a;
 		return {
 			body: _List_fromArray(
 				[
@@ -18506,7 +18439,11 @@ var $author$project$Main$view = function (model) {
 									]),
 								_List_fromArray(
 									[
-										$author$project$Main$submitButton($author$project$Main$TokenSubmit)
+										A3(
+										$author$project$Main$submitButton,
+										A2($elm$core$Basics$composeL, $elm$core$Basics$not, $elm$core$String$isEmpty),
+										A2($elm$core$Maybe$withDefault, '', model.secretsUnsubmitted),
+										$author$project$Main$TokenSubmit)
 									]))
 							])))
 				]),
