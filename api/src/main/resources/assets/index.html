@@ -7254,8 +7254,6 @@ var $lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl = F2(
 		};
 	});
 var $lukewestby$elm_http_builder$HttpBuilder$get = $lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('GET');
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$PaginatedResponse = F3(
 	function (page, limit, results) {
 		return {limit: limit, page: page, results: results};
@@ -7473,26 +7471,18 @@ var $lukewestby$elm_http_builder$HttpBuilder$withExpect = F2(
 	});
 var $author$project$Main$fetchExecutions = F2(
 	function (token, taskId) {
-		return A2(
-			$elm$core$Maybe$withDefault,
-			$elm$core$Platform$Cmd$none,
+		return $lukewestby$elm_http_builder$HttpBuilder$request(
 			A2(
-				$elm$core$Maybe$map,
-				function (t) {
-					return $lukewestby$elm_http_builder$HttpBuilder$request(
-						A2(
-							$lukewestby$elm_http_builder$HttpBuilder$withBearerToken,
-							t,
-							A2(
-								$lukewestby$elm_http_builder$HttpBuilder$withExpect,
-								A2(
-									$elm$http$Http$expectJson,
-									$author$project$Main$GotExecutions(taskId),
-									$author$project$Main$paginatedDecoder($author$project$Main$decoderGranaryExecution)),
-								$lukewestby$elm_http_builder$HttpBuilder$get(
-									$author$project$Main$executionsUrl(taskId)))));
-				},
-				token));
+				$lukewestby$elm_http_builder$HttpBuilder$withBearerToken,
+				token,
+				A2(
+					$lukewestby$elm_http_builder$HttpBuilder$withExpect,
+					A2(
+						$elm$http$Http$expectJson,
+						$author$project$Main$GotExecutions(taskId),
+						$author$project$Main$paginatedDecoder($author$project$Main$decoderGranaryExecution)),
+					$lukewestby$elm_http_builder$HttpBuilder$get(
+						$author$project$Main$executionsUrl(taskId)))));
 	});
 var $author$project$Main$GotTasks = function (a) {
 	return {$: 'GotTasks', a: a};
@@ -8234,28 +8224,21 @@ var $author$project$Main$decoderGranaryModel = A6(
 	A2($elm$json$Json$Decode$field, 'jobDefinition', $elm$json$Json$Decode$string),
 	A2($elm$json$Json$Decode$field, 'jobQueue', $elm$json$Json$Decode$string));
 var $author$project$Main$fetchTasks = function (token) {
-	return A2(
-		$elm$core$Maybe$withDefault,
-		$elm$core$Platform$Cmd$none,
+	return $lukewestby$elm_http_builder$HttpBuilder$request(
 		A2(
-			$elm$core$Maybe$map,
-			function (t) {
-				return $lukewestby$elm_http_builder$HttpBuilder$request(
-					A2(
-						$lukewestby$elm_http_builder$HttpBuilder$withBearerToken,
-						t,
-						A2(
-							$lukewestby$elm_http_builder$HttpBuilder$withExpect,
-							A2(
-								$elm$http$Http$expectJson,
-								$author$project$Main$GotTasks,
-								$author$project$Main$paginatedDecoder($author$project$Main$decoderGranaryModel)),
-							$lukewestby$elm_http_builder$HttpBuilder$get('/api/tasks'))));
-			},
-			token));
+			$lukewestby$elm_http_builder$HttpBuilder$withBearerToken,
+			token,
+			A2(
+				$lukewestby$elm_http_builder$HttpBuilder$withExpect,
+				A2(
+					$elm$http$Http$expectJson,
+					$author$project$Main$GotTasks,
+					$author$project$Main$paginatedDecoder($author$project$Main$decoderGranaryModel)),
+				$lukewestby$elm_http_builder$HttpBuilder$get('/api/tasks'))));
 };
 var $elm$browser$Browser$Navigation$load = _Browser_load;
-var $elm$core$Debug$log = _Debug_log;
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$CreatedExecution = function (a) {
 	return {$: 'CreatedExecution', a: a};
 };
@@ -8608,40 +8591,6 @@ var $elm$url$Url$Parser$s = function (str) {
 			}
 		});
 };
-var $elm$url$Url$Parser$custom = F2(
-	function (tipe, stringToSomething) {
-		return $elm$url$Url$Parser$Parser(
-			function (_v0) {
-				var visited = _v0.visited;
-				var unvisited = _v0.unvisited;
-				var params = _v0.params;
-				var frag = _v0.frag;
-				var value = _v0.value;
-				if (!unvisited.b) {
-					return _List_Nil;
-				} else {
-					var next = unvisited.a;
-					var rest = unvisited.b;
-					var _v2 = stringToSomething(next);
-					if (_v2.$ === 'Just') {
-						var nextValue = _v2.a;
-						return _List_fromArray(
-							[
-								A5(
-								$elm$url$Url$Parser$State,
-								A2($elm$core$List$cons, next, visited),
-								rest,
-								params,
-								frag,
-								value(nextValue))
-							]);
-					} else {
-						return _List_Nil;
-					}
-				}
-			});
-	});
-var $elm$url$Url$Parser$string = A2($elm$url$Url$Parser$custom, 'STRING', $elm$core$Maybe$Just);
 var $author$project$Main$routeParser = function () {
 	var uuidParam = function (strings) {
 		return A2(
@@ -8662,11 +8611,7 @@ var $author$project$Main$routeParser = function () {
 				A2(
 				$elm$url$Url$Parser$map,
 				$author$project$Main$TaskList,
-				$elm$url$Url$Parser$s('tasks')),
-				A2(
-				$elm$url$Url$Parser$map,
-				$elm$core$Basics$always($author$project$Main$Login),
-				$elm$url$Url$Parser$string)
+				$elm$url$Url$Parser$s('tasks'))
 			]));
 }();
 var $elm$core$List$intersperse = F2(
@@ -10755,255 +10700,200 @@ var $1602$json_schema$Json$Schema$validateValue = F3(
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
-		var _v0 = _Utils_Tuple2(msg, model.secrets);
-		_v0$0:
-		while (true) {
-			switch (_v0.a.$) {
-				case 'UrlChanged':
-					if (_v0.b.$ === 'Nothing') {
-						break _v0$0;
-					} else {
-						var url = _v0.a.a;
-						var routeResult = A2(
-							$elm$core$Debug$log,
-							'Parse result',
-							A2($elm$url$Url$Parser$parse, $author$project$Main$routeParser, url));
-						var cmdM = function () {
-							_v3$2:
-							while (true) {
-								if (routeResult.$ === 'Just') {
-									switch (routeResult.a.$) {
-										case 'TaskList':
-											var _v4 = routeResult.a;
-											return $elm$core$Maybe$Just(
-												$author$project$Main$fetchTasks(model.secrets));
-										case 'ExecutionList':
-											var taskId = routeResult.a.a;
-											return $elm$core$Maybe$Just(
-												A2($author$project$Main$fetchExecutions, model.secrets, taskId));
-										default:
-											break _v3$2;
-									}
-								} else {
-									break _v3$2;
+		switch (msg.$) {
+			case 'UrlChanged':
+				var url = msg.a;
+				var routeResult = A2($elm$url$Url$Parser$parse, $author$project$Main$routeParser, url);
+				var cmdM = function () {
+					var _v2 = _Utils_Tuple2(routeResult, model.secrets);
+					_v2$2:
+					while (true) {
+						if (_v2.b.$ === 'Just') {
+							if (_v2.a.$ === 'Just') {
+								switch (_v2.a.a.$) {
+									case 'TaskList':
+										var _v3 = _v2.a.a;
+										var token = _v2.b.a;
+										return $elm$core$Maybe$Just(
+											$author$project$Main$fetchTasks(token));
+									case 'ExecutionList':
+										var taskId = _v2.a.a.a;
+										var token = _v2.b.a;
+										return $elm$core$Maybe$Just(
+											A2($author$project$Main$fetchExecutions, token, taskId));
+									default:
+										break _v2$2;
 								}
-							}
-							return $elm$core$Maybe$Nothing;
-						}();
-						if (cmdM.$ === 'Nothing') {
-							return _Utils_Tuple2(
-								model,
-								$author$project$Main$fetchTasks(model.secrets));
-						} else {
-							var cmd = cmdM.a;
-							return _Utils_Tuple2(model, cmd);
-						}
-					}
-				case 'Navigation':
-					if (_v0.b.$ === 'Nothing') {
-						break _v0$0;
-					} else {
-						var urlRequest = _v0.a.a;
-						if (urlRequest.$ === 'Internal') {
-							var url = urlRequest.a;
-							return _Utils_Tuple2(
-								model,
-								A2(
-									$elm$browser$Browser$Navigation$pushUrl,
-									model.key,
-									$elm$url$Url$toString(url)));
-						} else {
-							var href = urlRequest.a;
-							return _Utils_Tuple2(
-								model,
-								$elm$browser$Browser$Navigation$load(href));
-						}
-					}
-				case 'TaskSelect':
-					if (_v0.b.$ === 'Nothing') {
-						break _v0$0;
-					} else {
-						var task = _v0.a.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									activeSchema: $elm$core$Maybe$Just(task.validator),
-									formValues: $elm$core$Dict$empty,
-									selectedTask: $elm$core$Maybe$Just(task),
-									taskValidationErrors: $elm$core$Dict$empty
-								}),
-							$elm$core$Platform$Cmd$none);
-					}
-				case 'GotTasks':
-					if (_v0.a.a.$ === 'Ok') {
-						if (_v0.b.$ === 'Nothing') {
-							break _v0$0;
-						} else {
-							var tasks = _v0.a.a.a;
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{granaryTasks: tasks.results, route: $author$project$Main$TaskList}),
-								$elm$core$Platform$Cmd$none);
-						}
-					} else {
-						if (_v0.b.$ === 'Nothing') {
-							break _v0$0;
-						} else {
-							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-						}
-					}
-				case 'GotExecutions':
-					if (_v0.a.b.$ === 'Ok') {
-						if (_v0.b.$ === 'Nothing') {
-							break _v0$0;
-						} else {
-							var _v6 = _v0.a;
-							var taskId = _v6.a;
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{
-										route: $author$project$Main$ExecutionList(taskId)
-									}),
-								$elm$core$Platform$Cmd$none);
-						}
-					} else {
-						if (_v0.b.$ === 'Nothing') {
-							break _v0$0;
-						} else {
-							var _v7 = _v0.a;
-							return _Utils_Tuple2(
-								model,
-								A2($elm$browser$Browser$Navigation$pushUrl, model.key, '/'));
-						}
-					}
-				case 'TokenInput':
-					if (_v0.b.$ === 'Nothing') {
-						break _v0$0;
-					} else {
-						var s = _v0.a.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									secretsUnsubmitted: $elm$core$Maybe$Just(s)
-								}),
-							$elm$core$Platform$Cmd$none);
-					}
-				case 'TokenSubmit':
-					if (_v0.b.$ === 'Nothing') {
-						break _v0$0;
-					} else {
-						var _v8 = _v0.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{secrets: model.secretsUnsubmitted, secretsUnsubmitted: $elm$core$Maybe$Nothing}),
-							A2($elm$browser$Browser$Navigation$pushUrl, model.key, '/tasks'));
-					}
-				case 'CreatedExecution':
-					if (_v0.b.$ === 'Nothing') {
-						break _v0$0;
-					} else {
-						if (_v0.a.a.$ === 'Ok') {
-							return _Utils_Tuple2(
-								model,
-								A2(
-									$elm$browser$Browser$Navigation$pushUrl,
-									model.key,
-									'/executions?taskId=' + A2(
-										$elm$core$Maybe$withDefault,
-										'',
-										A2(
-											$elm$core$Maybe$map,
-											A2(
-												$elm$core$Basics$composeL,
-												$danyx23$elm_uuid$Uuid$toString,
-												function ($) {
-													return $.id;
-												}),
-											model.selectedTask))));
-						} else {
-							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-						}
-					}
-				case 'ValidateWith':
-					if (_v0.b.$ === 'Nothing') {
-						break _v0$0;
-					} else {
-						var validateOpts = _v0.a.a;
-						var validation = function () {
-							var _v10 = validateOpts.fieldValue;
-							if (_v10.$ === 'Ok') {
-								var jsonValue = _v10.a;
-								return A3(
-									$1602$json_schema$Json$Schema$validateValue,
-									{applyDefaults: true},
-									jsonValue,
-									$1602$json_schema$Json$Schema$Definitions$ObjectSchema(validateOpts.schema));
 							} else {
-								return $elm$core$Result$Err(
-									_List_fromArray(
-										[
-											{
-											details: $1602$json_schema$Json$Schema$Validation$InvalidType(
-												'Expected ' + ($author$project$Main$showType(validateOpts.schema.type_) + ' 😟')),
-											jsonPointer: A2(
-												$1602$json_schema$Json$Schema$Validation$JsonPointer,
-												'',
-												_List_fromArray(
-													[validateOpts.fieldName]))
-										}
-										]));
+								break _v2$2;
 							}
-						}();
-						if (validation.$ === 'Ok') {
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{
-										formValues: A2(
-											$elm$core$Dict$union,
-											A2($elm$core$Dict$singleton, validateOpts.fieldName, validateOpts.fieldValue),
-											model.formValues),
-										taskValidationErrors: A2($elm$core$Dict$remove, validateOpts.fieldName, model.taskValidationErrors)
-									}),
-								$elm$core$Platform$Cmd$none);
 						} else {
-							var errs = validation.a;
-							return _Utils_Tuple2(
-								_Utils_update(
-									model,
-									{
-										formValues: A2(
-											$elm$core$Dict$union,
-											A2($elm$core$Dict$singleton, validateOpts.fieldName, validateOpts.fieldValue),
-											model.formValues),
-										taskValidationErrors: A2(
-											$elm$core$Dict$union,
-											A2($elm$core$Dict$singleton, validateOpts.fieldName, errs),
-											model.taskValidationErrors)
-									}),
-								$elm$core$Platform$Cmd$none);
+							var _v4 = _v2.b;
+							return $elm$core$Maybe$Nothing;
 						}
 					}
-				default:
-					if (_v0.b.$ === 'Nothing') {
-						break _v0$0;
-					} else {
-						var executionCreate = _v0.a.a;
-						return _Utils_Tuple2(
+					return $elm$core$Maybe$Just(
+						A2($elm$browser$Browser$Navigation$pushUrl, model.key, '/tasks'));
+				}();
+				if (cmdM.$ === 'Nothing') {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				} else {
+					var cmd = cmdM.a;
+					return _Utils_Tuple2(model, cmd);
+				}
+			case 'Navigation':
+				var urlRequest = msg.a;
+				if (urlRequest.$ === 'Internal') {
+					var url = urlRequest.a;
+					return _Utils_Tuple2(
+						model,
+						A2(
+							$elm$browser$Browser$Navigation$pushUrl,
+							model.key,
+							$elm$url$Url$toString(url)));
+				} else {
+					var href = urlRequest.a;
+					return _Utils_Tuple2(
+						model,
+						$elm$browser$Browser$Navigation$load(href));
+				}
+			case 'TaskSelect':
+				var task = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							activeSchema: $elm$core$Maybe$Just(task.validator),
+							formValues: $elm$core$Dict$empty,
+							selectedTask: $elm$core$Maybe$Just(task),
+							taskValidationErrors: $elm$core$Dict$empty
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'GotTasks':
+				if (msg.a.$ === 'Ok') {
+					var tasks = msg.a.a;
+					return _Utils_Tuple2(
+						_Utils_update(
 							model,
-							A2($author$project$Main$maybePostExecution, model.secrets, executionCreate));
+							{granaryTasks: tasks.results, route: $author$project$Main$TaskList}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			case 'GotExecutions':
+				if (msg.b.$ === 'Ok') {
+					var taskId = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								route: $author$project$Main$ExecutionList(taskId)
+							}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					return _Utils_Tuple2(
+						model,
+						A2($elm$browser$Browser$Navigation$pushUrl, model.key, '/'));
+				}
+			case 'TokenInput':
+				var s = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							secretsUnsubmitted: $elm$core$Maybe$Just(s)
+						}),
+					$elm$core$Platform$Cmd$none);
+			case 'TokenSubmit':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{secrets: model.secretsUnsubmitted, secretsUnsubmitted: $elm$core$Maybe$Nothing}),
+					A2($elm$browser$Browser$Navigation$pushUrl, model.key, '/tasks'));
+			case 'CreatedExecution':
+				if (msg.a.$ === 'Ok') {
+					return _Utils_Tuple2(
+						model,
+						A2(
+							$elm$browser$Browser$Navigation$pushUrl,
+							model.key,
+							'/executions?taskId=' + A2(
+								$elm$core$Maybe$withDefault,
+								'',
+								A2(
+									$elm$core$Maybe$map,
+									A2(
+										$elm$core$Basics$composeL,
+										$danyx23$elm_uuid$Uuid$toString,
+										function ($) {
+											return $.id;
+										}),
+									model.selectedTask))));
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+			case 'ValidateWith':
+				var validateOpts = msg.a;
+				var validation = function () {
+					var _v7 = validateOpts.fieldValue;
+					if (_v7.$ === 'Ok') {
+						var jsonValue = _v7.a;
+						return A3(
+							$1602$json_schema$Json$Schema$validateValue,
+							{applyDefaults: true},
+							jsonValue,
+							$1602$json_schema$Json$Schema$Definitions$ObjectSchema(validateOpts.schema));
+					} else {
+						return $elm$core$Result$Err(
+							_List_fromArray(
+								[
+									{
+									details: $1602$json_schema$Json$Schema$Validation$InvalidType(
+										'Expected ' + ($author$project$Main$showType(validateOpts.schema.type_) + ' 😟')),
+									jsonPointer: A2(
+										$1602$json_schema$Json$Schema$Validation$JsonPointer,
+										'',
+										_List_fromArray(
+											[validateOpts.fieldName]))
+								}
+								]));
 					}
-			}
+				}();
+				if (validation.$ === 'Ok') {
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								formValues: A2(
+									$elm$core$Dict$union,
+									A2($elm$core$Dict$singleton, validateOpts.fieldName, validateOpts.fieldValue),
+									model.formValues),
+								taskValidationErrors: A2($elm$core$Dict$remove, validateOpts.fieldName, model.taskValidationErrors)
+							}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					var errs = validation.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								formValues: A2(
+									$elm$core$Dict$union,
+									A2($elm$core$Dict$singleton, validateOpts.fieldName, validateOpts.fieldValue),
+									model.formValues),
+								taskValidationErrors: A2(
+									$elm$core$Dict$union,
+									A2($elm$core$Dict$singleton, validateOpts.fieldName, errs),
+									model.taskValidationErrors)
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
+			default:
+				var executionCreate = msg.a;
+				return _Utils_Tuple2(
+					model,
+					A2($author$project$Main$maybePostExecution, model.secrets, executionCreate));
 		}
-		var _v1 = _v0.b;
-		return _Utils_Tuple2(
-			model,
-			A2($elm$browser$Browser$Navigation$pushUrl, model.key, '/'));
 	});
 var $author$project$Main$CreateExecution = function (a) {
 	return {$: 'CreateExecution', a: a};
