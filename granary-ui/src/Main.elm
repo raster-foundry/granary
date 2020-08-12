@@ -30,11 +30,18 @@ import Json.Decode as JD
 import Json.Decode.Extra as JDE
 import Json.Encode as JE
 import Json.Schema as Schema
-import Json.Schema.Definitions as Schema exposing (Schema(..), SingleType(..), Type(..))
+import Json.Schema.Definitions as Schema
+    exposing
+        ( Schema(..)
+        , SingleType(..)
+        , Type(..)
+        )
 import Json.Schema.Validation as Validation
 import Result
 import Time
 import Url
+import Url.Parser as Parser exposing ((<?>))
+import Url.Parser.Query as Query
 import Uuid as Uuid
 
 
@@ -45,15 +52,6 @@ type alias PaginatedResponse a =
     }
 
 
-type alias TaskDetail =
-    { executions : List GranaryExecution
-    , task : GranaryTask
-    , addingExecution : Bool
-    , newExecution : Result (List Validation.Error) JD.Value
-    , newExecutionRaw : String
-    }
-
-
 type alias GranaryToken =
     String
 
@@ -61,12 +59,12 @@ type alias GranaryToken =
 type alias Model =
     { url : Url.Url
     , key : Nav.Key
+    , route : Route
     , granaryTasks : List GranaryTask
     , activeSchema : Maybe Schema
     , taskValidationErrors : Dict String (List Validation.Error)
     , formValues : Dict String (Result String JD.Value)
     , selectedTask : Maybe GranaryTask
-    , taskDetail : Maybe TaskDetail
     , secrets : Maybe GranaryToken
     , secretsUnsubmitted : Maybe GranaryToken
     }
@@ -157,20 +155,39 @@ paginatedDecoder ofDecoder =
         (JD.field "results" <| JD.list ofDecoder)
 
 
+type Route
+    = Login
+    | TaskList
+    | ExecutionList (Maybe Uuid.Uuid)
+
+
+routeParser : Parser.Parser (Route -> a) a
+routeParser =
+    let
+        uuidParam strings =
+            List.head strings |> Maybe.andThen Uuid.fromString
+    in
+    Parser.oneOf
+        [ Parser.map ExecutionList (Parser.s "executions" <?> Query.custom "taskId" uuidParam)
+        , Parser.map TaskList (Parser.s "tasks")
+        , Parser.map (always Login) Parser.string
+        ]
+
+
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
     ( { url = url
       , key = key
+      , route = Login
       , granaryTasks = []
       , selectedTask = Nothing
-      , taskDetail = Nothing
       , activeSchema = Nothing
       , taskValidationErrors = Dict.empty
       , formValues = Dict.empty
       , secrets = Nothing
       , secretsUnsubmitted = Nothing
       }
-    , Cmd.none
+    , Nav.pushUrl key (Url.toString url)
     )
 
 
@@ -192,14 +209,12 @@ toExecutionCreate taskId validatedFields =
     ExecutionCreate taskId (JE.object goodFields)
 
 
-taskUrl : Uuid.Uuid -> String
-taskUrl =
-    (++) "/api/tasks/" << Uuid.toString
-
-
-executionsUrl : Uuid.Uuid -> String
+executionsUrl : Maybe Uuid.Uuid -> String
 executionsUrl =
-    (++) "/api/executions?taskId=" << Uuid.toString
+    (++) "/api/executions"
+        << (Maybe.withDefault ""
+                << Maybe.map ((++) "?taskId=" << Uuid.toString)
+           )
 
 
 fetchTasks : Maybe GranaryToken -> Cmd.Cmd Msg
@@ -215,28 +230,14 @@ fetchTasks token =
         |> Maybe.withDefault Cmd.none
 
 
-fetchTask : Maybe GranaryToken -> Uuid.Uuid -> Cmd.Cmd Msg
-fetchTask token taskId =
+fetchExecutions : Maybe GranaryToken -> Maybe Uuid.Uuid -> Cmd.Cmd Msg
+fetchExecutions token taskId =
     token
         |> Maybe.map
             (\t ->
-                taskUrl taskId
+                executionsUrl taskId
                     |> B.get
-                    |> B.withExpect (Http.expectJson GotTask decoderGranaryModel)
-                    |> B.withBearerToken t
-                    |> B.request
-            )
-        |> Maybe.withDefault Cmd.none
-
-
-fetchExecutions : Maybe GranaryToken -> Uuid.Uuid -> Cmd.Cmd Msg
-fetchExecutions token modelId =
-    token
-        |> Maybe.map
-            (\t ->
-                executionsUrl modelId
-                    |> B.get
-                    |> B.withExpect (Http.expectJson GotExecutions (paginatedDecoder decoderGranaryExecution))
+                    |> B.withExpect (Http.expectJson (GotExecutions taskId) (paginatedDecoder decoderGranaryExecution))
                     |> B.withBearerToken t
                     |> B.request
             )
@@ -261,8 +262,7 @@ maybePostExecution tokenM executionCreate =
 
 type Msg
     = GotTasks (Result Http.Error (PaginatedResponse GranaryTask))
-    | GotTask (Result Http.Error GranaryTask)
-    | GotExecutions (Result Http.Error (PaginatedResponse GranaryExecution))
+    | GotExecutions (Maybe Uuid.Uuid) (Result Http.Error (PaginatedResponse GranaryExecution))
     | Navigation Browser.UrlRequest
     | UrlChanged Url.Url
     | TokenInput String
@@ -279,24 +279,34 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
-        UrlChanged url ->
+    case ( msg, model.secrets ) of
+        ( _, Nothing ) ->
+            ( model, Nav.pushUrl model.key "/" )
+
+        ( UrlChanged url, _ ) ->
             let
-                maybeModelId =
-                    String.dropLeft 1 url.path |> Uuid.fromString
+                routeResult =
+                    Parser.parse routeParser url
 
                 cmdM =
-                    maybeModelId
-                        |> Maybe.map (fetchTask model.secrets)
+                    case routeResult of
+                        Just TaskList ->
+                            fetchTasks model.secrets |> Just
+
+                        Just (ExecutionList taskId) ->
+                            fetchExecutions model.secrets taskId |> Just
+
+                        _ ->
+                            Nothing
             in
             case cmdM of
                 Nothing ->
-                    ( { model | taskDetail = Nothing }, fetchTasks model.secrets )
+                    ( model, fetchTasks model.secrets )
 
                 Just cmd ->
                     ( model, cmd )
 
-        Navigation urlRequest ->
+        ( Navigation urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
                     ( model, Nav.pushUrl model.key (Url.toString url) )
@@ -304,15 +314,7 @@ update msg model =
                 Browser.External href ->
                     ( model, Nav.load href )
 
-        GotTask (Ok granaryTask) ->
-            ( { model
-                | granaryTasks = []
-                , taskDetail = Just <| TaskDetail [] granaryTask False (Result.Err []) "{}"
-              }
-            , fetchExecutions model.secrets granaryTask.id
-            )
-
-        TaskSelect task ->
+        ( TaskSelect task, _ ) ->
             ( { model
                 | selectedTask = Just task
                 , taskValidationErrors = Dict.empty
@@ -322,40 +324,30 @@ update msg model =
             , Cmd.none
             )
 
-        GotTask (Err _) ->
+        ( GotTasks (Ok tasks), _ ) ->
+            ( { model | granaryTasks = tasks.results, route = TaskList }, Cmd.none )
+
+        ( GotTasks (Err _), _ ) ->
+            ( model, Cmd.none )
+
+        ( GotExecutions taskId (Ok _), _ ) ->
+            ( { model | route = ExecutionList taskId }, Cmd.none )
+
+        ( GotExecutions _ (Err _), _ ) ->
             ( model, Nav.pushUrl model.key "/" )
 
-        GotTasks (Ok tasks) ->
-            ( { model | granaryTasks = tasks.results }, Cmd.none )
-
-        GotTasks (Err _) ->
-            ( model, Cmd.none )
-
-        GotExecutions (Ok executions) ->
-            let
-                baseTaskDetail =
-                    model.taskDetail
-
-                updatedTaskDetail =
-                    Maybe.map (\rec -> { rec | executions = executions.results }) baseTaskDetail
-            in
-            ( { model | taskDetail = updatedTaskDetail }, Cmd.none )
-
-        GotExecutions (Err _) ->
-            ( model, Cmd.none )
-
-        TokenInput s ->
+        ( TokenInput s, _ ) ->
             ( { model | secretsUnsubmitted = Just s }, Cmd.none )
 
-        TokenSubmit ->
+        ( TokenSubmit, _ ) ->
             ( { model | secrets = model.secretsUnsubmitted, secretsUnsubmitted = Nothing }
-            , fetchTasks model.secretsUnsubmitted
+            , Nav.pushUrl model.key "/tasks"
             )
 
-        CreatedExecution (Ok _) ->
+        ( CreatedExecution (Ok _), _ ) ->
             ( model
             , Nav.pushUrl model.key
-                ("/executions?modelId="
+                ("/executions?taskId="
                     ++ (model.selectedTask
                             |> Maybe.map (Uuid.toString << .id)
                             |> Maybe.withDefault ""
@@ -363,10 +355,10 @@ update msg model =
                 )
             )
 
-        CreatedExecution _ ->
+        ( CreatedExecution _, _ ) ->
             ( model, Cmd.none )
 
-        ValidateWith validateOpts ->
+        ( ValidateWith validateOpts, _ ) ->
             let
                 validation =
                     case validateOpts.fieldValue of
@@ -412,7 +404,7 @@ update msg model =
                     , Cmd.none
                     )
 
-        CreateExecution executionCreate ->
+        ( CreateExecution executionCreate, _ ) ->
             ( model, maybePostExecution model.secrets executionCreate )
 
 
@@ -794,8 +786,8 @@ makeErr err =
 
 view : Model -> Browser.Document Msg
 view model =
-    case model.secrets of
-        Just _ ->
+    case ( model.route, model.secrets ) of
+        ( TaskList, Just _ ) ->
             { title = "Available Models"
             , body =
                 [ Element.layout [] <|
@@ -841,7 +833,18 @@ view model =
                 ]
             }
 
-        Nothing ->
+        ( ExecutionList _, Just _ ) ->
+            { title = "You found a secret!"
+            , body =
+                [ Element.layout [] <|
+                    column [ spacing 3, Element.centerX, Element.centerY, width Element.shrink ]
+                        [ row [ width fill ] [ logo [] 200 ]
+                        , row [ width fill ] [ text "This page hasn't been implemented yet!" ]
+                        ]
+                ]
+            }
+
+        _ ->
             { title = "Granary Model Dashboard"
             , body =
                 [ Element.layout [] <|
