@@ -192,8 +192,8 @@ toExecutionCreate taskId validatedFields =
     ExecutionCreate taskId (JE.object goodFields)
 
 
-modelUrl : Uuid.Uuid -> String
-modelUrl =
+taskUrl : Uuid.Uuid -> String
+taskUrl =
     (++) "/api/tasks/" << Uuid.toString
 
 
@@ -202,8 +202,8 @@ executionsUrl =
     (++) "/api/executions?taskId=" << Uuid.toString
 
 
-fetchModels : Maybe GranaryToken -> Cmd.Cmd Msg
-fetchModels token =
+fetchTasks : Maybe GranaryToken -> Cmd.Cmd Msg
+fetchTasks token =
     token
         |> Maybe.map
             (\t ->
@@ -215,12 +215,12 @@ fetchModels token =
         |> Maybe.withDefault Cmd.none
 
 
-fetchModel : Maybe GranaryToken -> Uuid.Uuid -> Cmd.Cmd Msg
-fetchModel token modelId =
+fetchTask : Maybe GranaryToken -> Uuid.Uuid -> Cmd.Cmd Msg
+fetchTask token taskId =
     token
         |> Maybe.map
             (\t ->
-                modelUrl modelId
+                taskUrl taskId
                     |> B.get
                     |> B.withExpect (Http.expectJson GotTask decoderGranaryModel)
                     |> B.withBearerToken t
@@ -287,11 +287,11 @@ update msg model =
 
                 cmdM =
                     maybeModelId
-                        |> Maybe.map (fetchModel model.secrets)
+                        |> Maybe.map (fetchTask model.secrets)
             in
             case cmdM of
                 Nothing ->
-                    ( { model | taskDetail = Nothing }, fetchModels model.secrets )
+                    ( { model | taskDetail = Nothing }, fetchTasks model.secrets )
 
                 Just cmd ->
                     ( model, cmd )
@@ -349,7 +349,7 @@ update msg model =
 
         TokenSubmit ->
             ( { model | secrets = model.secretsUnsubmitted, secretsUnsubmitted = Nothing }
-            , fetchModels model.secretsUnsubmitted
+            , fetchTasks model.secretsUnsubmitted
             )
 
         CreatedExecution (Ok _) ->
