@@ -22,7 +22,11 @@ trait Generators {
     }
 
   val executionGen: Gen[Execution.Create] =
-    (Gen.delay(UUID.randomUUID), Gen.const(Map.empty[String, String].asJson)).tupled map {
+    (
+      Gen.delay(UUID.randomUUID),
+      Gen.const(Map.empty[String, String].asJson),
+      shortStringGen
+    ).tupled map {
       Function.tupled(Execution.Create.apply)
     }
 
