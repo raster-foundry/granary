@@ -291,29 +291,27 @@ update msg model =
                 routeResult =
                     Parser.parse routeParser url
 
+                getCmd f t =
+                    let
+                        maybeCmd =
+                            t |> Maybe.map f
+                    in
+                    case maybeCmd of
+                        Just c ->
+                            ( c, t )
+
+                        _ ->
+                            ( Cmd.none, t )
+
                 ( cmd, token ) =
                     case ( routeResult, model.secrets ) of
                         ( Just (TaskList urlToken), modelToken ) ->
-                            let
-                                t =
-                                    chooseToken urlToken modelToken
-                            in
-                            ( t
-                                |> Maybe.map fetchTasks
-                                |> Maybe.withDefault Cmd.none
-                            , t
-                            )
+                            chooseToken urlToken modelToken
+                                |> getCmd fetchTasks
 
                         ( Just (ExecutionList taskId urlToken), modelToken ) ->
-                            let
-                                t =
-                                    chooseToken urlToken modelToken
-                            in
-                            ( t
-                                |> Maybe.map (fetchExecutions taskId)
-                                |> Maybe.withDefault Cmd.none
-                            , t
-                            )
+                            chooseToken urlToken modelToken
+                                |> getCmd (fetchExecutions taskId)
 
                         ( _, Just t ) ->
                             ( Nav.pushUrl model.key ("/tasks?token=" ++ t), Just t )
