@@ -24,6 +24,7 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Framework.Button as Button
+import Framework.Card as Card
 import Http as Http
 import HttpBuilder as B
 import Json.Decode as JD
@@ -61,6 +62,7 @@ type alias Model =
     , key : Nav.Key
     , route : Route
     , granaryTasks : List GranaryTask
+    , granaryExecutions : List GranaryExecution
     , activeSchema : Maybe Schema
     , taskValidationErrors : Dict String (List Validation.Error)
     , formValues : Dict String (Result String JD.Value)
@@ -182,6 +184,7 @@ init _ url key =
       , key = key
       , route = Login
       , granaryTasks = []
+      , granaryExecutions = []
       , selectedTask = Nothing
       , activeSchema = Nothing
       , taskValidationErrors = Dict.empty
@@ -322,8 +325,8 @@ update msg model =
         GotTasks (Err _) ->
             ( model, Cmd.none )
 
-        GotExecutions taskId (Ok _) ->
-            ( { model | route = ExecutionList taskId }, Cmd.none )
+        GotExecutions taskId (Ok executionsPage) ->
+            ( { model | route = ExecutionList taskId, granaryExecutions = executionsPage.results }, Cmd.none )
 
         GotExecutions _ (Err _) ->
             ( model, Nav.pushUrl model.key "/" )
@@ -532,6 +535,19 @@ isOk res =
 
         Result.Err _ ->
             False
+
+
+toEmoji : GranaryExecution -> String
+toEmoji execution =
+    case ( execution.statusReason, execution.results ) of
+        ( Just _, _ ) ->
+            "😱"
+
+        ( _, _ :: _ ) ->
+            "✨"
+
+        _ ->
+            "🏃\u{200D}♀️"
 
 
 numProperties : Schema -> Int
@@ -789,6 +805,13 @@ secretPage =
     }
 
 
+logoTop : List (Element Msg) -> Element Msg
+logoTop rest =
+    column [ width fill ] <|
+        logo [ width fill ] 100
+            :: rest
+
+
 view : Model -> Browser.Document Msg
 view model =
     case ( model.route, model.secrets ) of
@@ -796,9 +819,8 @@ view model =
             { title = "Available Models"
             , body =
                 [ Element.layout [] <|
-                    column [ width fill ]
-                        [ logo [ width fill ] 100
-                        , row [ Element.centerX ]
+                    logoTop
+                        [ row [ Element.centerX ]
                             [ column
                                 [ fillPortion 1 |> width
                                 , spacing 10
@@ -839,7 +861,18 @@ view model =
             }
 
         ( ExecutionList _, Just _ ) ->
-            secretPage
+            { title = "Execution list"
+            , body =
+                [ Element.layout [] <|
+                    logoTop
+                        (model.granaryExecutions
+                            |> List.map
+                                (\execution ->
+                                    Element.el Card.simple (styledPrimaryText [] (Uuid.toString execution.id ++ toEmoji execution))
+                                )
+                        )
+                ]
+            }
 
         ( ExecutionDetail _, Just _ ) ->
             secretPage
