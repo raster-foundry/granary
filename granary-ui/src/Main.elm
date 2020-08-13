@@ -40,7 +40,7 @@ import Json.Schema.Validation as Validation
 import Result
 import Time
 import Url
-import Url.Parser as Parser exposing ((<?>))
+import Url.Parser as Parser exposing ((</>), (<?>))
 import Url.Parser.Query as Query
 import Uuid as Uuid
 
@@ -159,16 +159,19 @@ type Route
     = Login
     | TaskList
     | ExecutionList (Maybe Uuid.Uuid)
+    | ExecutionDetail Uuid.Uuid
 
 
 routeParser : Parser.Parser (Route -> a) a
 routeParser =
     let
-        uuidParam strings =
+        uuidQueryParam strings =
             List.head strings |> Maybe.andThen Uuid.fromString
     in
     Parser.oneOf
-        [ Parser.map ExecutionList (Parser.s "executions" <?> Query.custom "taskId" uuidParam)
+        [ Parser.map ExecutionList
+            (Parser.s "executions" <?> Query.custom "taskId" uuidQueryParam)
+        , Parser.map ExecutionDetail (Parser.s "executions" </> Parser.custom "UUID" Uuid.fromString)
         , Parser.map TaskList (Parser.s "tasks")
         ]
 
@@ -314,7 +317,7 @@ update msg model =
             )
 
         GotTasks (Ok tasks) ->
-            ( { model | granaryTasks = tasks.results, route = TaskList }, Cmd.none )
+            ( { model | granaryTasks = tasks.results, route = TaskList, secretsUnsubmitted = Nothing }, Cmd.none )
 
         GotTasks (Err _) ->
             ( model, Cmd.none )
@@ -329,7 +332,7 @@ update msg model =
             ( { model | secretsUnsubmitted = Just s }, Cmd.none )
 
         TokenSubmit ->
-            ( { model | secrets = model.secretsUnsubmitted, secretsUnsubmitted = Nothing }
+            ( { model | secrets = model.secretsUnsubmitted }
             , Nav.pushUrl model.key "/tasks"
             )
 
@@ -773,6 +776,19 @@ makeErr err =
             ]
 
 
+secretPage : Browser.Document Msg
+secretPage =
+    { title = "You found a secret!"
+    , body =
+        [ Element.layout [] <|
+            column [ spacing 3, Element.centerX, Element.centerY, width Element.shrink ]
+                [ row [ width fill ] [ logo [] 200 ]
+                , row [ width fill ] [ text "This page hasn't been implemented yet!" ]
+                ]
+        ]
+    }
+
+
 view : Model -> Browser.Document Msg
 view model =
     case ( model.route, model.secrets ) of
@@ -823,15 +839,10 @@ view model =
             }
 
         ( ExecutionList _, Just _ ) ->
-            { title = "You found a secret!"
-            , body =
-                [ Element.layout [] <|
-                    column [ spacing 3, Element.centerX, Element.centerY, width Element.shrink ]
-                        [ row [ width fill ] [ logo [] 200 ]
-                        , row [ width fill ] [ text "This page hasn't been implemented yet!" ]
-                        ]
-                ]
-            }
+            secretPage
+
+        ( ExecutionDetail _, Just _ ) ->
+            secretPage
 
         _ ->
             { title = "Granary Model Dashboard"
