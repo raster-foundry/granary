@@ -294,7 +294,7 @@ update msg model =
                 getCmd f t =
                     let
                         maybeCmd =
-                            t |> Maybe.map f
+                            Maybe.map f t
                     in
                     case maybeCmd of
                         Just c ->
