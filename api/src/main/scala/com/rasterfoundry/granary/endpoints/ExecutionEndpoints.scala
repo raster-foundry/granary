@@ -53,6 +53,7 @@ object ExecutionEndpoints {
       .in(Inputs.paginationInput)
       .in(query[Option[UUID]]("taskId"))
       .in(query[Option[JobStatus]]("status"))
+      .in(query[Option[String]]("name"))
       .out(jsonBody[PaginatedResponse[Execution]])
       .errorOut(
         oneOf[CrudError](
