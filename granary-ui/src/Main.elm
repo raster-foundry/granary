@@ -159,9 +159,9 @@ paginatedDecoder ofDecoder =
 
 type Route
     = Login
-    | TaskList
-    | ExecutionList (Maybe Uuid.Uuid)
-    | ExecutionDetail Uuid.Uuid
+    | TaskList (Maybe GranaryToken)
+    | ExecutionList (Maybe Uuid.Uuid) (Maybe GranaryToken)
+    | ExecutionDetail Uuid.Uuid (Maybe GranaryToken)
 
 
 routeParser : Parser.Parser (Route -> a) a
@@ -172,9 +172,9 @@ routeParser =
     in
     Parser.oneOf
         [ Parser.map ExecutionList
-            (Parser.s "executions" <?> Query.custom "taskId" uuidQueryParam)
-        , Parser.map ExecutionDetail (Parser.s "executions" </> Parser.custom "UUID" Uuid.fromString)
-        , Parser.map TaskList (Parser.s "tasks")
+            (Parser.s "executions" <?> Query.custom "taskId" uuidQueryParam <?> Query.string "token")
+        , Parser.map ExecutionDetail (Parser.s "executions" </> Parser.custom "UUID" Uuid.fromString <?> Query.string "token")
+        , Parser.map TaskList (Parser.s "tasks" <?> Query.string "token")
         ]
 
 
@@ -230,8 +230,8 @@ fetchTasks token =
         |> B.request
 
 
-fetchExecutions : GranaryToken -> Maybe Uuid.Uuid -> Cmd.Cmd Msg
-fetchExecutions token taskId =
+fetchExecutions : Maybe Uuid.Uuid -> GranaryToken -> Cmd.Cmd Msg
+fetchExecutions taskId token =
     executionsUrl taskId
         |> B.get
         |> B.withExpect (Http.expectJson (GotExecutions taskId) (paginatedDecoder decoderGranaryExecution))
@@ -277,29 +277,51 @@ update msg model =
     case msg of
         UrlChanged url ->
             let
+                chooseToken urlToken modelToken =
+                    case ( urlToken, modelToken ) of
+                        ( Just t, _ ) ->
+                            Just t
+
+                        ( _, Just t ) ->
+                            Just t
+
+                        _ ->
+                            Nothing
+
                 routeResult =
                     Parser.parse routeParser url
 
-                cmdM =
+                ( cmd, token ) =
                     case ( routeResult, model.secrets ) of
-                        ( Just TaskList, Just token ) ->
-                            fetchTasks token |> Just
+                        ( Just (TaskList urlToken), modelToken ) ->
+                            let
+                                t =
+                                    chooseToken urlToken modelToken
+                            in
+                            ( t
+                                |> Maybe.map fetchTasks
+                                |> Maybe.withDefault Cmd.none
+                            , t
+                            )
 
-                        ( Just (ExecutionList taskId), Just token ) ->
-                            fetchExecutions token taskId |> Just
+                        ( Just (ExecutionList taskId urlToken), modelToken ) ->
+                            let
+                                t =
+                                    chooseToken urlToken modelToken
+                            in
+                            ( t
+                                |> Maybe.map (fetchExecutions taskId)
+                                |> Maybe.withDefault Cmd.none
+                            , t
+                            )
 
-                        ( _, Just _ ) ->
-                            Nav.pushUrl model.key "/tasks" |> Just
+                        ( _, Just t ) ->
+                            ( Nav.pushUrl model.key ("/tasks?token=" ++ t), Just t )
 
                         ( _, Nothing ) ->
-                            Nothing
+                            ( Cmd.none, Nothing )
             in
-            case cmdM of
-                Nothing ->
-                    ( model, Cmd.none )
-
-                Just cmd ->
-                    ( model, cmd )
+            ( { model | secrets = token }, cmd )
 
         Navigation urlRequest ->
             case urlRequest of
@@ -320,13 +342,13 @@ update msg model =
             )
 
         GotTasks (Ok tasks) ->
-            ( { model | granaryTasks = tasks.results, route = TaskList, secretsUnsubmitted = Nothing }, Cmd.none )
+            ( { model | granaryTasks = tasks.results, route = TaskList model.secrets, secretsUnsubmitted = Nothing }, Cmd.none )
 
         GotTasks (Err _) ->
             ( model, Cmd.none )
 
         GotExecutions taskId (Ok executionsPage) ->
-            ( { model | route = ExecutionList taskId, granaryExecutions = executionsPage.results }, Cmd.none )
+            ( { model | route = ExecutionList taskId model.secrets, granaryExecutions = executionsPage.results }, Cmd.none )
 
         GotExecutions _ (Err _) ->
             ( model, Nav.pushUrl model.key "/" )
@@ -815,7 +837,7 @@ logoTop rest =
 view : Model -> Browser.Document Msg
 view model =
     case ( model.route, model.secrets ) of
-        ( TaskList, Just _ ) ->
+        ( TaskList _, Just _ ) ->
             { title = "Available Models"
             , body =
                 [ Element.layout [] <|
@@ -860,7 +882,7 @@ view model =
                 ]
             }
 
-        ( ExecutionList _, Just _ ) ->
+        ( ExecutionList _ _, Just _ ) ->
             { title = "Execution list"
             , body =
                 [ Element.layout [] <|
@@ -874,7 +896,7 @@ view model =
                 ]
             }
 
-        ( ExecutionDetail _, Just _ ) ->
+        ( ExecutionDetail _ _, Just _ ) ->
             secretPage
 
         _ ->
