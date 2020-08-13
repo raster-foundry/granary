@@ -122,7 +122,8 @@ object ExecutionDao {
             "status_reason",
             "results",
             "webhook_id",
-            "owner"
+            "owner",
+            "name"
           ) map { Right(_) }
       }
     }
