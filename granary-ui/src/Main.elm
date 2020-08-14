@@ -1075,6 +1075,40 @@ taskList model =
         ]
 
 
+executionList : Model -> Element Msg
+executionList model =
+    let
+        showAssets execution =
+            Set.member (Uuid.toString execution.id) model.selectedExecutions
+
+        card execution =
+            executionCard (showAssets execution) execution
+    in
+    logoTop model.secrets
+        [ nameSearchInput model.executionNameSearch
+            :: (model.granaryExecutions
+                    |> List.map card
+               )
+            |> column [ Element.centerX, spacing 10, padding 15 ]
+        ]
+
+
+loginPage : Model -> Element Msg
+loginPage model =
+    column [ spacing 3, Element.centerX, Element.centerY, width Element.shrink ]
+        [ row [ width fill ] [ logo [] 200 ]
+        , row [ width fill ]
+            [ textInput [] TokenInput model.secretsUnsubmitted "Enter a token" "Token input"
+            ]
+        , row [ width fill ]
+            [ submitButton (not << String.isEmpty)
+                (Maybe.withDefault "" model.secretsUnsubmitted)
+                "Please enter a token"
+                TokenSubmit
+            ]
+        ]
+
+
 view : Model -> Browser.Document Msg
 view model =
     case ( model.route, model.secrets ) of
@@ -1088,42 +1122,16 @@ view model =
             }
 
         ( ExecutionList _ _, Just _ ) ->
-            let
-                showAssets execution =
-                    Set.member (Uuid.toString execution.id) model.selectedExecutions
-
-                card execution =
-                    executionCard (showAssets execution) execution
-            in
             { title = "Execution list"
             , body =
-                [ Element.layout [] <|
-                    logoTop model.secrets
-                        [ nameSearchInput model.executionNameSearch
-                            :: (model.granaryExecutions
-                                    |> List.map card
-                               )
-                            |> column [ Element.centerX, spacing 10, padding 15 ]
-                        ]
+                [ Element.layout [] <| executionList model
                 ]
             }
 
         _ ->
             { title = "Granary Model Dashboard"
             , body =
-                [ Element.layout [] <|
-                    column [ spacing 3, Element.centerX, Element.centerY, width Element.shrink ]
-                        [ row [ width fill ] [ logo [] 200 ]
-                        , row [ width fill ]
-                            [ textInput [] TokenInput model.secretsUnsubmitted "Enter a token" "Token input"
-                            ]
-                        , row [ width fill ]
-                            [ submitButton (not << String.isEmpty)
-                                (Maybe.withDefault "" model.secretsUnsubmitted)
-                                "Please enter a token"
-                                TokenSubmit
-                            ]
-                        ]
+                [ Element.layout [] <| loginPage model
                 ]
             }
 
