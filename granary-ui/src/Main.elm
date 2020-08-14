@@ -308,6 +308,7 @@ type Msg
     | ToggleShowAssets Uuid.Uuid
     | SearchExecutionName String
     | AddTokenParam GranaryToken
+    | GoHome
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -515,6 +516,9 @@ update msg model =
                             tokenQp
             in
             ( model, Nav.pushUrl model.key (Url.toString { baseUrl | query = Just newQp }) )
+
+        GoHome ->
+            ( model, Nav.pushUrl model.key "/tasks" )
 
 
 
@@ -857,7 +861,7 @@ schemaToForm formValues errors schema =
                         _ ->
                             Nothing
                     )
-                    k
+                    (k ++ ": " ++ showType v.type_)
                     k
 
             else
@@ -959,10 +963,17 @@ logoTop : Maybe GranaryToken -> List (Element Msg) -> Element Msg
 logoTop secrets rest =
     column [ width fill, Element.centerX ] <|
         [ row [ Element.centerX, Element.maximum 400 fill |> width ] <|
-            [ logo
-                [ width fill ]
-                100
-            , pageLink secrets
+            [ column [ width (fillPortion 9), height fill ]
+                [ logo
+                    [ width fill ]
+                    100
+                ]
+            , column [ width (fillPortion 1), height fill ]
+                [ row [ Element.centerY ]
+                    [ pageLink secrets
+                    , homeLink
+                    ]
+                ]
             ]
         ]
             ++ rest
@@ -1015,10 +1026,18 @@ nameSearchInput currValue =
         [ width fill ]
         SearchExecutionName
         currValue
-        "Executions with names like"
+        "Name like"
         "Search"
         |> List.singleton
         |> row [ width fill ]
+
+
+homeLink : Element Msg
+homeLink =
+    Input.button []
+        { onPress = Just GoHome
+        , label = text "🏠"
+        }
 
 
 pageLink : Maybe GranaryToken -> Element Msg

@@ -11105,7 +11105,7 @@ var $author$project$Main$update = F2(
 									},
 									model.selectedTask)),
 							model.secrets)));
-			default:
+			case 'AddTokenParam':
 				var token = msg.a;
 				var tokenQp = 'token=' + token;
 				var baseUrl = model.url;
@@ -11140,6 +11140,10 @@ var $author$project$Main$update = F2(
 								{
 									query: $elm$core$Maybe$Just(newQp)
 								}))));
+			default:
+				return _Utils_Tuple2(
+					model,
+					A2($elm$browser$Browser$Navigation$pushUrl, model.key, '/tasks'));
 		}
 	});
 var $author$project$Main$TokenInput = function (a) {
@@ -17360,6 +17364,14 @@ var $author$project$Main$logo = F2(
 				attrs),
 			{description: 'Granary logo', src: 'logo.svg'});
 	});
+var $author$project$Main$GoHome = {$: 'GoHome'};
+var $author$project$Main$homeLink = A2(
+	$mdgriffith$elm_ui$Element$Input$button,
+	_List_Nil,
+	{
+		label: $mdgriffith$elm_ui$Element$text('🏠'),
+		onPress: $elm$core$Maybe$Just($author$project$Main$GoHome)
+	});
 var $author$project$Main$AddTokenParam = function (a) {
 	return {$: 'AddTokenParam', a: a};
 };
@@ -17395,13 +17407,43 @@ var $author$project$Main$logoTop = F2(
 						_List_fromArray(
 							[
 								A2(
-								$author$project$Main$logo,
+								$mdgriffith$elm_ui$Element$column,
 								_List_fromArray(
 									[
-										$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
+										$mdgriffith$elm_ui$Element$width(
+										$mdgriffith$elm_ui$Element$fillPortion(9)),
+										$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill)
 									]),
-								100),
-								$author$project$Main$pageLink(secrets)
+								_List_fromArray(
+									[
+										A2(
+										$author$project$Main$logo,
+										_List_fromArray(
+											[
+												$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
+											]),
+										100)
+									])),
+								A2(
+								$mdgriffith$elm_ui$Element$column,
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$width(
+										$mdgriffith$elm_ui$Element$fillPortion(1)),
+										$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill)
+									]),
+								_List_fromArray(
+									[
+										A2(
+										$mdgriffith$elm_ui$Element$row,
+										_List_fromArray(
+											[$mdgriffith$elm_ui$Element$centerY]),
+										_List_fromArray(
+											[
+												$author$project$Main$pageLink(secrets),
+												$author$project$Main$homeLink
+											]))
+									]))
 							]))
 					]),
 				rest));
@@ -18437,7 +18479,7 @@ var $author$project$Main$nameSearchInput = function (currValue) {
 					]),
 				$author$project$Main$SearchExecutionName,
 				currValue,
-				'Executions with names like',
+				'Name like',
 				'Search')));
 };
 var $author$project$Main$secretPage = {
@@ -18941,7 +18983,7 @@ var $author$project$Main$schemaToForm = F3(
 						return $elm$core$Maybe$Nothing;
 					}
 				}(),
-				k,
+				k + (': ' + $author$project$Main$showType(v.type_)),
 				k) : A2(
 				$mdgriffith$elm_ui$Element$row,
 				_List_Nil,
