@@ -44,7 +44,7 @@ import Set exposing (Set)
 import String
 import Time
 import Url
-import Url.Parser as Parser exposing ((</>), (<?>))
+import Url.Parser as Parser exposing ((<?>))
 import Url.Parser.Query as Query
 import Uuid as Uuid
 
@@ -170,7 +170,6 @@ type Route
     = Login
     | TaskList (Maybe GranaryToken)
     | ExecutionList (Maybe Uuid.Uuid) (Maybe GranaryToken)
-    | ExecutionDetail Uuid.Uuid (Maybe GranaryToken)
 
 
 routeParser : Parser.Parser (Route -> a) a
@@ -182,7 +181,6 @@ routeParser =
     Parser.oneOf
         [ Parser.map ExecutionList
             (Parser.s "executions" <?> Query.custom "taskId" uuidQueryParam <?> Query.string "token")
-        , Parser.map ExecutionDetail (Parser.s "executions" </> Parser.custom "UUID" Uuid.fromString <?> Query.string "token")
         , Parser.map TaskList (Parser.s "tasks" <?> Query.string "token")
         ]
 
@@ -946,19 +944,6 @@ makeErr err =
             ]
 
 
-secretPage : Browser.Document Msg
-secretPage =
-    { title = "You found a secret!"
-    , body =
-        [ Element.layout [] <|
-            column [ spacing 3, Element.centerX, Element.centerY, width Element.shrink ]
-                [ row [ width fill ] [ logo [] 200 ]
-                , row [ width fill ] [ text "This page hasn't been implemented yet!" ]
-                ]
-        ]
-    }
-
-
 logoTop : Maybe GranaryToken -> List (Element Msg) -> Element Msg
 logoTop secrets rest =
     column [ width fill, Element.centerX ] <|
@@ -1122,9 +1107,6 @@ view model =
                         ]
                 ]
             }
-
-        ( ExecutionDetail _ _, Just _ ) ->
-            secretPage
 
         _ ->
             { title = "Granary Model Dashboard"

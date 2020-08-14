@@ -8505,10 +8505,6 @@ var $elm$core$Set$remove = F2(
 		return $elm$core$Set$Set_elm_builtin(
 			A2($elm$core$Dict$remove, key, dict));
 	});
-var $author$project$Main$ExecutionDetail = F2(
-	function (a, b) {
-		return {$: 'ExecutionDetail', a: a, b: b};
-	});
 var $elm$core$Maybe$andThen = F2(
 	function (callback, maybeValue) {
 		if (maybeValue.$ === 'Just') {
@@ -8517,42 +8513,6 @@ var $elm$core$Maybe$andThen = F2(
 		} else {
 			return $elm$core$Maybe$Nothing;
 		}
-	});
-var $elm$url$Url$Parser$Parser = function (a) {
-	return {$: 'Parser', a: a};
-};
-var $elm$url$Url$Parser$custom = F2(
-	function (tipe, stringToSomething) {
-		return $elm$url$Url$Parser$Parser(
-			function (_v0) {
-				var visited = _v0.visited;
-				var unvisited = _v0.unvisited;
-				var params = _v0.params;
-				var frag = _v0.frag;
-				var value = _v0.value;
-				if (!unvisited.b) {
-					return _List_Nil;
-				} else {
-					var next = unvisited.a;
-					var rest = unvisited.b;
-					var _v2 = stringToSomething(next);
-					if (_v2.$ === 'Just') {
-						var nextValue = _v2.a;
-						return _List_fromArray(
-							[
-								A5(
-								$elm$url$Url$Parser$State,
-								A2($elm$core$List$cons, next, visited),
-								rest,
-								params,
-								frag,
-								value(nextValue))
-							]);
-					} else {
-						return _List_Nil;
-					}
-				}
-			});
 	});
 var $elm$url$Url$Parser$Internal$Parser = function (a) {
 	return {$: 'Parser', a: a};
@@ -8576,6 +8536,9 @@ var $elm$core$List$head = function (list) {
 	} else {
 		return $elm$core$Maybe$Nothing;
 	}
+};
+var $elm$url$Url$Parser$Parser = function (a) {
+	return {$: 'Parser', a: a};
 };
 var $elm$url$Url$Parser$mapState = F2(
 	function (func, _v0) {
@@ -8737,16 +8700,6 @@ var $author$project$Main$routeParser = function () {
 						$elm$url$Url$Parser$s('executions'),
 						A2($elm$url$Url$Parser$Query$custom, 'taskId', uuidQueryParam)),
 					$elm$url$Url$Parser$Query$string('token'))),
-				A2(
-				$elm$url$Url$Parser$map,
-				$author$project$Main$ExecutionDetail,
-				A2(
-					$elm$url$Url$Parser$slash,
-					$elm$url$Url$Parser$s('executions'),
-					A2(
-						$elm$url$Url$Parser$questionMark,
-						A2($elm$url$Url$Parser$custom, 'UUID', $danyx23$elm_uuid$Uuid$fromString),
-						$elm$url$Url$Parser$Query$string('token')))),
 				A2(
 				$elm$url$Url$Parser$map,
 				$author$project$Main$TaskList,
@@ -18482,47 +18435,6 @@ var $author$project$Main$nameSearchInput = function (currValue) {
 				'Name like',
 				'Search')));
 };
-var $author$project$Main$secretPage = {
-	body: _List_fromArray(
-		[
-			A2(
-			$mdgriffith$elm_ui$Element$layout,
-			_List_Nil,
-			A2(
-				$mdgriffith$elm_ui$Element$column,
-				_List_fromArray(
-					[
-						$mdgriffith$elm_ui$Element$spacing(3),
-						$mdgriffith$elm_ui$Element$centerX,
-						$mdgriffith$elm_ui$Element$centerY,
-						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$shrink)
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$mdgriffith$elm_ui$Element$row,
-						_List_fromArray(
-							[
-								$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-							]),
-						_List_fromArray(
-							[
-								A2($author$project$Main$logo, _List_Nil, 200)
-							])),
-						A2(
-						$mdgriffith$elm_ui$Element$row,
-						_List_fromArray(
-							[
-								$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-							]),
-						_List_fromArray(
-							[
-								$mdgriffith$elm_ui$Element$text('This page hasn\'t been implemented yet!')
-							]))
-					])))
-		]),
-	title: 'You found a secret!'
-};
 var $author$project$Main$accent = A3($mdgriffith$elm_ui$Element$rgb255, 253, 233, 135);
 var $mdgriffith$elm_ui$Internal$Flag$fontAlignment = $mdgriffith$elm_ui$Internal$Flag$flag(12);
 var $mdgriffith$elm_ui$Element$Font$center = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$fontAlignment, $mdgriffith$elm_ui$Internal$Style$classes.textCenter);
@@ -19242,7 +19154,7 @@ var $author$project$Main$taskList = function (model) {
 };
 var $author$project$Main$view = function (model) {
 	var _v0 = _Utils_Tuple2(model.route, model.secrets);
-	_v0$3:
+	_v0$2:
 	while (true) {
 		if (_v0.b.$ === 'Just') {
 			switch (_v0.a.$) {
@@ -19296,14 +19208,11 @@ var $author$project$Main$view = function (model) {
 							]),
 						title: 'Execution list'
 					};
-				case 'ExecutionDetail':
-					var _v2 = _v0.a;
-					return $author$project$Main$secretPage;
 				default:
-					break _v0$3;
+					break _v0$2;
 			}
 		} else {
-			break _v0$3;
+			break _v0$2;
 		}
 	}
 	return {
