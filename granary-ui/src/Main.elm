@@ -64,6 +64,7 @@ type alias Model =
     , route : Route
     , granaryTasks : List GranaryTask
     , granaryExecutions : List GranaryExecution
+    , executionNameSearch : Maybe String
     , activeSchema : Maybe Schema
     , taskValidationErrors : Dict String (List Validation.Error)
     , formValues : Dict String (Result String JD.Value)
@@ -191,6 +192,7 @@ init _ url key =
       , route = Login
       , granaryTasks = []
       , granaryExecutions = []
+      , executionNameSearch = Nothing
       , selectedTask = Nothing
       , selectedExecutions = Set.empty
       , activeSchema = Nothing
@@ -221,12 +223,30 @@ toExecutionCreate executionName taskId validatedFields =
     ExecutionCreate executionName taskId (JE.object goodFields)
 
 
-executionsUrl : Maybe Uuid.Uuid -> String
-executionsUrl =
-    (++) "/api/executions"
-        << (Maybe.withDefault ""
-                << Maybe.map ((++) "?taskId=" << Uuid.toString)
-           )
+executionsUrl : Maybe String -> Maybe Uuid.Uuid -> String
+executionsUrl namesLike taskId =
+    let
+        baseUrl =
+            "/api/executions"
+
+        taskSearch =
+            taskId
+                |> Maybe.map ((++) "taskId=" << Uuid.toString)
+                |> Maybe.withDefault ""
+
+        nameSearch =
+            namesLike
+                |> Maybe.map ((++) "name=")
+                |> Maybe.withDefault ""
+
+        qp =
+            taskSearch ++ nameSearch
+    in
+    if String.isEmpty qp then
+        baseUrl
+
+    else
+        baseUrl ++ "?" ++ qp
 
 
 fetchTasks : GranaryToken -> Cmd.Cmd Msg
@@ -237,9 +257,9 @@ fetchTasks token =
         |> B.request
 
 
-fetchExecutions : Maybe Uuid.Uuid -> GranaryToken -> Cmd.Cmd Msg
-fetchExecutions taskId token =
-    executionsUrl taskId
+fetchExecutions : Maybe String -> Maybe Uuid.Uuid -> GranaryToken -> Cmd.Cmd Msg
+fetchExecutions namesLike taskId token =
+    executionsUrl namesLike taskId
         |> B.get
         |> B.withExpect (Http.expectJson (GotExecutions taskId) (paginatedDecoder decoderGranaryExecution))
         |> B.withBearerToken token
@@ -278,6 +298,7 @@ type Msg
         }
     | CreateExecution ExecutionCreate
     | ToggleShowAssets Uuid.Uuid
+    | SearchExecutionName String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -319,7 +340,7 @@ update msg model =
 
                         ( Just (ExecutionList taskId urlToken), modelToken ) ->
                             chooseToken urlToken modelToken
-                                |> getCmd (fetchExecutions taskId)
+                                |> getCmd (fetchExecutions Nothing taskId)
 
                         ( _, Just t ) ->
                             ( Nav.pushUrl model.key ("/tasks?token=" ++ t), Just t )
@@ -447,6 +468,13 @@ update msg model =
                         Set.insert stringExecutionId selectedExecutions
               }
             , Cmd.none
+            )
+
+        SearchExecutionName s ->
+            ( { model | executionNameSearch = Just s }
+            , model.secrets
+                |> Maybe.map (fetchExecutions (Just s) (Maybe.map .id model.selectedTask))
+                |> Maybe.withDefault Cmd.none
             )
 
 
@@ -588,10 +616,10 @@ toEmoji : GranaryExecution -> String
 toEmoji execution =
     case ( execution.statusReason, execution.results ) of
         ( Just _, _ ) ->
-            "😱"
+            "❌"
 
         ( _, _ :: _ ) ->
-            "✨"
+            "✅"
 
         _ ->
             "🏃\u{200D}♀️"
@@ -907,6 +935,18 @@ executionCard showAssets execution =
         |> row [ width fill ]
 
 
+nameSearchInput : Maybe String -> Element Msg
+nameSearchInput currValue =
+    textInput
+        [ width fill ]
+        SearchExecutionName
+        currValue
+        "Executions with names like"
+        "Search"
+        |> List.singleton
+        |> row [ width fill ]
+
+
 view : Model -> Browser.Document Msg
 view model =
     case ( model.route, model.secrets ) of
@@ -967,10 +1007,11 @@ view model =
             , body =
                 [ Element.layout [] <|
                     logoTop
-                        [ column [ Element.centerX, spacing 10, padding 15 ]
-                            (model.granaryExecutions
-                                |> List.map card
-                            )
+                        [ nameSearchInput model.executionNameSearch
+                            :: (model.granaryExecutions
+                                    |> List.map card
+                               )
+                            |> column [ Element.centerX, spacing 10, padding 15 ]
                         ]
                 ]
             }
