@@ -130,7 +130,11 @@ class ExecutionServiceSpec
               .withEntity(pred.copy(taskId = createdTask.id))
           )
           createdExecution <- createExecution(
-            Execution.Create(taskId = createdTask.id, arguments = Map("a" -> "1").asJson),
+            Execution.Create(
+              name = "test execution",
+              taskId = createdTask.id,
+              arguments = Map("a" -> "1").asJson
+            ),
             executionService
           )
           _ <- deleteTask(createdTask, taskService)
