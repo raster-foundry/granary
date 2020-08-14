@@ -41,6 +41,7 @@ import Json.Schema.Validation as Validation
 import Maybe.Extra exposing (orElse)
 import Result
 import Set exposing (Set)
+import String
 import Time
 import Url
 import Url.Parser as Parser exposing ((</>), (<?>))
@@ -306,6 +307,7 @@ type Msg
     | CreateExecution ExecutionCreate
     | ToggleShowAssets Uuid.Uuid
     | SearchExecutionName String
+    | AddTokenParam GranaryToken
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -355,7 +357,7 @@ update msg model =
                         ( _, Nothing ) ->
                             ( Cmd.none, Nothing )
             in
-            ( { model | secrets = token }, cmd )
+            ( { model | secrets = token, url = url }, cmd )
 
         Navigation urlRequest ->
             case urlRequest of
@@ -483,6 +485,36 @@ update msg model =
                 |> Maybe.map (fetchExecutions (Just s) (Maybe.map .id model.selectedTask))
                 |> Maybe.withDefault Cmd.none
             )
+
+        AddTokenParam token ->
+            let
+                baseUrl =
+                    model.url
+
+                hasToken =
+                    baseUrl.query |> Maybe.withDefault "" |> String.contains "token"
+
+                isEmpty =
+                    baseUrl.query |> Maybe.withDefault "" |> String.isEmpty
+
+                tokenQp =
+                    "token=" ++ token
+
+                newQp =
+                    case ( hasToken, isEmpty ) of
+                        -- technically, (True, False) can't happen
+                        ( True, _ ) ->
+                            baseUrl.query
+                                |> Maybe.withDefault ""
+
+                        ( False, False ) ->
+                            tokenQp
+                                |> (++) ((baseUrl.query |> Maybe.withDefault "") ++ "&")
+
+                        ( False, True ) ->
+                            tokenQp
+            in
+            ( model, Nav.pushUrl model.key (Url.toString { baseUrl | query = Just newQp }) )
 
 
 
@@ -923,11 +955,17 @@ secretPage =
     }
 
 
-logoTop : List (Element Msg) -> Element Msg
-logoTop rest =
+logoTop : Maybe GranaryToken -> List (Element Msg) -> Element Msg
+logoTop secrets rest =
     column [ width fill, Element.centerX ] <|
-        logo [ width fill ] 100
-            :: rest
+        [ row [ Element.centerX, Element.maximum 400 fill |> width ] <|
+            [ logo
+                [ width fill ]
+                100
+            , pageLink secrets
+            ]
+        ]
+            ++ rest
 
 
 executionAssets : Bool -> GranaryExecution -> List (Element Msg)
@@ -983,52 +1021,66 @@ nameSearchInput currValue =
         |> row [ width fill ]
 
 
+pageLink : Maybe GranaryToken -> Element Msg
+pageLink secrets =
+    Input.button []
+        { onPress = secrets |> Maybe.map AddTokenParam
+        , label = text "🔗"
+        }
+
+
+taskList : Model -> Element Msg
+taskList model =
+    logoTop model.secrets <|
+        [ row [ Element.centerX ]
+            [ column
+                [ fillPortion 1 |> width
+                , spacing 10
+                , padding 10
+                , Element.alignTop
+                ]
+                (model.granaryTasks
+                    |> List.map
+                        (taskCard
+                            (Maybe.map .id model.selectedTask)
+                        )
+                )
+            , column
+                [ fillPortion 3 |> width
+                , height fill
+                , spacing 10
+                , padding 10
+                ]
+                (Maybe.withDefault
+                    [ styledPrimaryText [] "👈 Choose a model on the left" ]
+                    (model.selectedTask
+                        |> Maybe.map
+                            (\selected ->
+                                executionInput model.formValues model.taskValidationErrors selected
+                                    ++ [ row []
+                                            [ submitButton (allowModelSubmit model.activeSchema)
+                                                model.formValues
+                                                "Some inputs are invalid"
+                                                (toExecutionCreate selected.name selected.id model.formValues |> CreateExecution)
+                                            ]
+                                       ]
+                            )
+                    )
+                )
+            ]
+        ]
+
+
 view : Model -> Browser.Document Msg
 view model =
     case ( model.route, model.secrets ) of
         ( TaskList _, Just _ ) ->
+            let
+                taskListBody =
+                    taskList model
+            in
             { title = "Available Models"
-            , body =
-                [ Element.layout [] <|
-                    logoTop
-                        [ row [ Element.centerX ]
-                            [ column
-                                [ fillPortion 1 |> width
-                                , spacing 10
-                                , padding 10
-                                , Element.alignTop
-                                ]
-                                (model.granaryTasks
-                                    |> List.map
-                                        (taskCard
-                                            (Maybe.map .id model.selectedTask)
-                                        )
-                                )
-                            , column
-                                [ fillPortion 3 |> width
-                                , height fill
-                                , spacing 10
-                                , padding 10
-                                ]
-                                (Maybe.withDefault
-                                    [ styledPrimaryText [] "👈 Choose a model on the left" ]
-                                    (model.selectedTask
-                                        |> Maybe.map
-                                            (\selected ->
-                                                executionInput model.formValues model.taskValidationErrors selected
-                                                    ++ [ row []
-                                                            [ submitButton (allowModelSubmit model.activeSchema)
-                                                                model.formValues
-                                                                "Some inputs are invalid"
-                                                                (toExecutionCreate selected.name selected.id model.formValues |> CreateExecution)
-                                                            ]
-                                                       ]
-                                            )
-                                    )
-                                )
-                            ]
-                        ]
-                ]
+            , body = [ Element.layout [] taskListBody ]
             }
 
         ( ExecutionList _ _, Just _ ) ->
@@ -1042,7 +1094,7 @@ view model =
             { title = "Execution list"
             , body =
                 [ Element.layout [] <|
-                    logoTop
+                    logoTop model.secrets
                         [ nameSearchInput model.executionNameSearch
                             :: (model.granaryExecutions
                                     |> List.map card
