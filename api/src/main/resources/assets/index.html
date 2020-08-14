@@ -5717,6 +5717,88 @@ var $author$project$Main$GotExecutions = F2(
 	function (a, b) {
 		return {$: 'GotExecutions', a: a, b: b};
 	});
+var $elm$core$String$concat = function (strings) {
+	return A2($elm$core$String$join, '', strings);
+};
+var $elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _v0 = f(mx);
+		if (_v0.$ === 'Just') {
+			var x = _v0.a;
+			return A2($elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var $elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			$elm$core$List$foldr,
+			$elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
+var $elm$core$List$intersperse = F2(
+	function (sep, xs) {
+		if (!xs.b) {
+			return _List_Nil;
+		} else {
+			var hd = xs.a;
+			var tl = xs.b;
+			var step = F2(
+				function (x, rest) {
+					return A2(
+						$elm$core$List$cons,
+						sep,
+						A2($elm$core$List$cons, x, rest));
+				});
+			var spersed = A3($elm$core$List$foldr, step, _List_Nil, tl);
+			return A2($elm$core$List$cons, hd, spersed);
+		}
+	});
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $danyx23$elm_uuid$Uuid$toString = function (_v0) {
+	var internalString = _v0.a;
+	return internalString;
+};
+var $author$project$Main$executionsUrl = F2(
+	function (namesLike, taskId) {
+		var taskSearch = A2(
+			$elm$core$Maybe$map,
+			A2(
+				$elm$core$Basics$composeL,
+				$elm$core$Basics$append('taskId='),
+				$danyx23$elm_uuid$Uuid$toString),
+			taskId);
+		var nameSearch = A2(
+			$elm$core$Maybe$map,
+			$elm$core$Basics$append('name='),
+			namesLike);
+		var qp = $elm$core$String$concat(
+			A2(
+				$elm$core$List$intersperse,
+				'&',
+				A2(
+					$elm$core$List$filterMap,
+					$elm$core$Basics$identity,
+					_List_fromArray(
+						[taskSearch, nameSearch]))));
+		var baseUrl = '/executions';
+		return $elm$core$String$isEmpty(qp) ? baseUrl : (baseUrl + ('?' + qp));
+	});
+var $author$project$Main$apiExecutionsUrl = F2(
+	function (namesLike, taskId) {
+		return '/api' + A2($author$project$Main$executionsUrl, namesLike, taskId);
+	});
 var $author$project$Main$GranaryExecution = F7(
 	function (id, taskId, invokedAt, statusReason, results, webhookId, name) {
 		return {id: id, invokedAt: invokedAt, name: name, results: results, statusReason: statusReason, taskId: taskId, webhookId: webhookId};
@@ -6602,43 +6684,6 @@ var $author$project$Main$decoderGranaryExecution = A8(
 		'webhookId',
 		$elm$json$Json$Decode$maybe($danyx23$elm_uuid$Uuid$decoder)),
 	A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string));
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
-var $danyx23$elm_uuid$Uuid$toString = function (_v0) {
-	var internalString = _v0.a;
-	return internalString;
-};
-var $author$project$Main$executionsUrl = F2(
-	function (namesLike, taskId) {
-		var taskSearch = A2(
-			$elm$core$Maybe$withDefault,
-			'',
-			A2(
-				$elm$core$Maybe$map,
-				A2(
-					$elm$core$Basics$composeL,
-					$elm$core$Basics$append('taskId='),
-					$danyx23$elm_uuid$Uuid$toString),
-				taskId));
-		var nameSearch = A2(
-			$elm$core$Maybe$withDefault,
-			'',
-			A2(
-				$elm$core$Maybe$map,
-				$elm$core$Basics$append('name='),
-				namesLike));
-		var qp = _Utils_ap(taskSearch, nameSearch);
-		var baseUrl = '/api/executions';
-		return $elm$core$String$isEmpty(qp) ? baseUrl : (baseUrl + ('?' + qp));
-	});
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
@@ -7372,24 +7417,6 @@ var $elm$http$Http$onEffects = F4(
 			},
 			A3($elm$http$Http$updateReqs, router, cmds, state.reqs));
 	});
-var $elm$core$List$maybeCons = F3(
-	function (f, mx, xs) {
-		var _v0 = f(mx);
-		if (_v0.$ === 'Just') {
-			var x = _v0.a;
-			return A2($elm$core$List$cons, x, xs);
-		} else {
-			return xs;
-		}
-	});
-var $elm$core$List$filterMap = F2(
-	function (f, xs) {
-		return A3(
-			$elm$core$List$foldr,
-			$elm$core$List$maybeCons(f),
-			_List_Nil,
-			xs);
-	});
 var $elm$http$Http$maybeSend = F4(
 	function (router, desiredTracker, progress, _v0) {
 		var actualTracker = _v0.a;
@@ -7502,7 +7529,7 @@ var $author$project$Main$fetchExecutions = F3(
 						$author$project$Main$GotExecutions(taskId),
 						$author$project$Main$paginatedDecoder($author$project$Main$decoderGranaryExecution)),
 					$lukewestby$elm_http_builder$HttpBuilder$get(
-						A2($author$project$Main$executionsUrl, namesLike, taskId)))));
+						A2($author$project$Main$apiExecutionsUrl, namesLike, taskId)))));
 	});
 var $author$project$Main$GotTasks = function (a) {
 	return {$: 'GotTasks', a: a};
@@ -8729,24 +8756,6 @@ var $author$project$Main$routeParser = function () {
 					$elm$url$Url$Parser$Query$string('token')))
 			]));
 }();
-var $elm$core$List$intersperse = F2(
-	function (sep, xs) {
-		if (!xs.b) {
-			return _List_Nil;
-		} else {
-			var hd = xs.a;
-			var tl = xs.b;
-			var step = F2(
-				function (x, rest) {
-					return A2(
-						$elm$core$List$cons,
-						sep,
-						A2($elm$core$List$cons, x, rest));
-				});
-			var spersed = A3($elm$core$List$foldr, step, _List_Nil, tl);
-			return A2($elm$core$List$cons, hd, spersed);
-		}
-	});
 var $author$project$Main$showType = function (t) {
 	switch (t.$) {
 		case 'SingleType':
@@ -10878,7 +10887,7 @@ var $author$project$Main$update = F2(
 							}
 							var t = _v2.b.a;
 							return _Utils_Tuple2(
-								A2($elm$browser$Browser$Navigation$pushUrl, model.key, '/tasks?token=' + t),
+								A2($elm$browser$Browser$Navigation$pushUrl, model.key, '/tasks'),
 								$elm$core$Maybe$Just(t));
 						}
 						var _v3 = _v2.a.a;
@@ -13448,9 +13457,6 @@ var $mdgriffith$elm_ui$Internal$Style$sliderReset = '\ninput[type=range] {\n  -w
 var $mdgriffith$elm_ui$Internal$Style$thumbReset = '\ninput[type=range]::-webkit-slider-thumb {\n    -webkit-appearance: none;\n    opacity: 0.5;\n    width: 80px;\n    height: 80px;\n    background-color: black;\n    border:none;\n    border-radius: 5px;\n}\ninput[type=range]::-moz-range-thumb {\n    opacity: 0.5;\n    width: 80px;\n    height: 80px;\n    background-color: black;\n    border:none;\n    border-radius: 5px;\n}\ninput[type=range]::-ms-thumb {\n    opacity: 0.5;\n    width: 80px;\n    height: 80px;\n    background-color: black;\n    border:none;\n    border-radius: 5px;\n}\ninput[type=range][orient=vertical]{\n    writing-mode: bt-lr; /* IE */\n    -webkit-appearance: slider-vertical;  /* WebKit */\n}\n';
 var $mdgriffith$elm_ui$Internal$Style$trackReset = '\ninput[type=range]::-moz-range-track {\n    background: transparent;\n    cursor: pointer;\n}\ninput[type=range]::-ms-track {\n    background: transparent;\n    cursor: pointer;\n}\ninput[type=range]::-webkit-slider-runnable-track {\n    background: transparent;\n    cursor: pointer;\n}\n';
 var $mdgriffith$elm_ui$Internal$Style$overrides = '@media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {' + ($mdgriffith$elm_ui$Internal$Style$dot($mdgriffith$elm_ui$Internal$Style$classes.any) + ($mdgriffith$elm_ui$Internal$Style$dot($mdgriffith$elm_ui$Internal$Style$classes.row) + (' > ' + ($mdgriffith$elm_ui$Internal$Style$dot($mdgriffith$elm_ui$Internal$Style$classes.any) + (' { flex-basis: auto !important; } ' + ($mdgriffith$elm_ui$Internal$Style$dot($mdgriffith$elm_ui$Internal$Style$classes.any) + ($mdgriffith$elm_ui$Internal$Style$dot($mdgriffith$elm_ui$Internal$Style$classes.row) + (' > ' + ($mdgriffith$elm_ui$Internal$Style$dot($mdgriffith$elm_ui$Internal$Style$classes.any) + ($mdgriffith$elm_ui$Internal$Style$dot($mdgriffith$elm_ui$Internal$Style$classes.container) + (' { flex-basis: auto !important; }}' + ($mdgriffith$elm_ui$Internal$Style$inputTextReset + ($mdgriffith$elm_ui$Internal$Style$sliderReset + ($mdgriffith$elm_ui$Internal$Style$trackReset + ($mdgriffith$elm_ui$Internal$Style$thumbReset + $mdgriffith$elm_ui$Internal$Style$explainer)))))))))))))));
-var $elm$core$String$concat = function (strings) {
-	return A2($elm$core$String$join, '', strings);
-};
 var $mdgriffith$elm_ui$Internal$Style$Intermediate = function (a) {
 	return {$: 'Intermediate', a: a};
 };
@@ -16747,6 +16753,7 @@ var $author$project$Main$styledSecondaryText = F2(
 				attrs),
 			$mdgriffith$elm_ui$Element$text(s));
 	});
+var $mdgriffith$elm_ui$Element$Font$underline = $mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.underline);
 var $author$project$Main$executionAssetsList = $elm$core$List$map(
 	function (asset) {
 		return A2(
@@ -16755,7 +16762,8 @@ var $author$project$Main$executionAssetsList = $elm$core$List$map(
 			{
 				label: A2(
 					$author$project$Main$styledSecondaryText,
-					_List_Nil,
+					_List_fromArray(
+						[$mdgriffith$elm_ui$Element$Font$underline]),
 					A2(
 						$elm$core$Maybe$withDefault,
 						$elm$core$String$concat(
@@ -18959,27 +18967,74 @@ var $author$project$Main$submitButton = F4(
 var $author$project$Main$TaskSelect = function (a) {
 	return {$: 'TaskSelect', a: a};
 };
-var $author$project$Main$taskCard = F2(
+var $author$project$Main$tasksLink = F2(
 	function (selectedId, task) {
-		return A2(
+		return _Utils_eq(
+			selectedId,
+			$elm$core$Maybe$Just(task.id)) ? A2(
 			$mdgriffith$elm_ui$Element$row,
-			A2(
-				$elm$core$List$cons,
-				$mdgriffith$elm_ui$Element$Font$color($author$project$Main$primary),
-				_Utils_eq(
-					$elm$core$Maybe$Just(task.id),
-					selectedId) ? _List_fromArray(
-					[$author$project$Main$secondaryShadow]) : _List_Nil),
+			_List_fromArray(
+				[
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
+				]),
 			_List_fromArray(
 				[
 					A2(
-					$mdgriffith$elm_ui$Element$Input$button,
-					$Orasund$elm_ui_framework$Framework$Button$simple,
-					{
-						label: $mdgriffith$elm_ui$Element$text(task.name),
-						onPress: $elm$core$Maybe$Just(
-							$author$project$Main$TaskSelect(task))
-					})
+					$mdgriffith$elm_ui$Element$row,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$mdgriffith$elm_ui$Element$link,
+							_List_Nil,
+							{
+								label: A2(
+									$author$project$Main$styledSecondaryText,
+									_List_fromArray(
+										[$mdgriffith$elm_ui$Element$Font$underline]),
+									'Executions'),
+								url: A2(
+									$author$project$Main$executionsUrl,
+									$elm$core$Maybe$Nothing,
+									$elm$core$Maybe$Just(task.id))
+							})
+						]))
+				])) : A2($mdgriffith$elm_ui$Element$row, _List_Nil, _List_Nil);
+	});
+var $author$project$Main$taskCard = F2(
+	function (selectedId, task) {
+		return A2(
+			$mdgriffith$elm_ui$Element$column,
+			A2(
+				$elm$core$List$cons,
+				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+				A2(
+					$elm$core$List$cons,
+					$mdgriffith$elm_ui$Element$spacing(5),
+					A2($elm$core$List$cons, $mdgriffith$elm_ui$Element$centerY, $Orasund$elm_ui_framework$Framework$Button$simple))),
+			_List_fromArray(
+				[
+					A2(
+					$mdgriffith$elm_ui$Element$row,
+					A2(
+						$elm$core$List$cons,
+						$mdgriffith$elm_ui$Element$Font$color($author$project$Main$primary),
+						_Utils_eq(
+							$elm$core$Maybe$Just(task.id),
+							selectedId) ? _List_fromArray(
+							[$author$project$Main$secondaryShadow]) : _List_Nil),
+					_List_fromArray(
+						[
+							A2(
+							$mdgriffith$elm_ui$Element$Input$button,
+							_List_Nil,
+							{
+								label: $mdgriffith$elm_ui$Element$text(task.name),
+								onPress: $elm$core$Maybe$Just(
+									$author$project$Main$TaskSelect(task))
+							})
+						])),
+					A2($author$project$Main$tasksLink, selectedId, task)
 				]));
 	});
 var $author$project$Main$ExecutionCreate = F3(

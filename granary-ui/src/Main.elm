@@ -224,24 +224,30 @@ toExecutionCreate executionName taskId validatedFields =
     ExecutionCreate executionName taskId (JE.object goodFields)
 
 
+apiExecutionsUrl : Maybe String -> Maybe Uuid.Uuid -> String
+apiExecutionsUrl namesLike taskId =
+    "/api" ++ executionsUrl namesLike taskId
+
+
 executionsUrl : Maybe String -> Maybe Uuid.Uuid -> String
 executionsUrl namesLike taskId =
     let
         baseUrl =
-            "/api/executions"
+            "/executions"
 
         taskSearch =
             taskId
                 |> Maybe.map ((++) "taskId=" << Uuid.toString)
-                |> Maybe.withDefault ""
 
         nameSearch =
             namesLike
                 |> Maybe.map ((++) "name=")
-                |> Maybe.withDefault ""
 
         qp =
-            taskSearch ++ nameSearch
+            [ taskSearch, nameSearch ]
+                |> List.filterMap identity
+                |> List.intersperse "&"
+                |> String.concat
     in
     if String.isEmpty qp then
         baseUrl
@@ -260,7 +266,7 @@ fetchTasks token =
 
 fetchExecutions : Maybe String -> Maybe Uuid.Uuid -> GranaryToken -> Cmd.Cmd Msg
 fetchExecutions namesLike taskId token =
-    executionsUrl namesLike taskId
+    apiExecutionsUrl namesLike taskId
         |> B.get
         |> B.withExpect (Http.expectJson (GotExecutions taskId) (paginatedDecoder decoderGranaryExecution))
         |> B.withBearerToken token
@@ -344,7 +350,7 @@ update msg model =
                                 |> getCmd (fetchExecutions Nothing taskId)
 
                         ( _, Just t ) ->
-                            ( Nav.pushUrl model.key ("/tasks?token=" ++ t), Just t )
+                            ( Nav.pushUrl model.key "/tasks", Just t )
 
                         ( _, Nothing ) ->
                             ( Cmd.none, Nothing )
@@ -584,22 +590,41 @@ logo attrs maxSize =
         }
 
 
+tasksLink : Maybe Uuid.Uuid -> GranaryTask -> Element Msg
+tasksLink selectedId task =
+    if selectedId == Just task.id then
+        row [ width fill ]
+            [ row []
+                [ Element.link []
+                    { url = executionsUrl Nothing (Just task.id)
+                    , label = styledSecondaryText [ Font.underline ] "Executions"
+                    }
+                ]
+            ]
+
+    else
+        row [] []
+
+
 taskCard : Maybe Uuid.Uuid -> GranaryTask -> Element Msg
 taskCard selectedId task =
-    row
-        (Font.color primary
-            :: (if Just task.id == selectedId then
-                    [ secondaryShadow ]
+    column (width fill :: spacing 5 :: Element.centerY :: Button.simple)
+        [ row
+            (Font.color primary
+                :: (if Just task.id == selectedId then
+                        [ secondaryShadow ]
 
-                else
-                    []
-               )
-        )
-        [ Input.button
-            Button.simple
-            { label = text task.name
-            , onPress = TaskSelect task |> Just
-            }
+                    else
+                        []
+                   )
+            )
+            [ Input.button
+                []
+                { label = text task.name
+                , onPress = TaskSelect task |> Just
+                }
+            ]
+        , tasksLink selectedId task
         ]
 
 
@@ -842,7 +867,7 @@ executionAssetsList =
             Element.link []
                 { url = asset.href
                 , label =
-                    styledSecondaryText []
+                    styledSecondaryText [ Font.underline ]
                         (asset.title
                             |> orElse asset.description
                             |> Maybe.withDefault
