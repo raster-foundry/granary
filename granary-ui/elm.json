@@ -17,6 +17,7 @@
             "elm/time": "1.0.0",
             "elm/url": "1.0.0",
             "elm-community/json-extra": "4.2.0",
+            "elm-community/maybe-extra": "5.2.0",
             "lukewestby/elm-http-builder": "7.0.0",
             "mdgriffith/elm-ui": "1.1.5",
             "rtfeldman/elm-iso8601-date-strings": "1.1.3"

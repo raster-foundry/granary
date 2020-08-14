@@ -38,6 +38,7 @@ import Json.Schema.Definitions as Schema
         , Type(..)
         )
 import Json.Schema.Validation as Validation
+import Maybe.Extra exposing (orElse)
 import Result
 import Set exposing (Set)
 import Time
@@ -834,6 +835,23 @@ executionInput formValues errors task =
             schemaToForm formValues errors subSchema
 
 
+executionAssetsList : List StacAsset -> List (Element Msg)
+executionAssetsList =
+    List.map
+        (\asset ->
+            Element.link []
+                { url = asset.href
+                , label =
+                    styledSecondaryText []
+                        (asset.title
+                            |> orElse asset.description
+                            |> Maybe.withDefault
+                                (asset.roles |> List.intersperse ", " |> String.concat)
+                        )
+                }
+        )
+
+
 getErrField : Validation.Error -> String
 getErrField err =
     case err.jsonPointer.path of
@@ -901,14 +919,7 @@ executionAssets showAssets execution =
             , styledPrimaryText [] " Show assets"
             ]
             :: (if showAssets then
-                    execution.results
-                        |> List.map
-                            (\asset ->
-                                Element.link []
-                                    { url = asset.href
-                                    , label = styledSecondaryText [] (asset.roles |> List.intersperse ", " |> String.concat)
-                                    }
-                            )
+                    executionAssetsList execution.results
 
                 else
                     []

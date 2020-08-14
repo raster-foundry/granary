@@ -16671,25 +16671,13 @@ var $mdgriffith$elm_ui$Element$link = F2(
 				_List_fromArray(
 					[label])));
 	});
-var $mdgriffith$elm_ui$Internal$Model$AsRow = {$: 'AsRow'};
-var $mdgriffith$elm_ui$Internal$Model$asRow = $mdgriffith$elm_ui$Internal$Model$AsRow;
-var $mdgriffith$elm_ui$Element$row = F2(
-	function (attrs, children) {
-		return A4(
-			$mdgriffith$elm_ui$Internal$Model$element,
-			$mdgriffith$elm_ui$Internal$Model$asRow,
-			$mdgriffith$elm_ui$Internal$Model$div,
-			A2(
-				$elm$core$List$cons,
-				$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.contentLeft + (' ' + $mdgriffith$elm_ui$Internal$Style$classes.contentCenterY)),
-				A2(
-					$elm$core$List$cons,
-					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$shrink),
-					A2(
-						$elm$core$List$cons,
-						$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$shrink),
-						attrs))),
-			$mdgriffith$elm_ui$Internal$Model$Unkeyed(children));
+var $elm_community$maybe_extra$Maybe$Extra$orElse = F2(
+	function (ma, mb) {
+		if (mb.$ === 'Nothing') {
+			return ma;
+		} else {
+			return mb;
+		}
 	});
 var $mdgriffith$elm_ui$Internal$Model$Colored = F3(
 	function (a, b, c) {
@@ -16742,24 +16730,13 @@ var $mdgriffith$elm_ui$Element$rgb255 = F3(
 	function (red, green, blue) {
 		return A4($mdgriffith$elm_ui$Internal$Model$Rgba, red / 255, green / 255, blue / 255, 1);
 	});
-var $author$project$Main$primary = A3($mdgriffith$elm_ui$Element$rgb255, 75, 59, 64);
+var $author$project$Main$secondary = A3($mdgriffith$elm_ui$Element$rgb255, 246, 141, 17);
 var $mdgriffith$elm_ui$Internal$Model$Text = function (a) {
 	return {$: 'Text', a: a};
 };
 var $mdgriffith$elm_ui$Element$text = function (content) {
 	return $mdgriffith$elm_ui$Internal$Model$Text(content);
 };
-var $author$project$Main$styledPrimaryText = F2(
-	function (attrs, s) {
-		return A2(
-			$mdgriffith$elm_ui$Element$el,
-			A2(
-				$elm$core$List$cons,
-				$mdgriffith$elm_ui$Element$Font$color($author$project$Main$primary),
-				attrs),
-			$mdgriffith$elm_ui$Element$text(s));
-	});
-var $author$project$Main$secondary = A3($mdgriffith$elm_ui$Element$rgb255, 246, 141, 17);
 var $author$project$Main$styledSecondaryText = F2(
 	function (attrs, s) {
 		return A2(
@@ -16767,6 +16744,54 @@ var $author$project$Main$styledSecondaryText = F2(
 			A2(
 				$elm$core$List$cons,
 				$mdgriffith$elm_ui$Element$Font$color($author$project$Main$secondary),
+				attrs),
+			$mdgriffith$elm_ui$Element$text(s));
+	});
+var $author$project$Main$executionAssetsList = $elm$core$List$map(
+	function (asset) {
+		return A2(
+			$mdgriffith$elm_ui$Element$link,
+			_List_Nil,
+			{
+				label: A2(
+					$author$project$Main$styledSecondaryText,
+					_List_Nil,
+					A2(
+						$elm$core$Maybe$withDefault,
+						$elm$core$String$concat(
+							A2($elm$core$List$intersperse, ', ', asset.roles)),
+						A2($elm_community$maybe_extra$Maybe$Extra$orElse, asset.description, asset.title))),
+				url: asset.href
+			});
+	});
+var $mdgriffith$elm_ui$Internal$Model$AsRow = {$: 'AsRow'};
+var $mdgriffith$elm_ui$Internal$Model$asRow = $mdgriffith$elm_ui$Internal$Model$AsRow;
+var $mdgriffith$elm_ui$Element$row = F2(
+	function (attrs, children) {
+		return A4(
+			$mdgriffith$elm_ui$Internal$Model$element,
+			$mdgriffith$elm_ui$Internal$Model$asRow,
+			$mdgriffith$elm_ui$Internal$Model$div,
+			A2(
+				$elm$core$List$cons,
+				$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.contentLeft + (' ' + $mdgriffith$elm_ui$Internal$Style$classes.contentCenterY)),
+				A2(
+					$elm$core$List$cons,
+					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$shrink),
+					A2(
+						$elm$core$List$cons,
+						$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$shrink),
+						attrs))),
+			$mdgriffith$elm_ui$Internal$Model$Unkeyed(children));
+	});
+var $author$project$Main$primary = A3($mdgriffith$elm_ui$Element$rgb255, 75, 59, 64);
+var $author$project$Main$styledPrimaryText = F2(
+	function (attrs, s) {
+		return A2(
+			$mdgriffith$elm_ui$Element$el,
+			A2(
+				$elm$core$List$cons,
+				$mdgriffith$elm_ui$Element$Font$color($author$project$Main$primary),
 				attrs),
 			$mdgriffith$elm_ui$Element$text(s));
 	});
@@ -16789,22 +16814,7 @@ var $author$project$Main$executionAssets = F2(
 						}),
 						A2($author$project$Main$styledPrimaryText, _List_Nil, ' Show assets')
 					])),
-			showAssets ? A2(
-				$elm$core$List$map,
-				function (asset) {
-					return A2(
-						$mdgriffith$elm_ui$Element$link,
-						_List_Nil,
-						{
-							label: A2(
-								$author$project$Main$styledSecondaryText,
-								_List_Nil,
-								$elm$core$String$concat(
-									A2($elm$core$List$intersperse, ', ', asset.roles))),
-							url: asset.href
-						});
-				},
-				execution.results) : _List_Nil);
+			showAssets ? $author$project$Main$executionAssetsList(execution.results) : _List_Nil);
 	});
 var $mdgriffith$elm_ui$Internal$Model$Fill = function (a) {
 	return {$: 'Fill', a: a};
