@@ -39,6 +39,7 @@ import Json.Schema.Definitions as Schema
         )
 import Json.Schema.Validation as Validation
 import Result
+import Set exposing (Set)
 import Time
 import Url
 import Url.Parser as Parser exposing ((</>), (<?>))
@@ -67,6 +68,7 @@ type alias Model =
     , taskValidationErrors : Dict String (List Validation.Error)
     , formValues : Dict String (Result String JD.Value)
     , selectedTask : Maybe GranaryTask
+    , selectedExecutions : Set String
     , secrets : Maybe GranaryToken
     , secretsUnsubmitted : Maybe GranaryToken
     }
@@ -97,11 +99,13 @@ type alias GranaryExecution =
     , statusReason : Maybe String
     , results : List StacAsset
     , webhookId : Maybe Uuid.Uuid
+    , name : String
     }
 
 
 type alias ExecutionCreate =
-    { taskId : Uuid.Uuid
+    { name : String
+    , taskId : Uuid.Uuid
     , arguments : JD.Value
     }
 
@@ -111,6 +115,7 @@ encodeExecutionCreate executionCreate =
     JE.object
         [ ( "taskId", Uuid.encode executionCreate.taskId )
         , ( "arguments", executionCreate.arguments )
+        , ( "name", JE.string executionCreate.name )
         ]
 
 
@@ -138,7 +143,7 @@ decoderStacAsset =
 
 decoderGranaryExecution : JD.Decoder GranaryExecution
 decoderGranaryExecution =
-    JD.map6
+    JD.map7
         GranaryExecution
         (JD.field "id" Uuid.decoder)
         (JD.field "taskId" Uuid.decoder)
@@ -146,6 +151,7 @@ decoderGranaryExecution =
         (JD.field "statusReason" <| JD.maybe JD.string)
         (JD.field "results" <| JD.list decoderStacAsset)
         (JD.field "webhookId" <| JD.maybe Uuid.decoder)
+        (JD.field "name" JD.string)
 
 
 paginatedDecoder : JD.Decoder a -> JD.Decoder (PaginatedResponse a)
@@ -186,6 +192,7 @@ init _ url key =
       , granaryTasks = []
       , granaryExecutions = []
       , selectedTask = Nothing
+      , selectedExecutions = Set.empty
       , activeSchema = Nothing
       , taskValidationErrors = Dict.empty
       , formValues = Dict.empty
@@ -200,8 +207,8 @@ init _ url key =
 ---- UPDATE ----
 
 
-toExecutionCreate : Uuid.Uuid -> Dict String (Result String JD.Value) -> ExecutionCreate
-toExecutionCreate taskId validatedFields =
+toExecutionCreate : String -> Uuid.Uuid -> Dict String (Result String JD.Value) -> ExecutionCreate
+toExecutionCreate executionName taskId validatedFields =
     let
         goodFields =
             Dict.toList validatedFields
@@ -211,7 +218,7 @@ toExecutionCreate taskId validatedFields =
                             |> Maybe.map (\goodVal -> ( k, goodVal ))
                     )
     in
-    ExecutionCreate taskId (JE.object goodFields)
+    ExecutionCreate executionName taskId (JE.object goodFields)
 
 
 executionsUrl : Maybe Uuid.Uuid -> String
@@ -270,6 +277,7 @@ type Msg
         , fieldValue : Result String JD.Value
         }
     | CreateExecution ExecutionCreate
+    | ToggleShowAssets Uuid.Uuid
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -421,6 +429,25 @@ update msg model =
 
         CreateExecution executionCreate ->
             ( model, maybePostExecution model.secrets executionCreate )
+
+        ToggleShowAssets executionId ->
+            let
+                stringExecutionId =
+                    Uuid.toString executionId
+
+                selectedExecutions =
+                    model.selectedExecutions
+            in
+            ( { model
+                | selectedExecutions =
+                    if Set.member stringExecutionId selectedExecutions then
+                        Set.remove stringExecutionId selectedExecutions
+
+                    else
+                        Set.insert stringExecutionId selectedExecutions
+              }
+            , Cmd.none
+            )
 
 
 
@@ -827,9 +854,57 @@ secretPage =
 
 logoTop : List (Element Msg) -> Element Msg
 logoTop rest =
-    column [ width fill ] <|
+    column [ width fill, Element.centerX ] <|
         logo [ width fill ] 100
             :: rest
+
+
+executionAssets : Bool -> GranaryExecution -> List (Element Msg)
+executionAssets showAssets execution =
+    if List.isEmpty execution.results then
+        []
+
+    else
+        row []
+            [ Input.button []
+                { onPress = ToggleShowAssets execution.id |> Just
+                , label = text "➕"
+                }
+            , styledPrimaryText [] " Show assets"
+            ]
+            :: (if showAssets then
+                    execution.results
+                        |> List.map
+                            (\asset ->
+                                Element.link []
+                                    { url = asset.href
+                                    , label = styledSecondaryText [] (asset.roles |> List.intersperse ", " |> String.concat)
+                                    }
+                            )
+
+                else
+                    []
+               )
+
+
+executionCard : Bool -> GranaryExecution -> Element Msg
+executionCard showAssets execution =
+    [ column
+        (width
+            (fill
+                |> Element.minimum 350
+                |> Element.maximum 400
+            )
+            :: spacing 5
+            :: Card.simple
+        )
+        ([ row [] [ styledPrimaryText [] execution.name ]
+         , row [] [ styledPrimaryText [] ("Status: " ++ toEmoji execution) ]
+         ]
+            ++ executionAssets showAssets execution
+        )
+    ]
+        |> row [ width fill ]
 
 
 view : Model -> Browser.Document Msg
@@ -869,7 +944,7 @@ view model =
                                                             [ submitButton (allowModelSubmit model.activeSchema)
                                                                 model.formValues
                                                                 "Some inputs are invalid"
-                                                                (toExecutionCreate selected.id model.formValues |> CreateExecution)
+                                                                (toExecutionCreate selected.name selected.id model.formValues |> CreateExecution)
                                                             ]
                                                        ]
                                             )
@@ -881,16 +956,22 @@ view model =
             }
 
         ( ExecutionList _ _, Just _ ) ->
+            let
+                showAssets execution =
+                    Set.member (Uuid.toString execution.id) model.selectedExecutions
+
+                card execution =
+                    executionCard (showAssets execution) execution
+            in
             { title = "Execution list"
             , body =
                 [ Element.layout [] <|
                     logoTop
-                        (model.granaryExecutions
-                            |> List.map
-                                (\execution ->
-                                    Element.el Card.simple (styledPrimaryText [] (Uuid.toString execution.id ++ toEmoji execution))
-                                )
-                        )
+                        [ column [ Element.centerX, spacing 10, padding 15 ]
+                            (model.granaryExecutions
+                                |> List.map card
+                            )
+                        ]
                 ]
             }
 
