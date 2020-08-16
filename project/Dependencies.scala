@@ -17,7 +17,7 @@ object Versions {
   val Http4sVersion          = "0.21.7"
   val LogbackVersion         = "1.2.3"
   val Log4CatsVersion        = "1.1.1"
-  val MagnoliaVersion        = "0.16.0"
+  val MagnoliaVersion        = "0.17.0"
   val NewtypeVersion         = "0.4.4"
   val OpenTracingVersion     = "0.1.1"
   val PureConfig             = "0.13.0"
