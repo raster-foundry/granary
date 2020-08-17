@@ -18612,38 +18612,31 @@ var $elm$core$Dict$values = function (dict) {
 var $author$project$Main$allowTaskSubmit = F2(
 	function (schema, formValues) {
 		var _v0 = _Utils_Tuple2(formValues.executionName, schema);
-		_v0$0:
-		while (true) {
+		if (_v0.a.$ === 'Nothing') {
+			var _v1 = _v0.a;
+			return false;
+		} else {
 			if (_v0.b.$ === 'Nothing') {
-				if (_v0.a.$ === 'Nothing') {
-					break _v0$0;
-				} else {
-					var _v2 = _v0.b;
-					return false;
-				}
+				var _v2 = _v0.b;
+				return false;
 			} else {
-				if (_v0.a.$ === 'Nothing') {
-					break _v0$0;
-				} else {
-					var schm = _v0.b.a;
-					return A3(
-						$elm$core$List$foldl,
-						F2(
-							function (x, y) {
-								return x && y;
-							}),
-						true,
-						A2(
-							$elm$core$List$map,
-							$author$project$Main$isOk,
-							$elm$core$Dict$values(formValues.fromSchema))) && _Utils_eq(
-						$elm$core$Dict$size(formValues.fromSchema),
-						$author$project$Main$numProperties(schm));
-				}
+				var s = _v0.a.a;
+				var schm = _v0.b.a;
+				return (!$elm$core$String$isEmpty(s)) && (A3(
+					$elm$core$List$foldl,
+					F2(
+						function (x, y) {
+							return x && y;
+						}),
+					true,
+					A2(
+						$elm$core$List$map,
+						$author$project$Main$isOk,
+						$elm$core$Dict$values(formValues.fromSchema))) && _Utils_eq(
+					$elm$core$Dict$size(formValues.fromSchema),
+					$author$project$Main$numProperties(schm)));
 			}
 		}
-		var _v1 = _v0.a;
-		return false;
 	});
 var $author$project$Main$NameExecution = function (a) {
 	return {$: 'NameExecution', a: a};

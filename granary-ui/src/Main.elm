@@ -734,8 +734,9 @@ allowTaskSubmit schema formValues =
         ( _, Nothing ) ->
             False
 
-        ( _, Just schm ) ->
-            List.foldl (\x y -> x && y) True (List.map isOk (Dict.values formValues.fromSchema))
+        ( Just s, Just schm ) ->
+            not (String.isEmpty s)
+                && List.foldl (\x y -> x && y) True (List.map isOk (Dict.values formValues.fromSchema))
                 && (Dict.size formValues.fromSchema
                         == numProperties schm
                    )
