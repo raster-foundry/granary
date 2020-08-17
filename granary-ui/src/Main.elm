@@ -181,8 +181,8 @@ paginatedDecoder ofDecoder =
 
 type Route
     = Login
-    | TaskList (Maybe GranaryToken)
-    | ExecutionList (Maybe Uuid.Uuid) (Maybe GranaryToken)
+    | TaskList
+    | ExecutionList (Maybe Uuid.Uuid)
 
 
 routeParser : Parser.Parser (Route -> a) a
@@ -193,8 +193,8 @@ routeParser =
     in
     Parser.oneOf
         [ Parser.map ExecutionList
-            (Parser.s "executions" <?> Query.custom "taskId" uuidQueryParam <?> Query.string "token")
-        , Parser.map TaskList (Parser.s "tasks" <?> Query.string "token")
+            (Parser.s "executions" <?> Query.custom "taskId" uuidQueryParam)
+        , Parser.map TaskList (Parser.s "tasks")
         ]
 
 
@@ -331,49 +331,30 @@ update msg model =
     case msg of
         UrlChanged url ->
             let
-                chooseToken urlToken modelToken =
-                    case ( urlToken, modelToken ) of
-                        ( Just t, _ ) ->
-                            Just t
-
-                        ( _, Just t ) ->
-                            Just t
-
-                        _ ->
-                            Nothing
-
                 routeResult =
                     Parser.parse routeParser url
 
                 getCmd f t =
-                    let
-                        maybeCmd =
-                            Maybe.map f t
-                    in
-                    case maybeCmd of
-                        Just c ->
-                            ( c, t )
+                    Maybe.map f t
+                        |> Maybe.withDefault Cmd.none
 
-                        _ ->
-                            ( Cmd.none, t )
-
-                ( cmd, token ) =
+                cmd =
                     case ( routeResult, model.secrets ) of
-                        ( Just (TaskList urlToken), modelToken ) ->
-                            chooseToken urlToken modelToken
-                                |> getCmd fetchTasks
+                        ( Just TaskList, modelToken ) ->
+                            getCmd fetchTasks modelToken
 
-                        ( Just (ExecutionList taskId urlToken), modelToken ) ->
-                            chooseToken urlToken modelToken
-                                |> getCmd (fetchExecutions Nothing taskId)
+                        ( Just (ExecutionList taskId), modelToken ) ->
+                            getCmd (fetchExecutions Nothing taskId) modelToken
 
-                        ( _, Just t ) ->
-                            ( Nav.pushUrl model.key "/tasks", Just t )
+                        -- we have a token available, but this is not a url we know how to handle
+                        -- possibly premature for actually storing the token in local storage
+                        ( _, Just _ ) ->
+                            Nav.pushUrl model.key "/tasks"
 
                         ( _, Nothing ) ->
-                            ( Cmd.none, Nothing )
+                            Cmd.none
             in
-            ( { model | secrets = token, url = url }, cmd )
+            ( { model | url = url }, cmd )
 
         Navigation urlRequest ->
             case urlRequest of
@@ -394,13 +375,13 @@ update msg model =
             )
 
         GotTasks (Ok tasks) ->
-            ( { model | granaryTasks = tasks.results, route = TaskList model.secrets, secretsUnsubmitted = Nothing }, Cmd.none )
+            ( { model | granaryTasks = tasks.results, route = TaskList, secretsUnsubmitted = Nothing }, Cmd.none )
 
         GotTasks (Err _) ->
             ( model, Cmd.none )
 
         GotExecutions taskId (Ok executionsPage) ->
-            ( { model | route = ExecutionList taskId model.secrets, granaryExecutions = executionsPage.results }, Cmd.none )
+            ( { model | route = ExecutionList taskId, granaryExecutions = executionsPage.results }, Cmd.none )
 
         GotExecutions _ (Err _) ->
             ( model, Nav.pushUrl model.key "/" )
@@ -1168,7 +1149,7 @@ loginPage model =
 view : Model -> Browser.Document Msg
 view model =
     case ( model.route, model.secrets ) of
-        ( TaskList _, Just _ ) ->
+        ( TaskList, Just _ ) ->
             let
                 taskListBody =
                     taskList model
@@ -1177,7 +1158,7 @@ view model =
             , body = [ Element.layout [] taskListBody ]
             }
 
-        ( ExecutionList _ _, Just _ ) ->
+        ( ExecutionList _, Just _ ) ->
             { title = "Execution list"
             , body =
                 [ Element.layout [] <| executionList model
