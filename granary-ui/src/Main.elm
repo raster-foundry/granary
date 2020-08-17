@@ -1094,7 +1094,7 @@ taskList model =
                 , padding 10
                 ]
                 (Maybe.withDefault
-                    [ styledPrimaryText [] "👈 Choose a model on the left" ]
+                    [ styledPrimaryText [] "👈 Choose a task on the left" ]
                     (model.selectedTask
                         |> Maybe.map
                             (\selected ->
