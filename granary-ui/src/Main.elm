@@ -60,6 +60,19 @@ type alias GranaryToken =
     String
 
 
+type alias FormValues =
+    { fromSchema : Dict String (Result String JD.Value)
+    , executionName : Maybe String
+    }
+
+
+emptyFormValues : FormValues
+emptyFormValues =
+    { fromSchema = Dict.empty
+    , executionName = Nothing
+    }
+
+
 type alias Model =
     { url : Url.Url
     , key : Nav.Key
@@ -69,7 +82,7 @@ type alias Model =
     , executionNameSearch : Maybe String
     , activeSchema : Maybe Schema
     , taskValidationErrors : Dict String (List Validation.Error)
-    , formValues : Dict String (Result String JD.Value)
+    , formValues : FormValues
     , selectedTask : Maybe GranaryTask
     , selectedExecutions : Set String
     , secrets : Maybe GranaryToken
@@ -197,7 +210,7 @@ init _ url key =
       , selectedExecutions = Set.empty
       , activeSchema = Nothing
       , taskValidationErrors = Dict.empty
-      , formValues = Dict.empty
+      , formValues = emptyFormValues
       , secrets = Nothing
       , secretsUnsubmitted = Nothing
       }
@@ -209,16 +222,19 @@ init _ url key =
 ---- UPDATE ----
 
 
-toExecutionCreate : String -> Uuid.Uuid -> Dict String (Result String JD.Value) -> ExecutionCreate
-toExecutionCreate executionName taskId validatedFields =
+toExecutionCreate : String -> Uuid.Uuid -> FormValues -> ExecutionCreate
+toExecutionCreate fallbackName taskId formValues =
     let
         goodFields =
-            Dict.toList validatedFields
+            Dict.toList formValues.fromSchema
                 |> List.filterMap
                     (\( k, v ) ->
                         Result.toMaybe v
                             |> Maybe.map (\goodVal -> ( k, goodVal ))
                     )
+
+        executionName =
+            formValues.executionName |> Maybe.withDefault fallbackName
     in
     ExecutionCreate executionName taskId (JE.object goodFields)
 
@@ -302,6 +318,7 @@ type Msg
         , fieldName : String
         , fieldValue : Result String JD.Value
         }
+    | NameExecution String
     | CreateExecution ExecutionCreate
     | ToggleShowAssets Uuid.Uuid
     | SearchExecutionName String
@@ -370,7 +387,7 @@ update msg model =
             ( { model
                 | selectedTask = Just task
                 , taskValidationErrors = Dict.empty
-                , formValues = Dict.empty
+                , formValues = emptyFormValues
                 , activeSchema = Just task.validator
               }
             , Cmd.none
@@ -397,7 +414,7 @@ update msg model =
             )
 
         CreatedExecution (Ok _) ->
-            ( model
+            ( { model | formValues = emptyFormValues }
             , Nav.pushUrl model.key
                 ("/executions?taskId="
                     ++ (model.selectedTask
@@ -429,18 +446,38 @@ update msg model =
             in
             case validation of
                 Result.Ok _ ->
+                    let
+                        formValues =
+                            model.formValues
+
+                        newFormValues =
+                            { formValues
+                                | fromSchema =
+                                    Dict.union (Dict.singleton validateOpts.fieldName validateOpts.fieldValue)
+                                        formValues.fromSchema
+                            }
+                    in
                     ( { model
                         | taskValidationErrors =
                             Dict.remove validateOpts.fieldName
                                 model.taskValidationErrors
-                        , formValues =
-                            Dict.union (Dict.singleton validateOpts.fieldName validateOpts.fieldValue)
-                                model.formValues
+                        , formValues = newFormValues
                       }
                     , Cmd.none
                     )
 
                 Result.Err errs ->
+                    let
+                        formValues =
+                            model.formValues
+
+                        newFormValues =
+                            { formValues
+                                | fromSchema =
+                                    Dict.union (Dict.singleton validateOpts.fieldName validateOpts.fieldValue)
+                                        formValues.fromSchema
+                            }
+                    in
                     ( { model
                         | taskValidationErrors =
                             Dict.union
@@ -449,9 +486,7 @@ update msg model =
                                     errs
                                 )
                                 model.taskValidationErrors
-                        , formValues =
-                            Dict.union (Dict.singleton validateOpts.fieldName validateOpts.fieldValue)
-                                model.formValues
+                        , formValues = newFormValues
                       }
                     , Cmd.none
                     )
@@ -516,7 +551,17 @@ update msg model =
             ( model, Nav.pushUrl model.key (Url.toString { baseUrl | query = Just newQp }) )
 
         GoHome ->
-            ( model, Nav.pushUrl model.key "/tasks" )
+            ( { model | selectedTask = Nothing }, Nav.pushUrl model.key "/tasks" )
+
+        NameExecution s ->
+            let
+                formValues =
+                    model.formValues
+
+                newFormValues =
+                    { formValues | executionName = Just s }
+            in
+            ( { model | formValues = newFormValues }, Cmd.none )
 
 
 
@@ -699,17 +744,20 @@ numProperties schema =
             0
 
 
-allowModelSubmit : Maybe Schema -> Dict String (Result String JD.Value) -> Bool
-allowModelSubmit schema enteredValues =
-    case schema of
-        Just schm ->
-            List.foldl (\x y -> x && y) True (List.map isOk (Dict.values enteredValues))
-                && (Dict.size enteredValues
+allowTaskSubmit : Maybe Schema -> FormValues -> Bool
+allowTaskSubmit schema formValues =
+    case ( formValues.executionName, schema ) of
+        ( Nothing, _ ) ->
+            False
+
+        ( _, Nothing ) ->
+            False
+
+        ( _, Just schm ) ->
+            List.foldl (\x y -> x && y) True (List.map isOk (Dict.values formValues.fromSchema))
+                && (Dict.size formValues.fromSchema
                         == numProperties schm
                    )
-
-        Nothing ->
-            False
 
 
 toResult : String -> Maybe JD.Value -> Result String JD.Value
@@ -884,14 +932,22 @@ schemaToForm formValues errors schema =
         |> Maybe.withDefault []
 
 
-executionInput : Dict String (Result String JD.Value) -> Dict String (List Validation.Error) -> GranaryTask -> List (Element Msg)
+executionInput : FormValues -> Dict String (List Validation.Error) -> GranaryTask -> List (Element Msg)
 executionInput formValues errors task =
     case task.validator of
         BooleanSchema _ ->
-            [ Element.el [] (text "oh no") ]
+            [ Element.el [] (text "oh no -- this task's schema decoded as a \"BooleanSchema\"") ]
 
         ObjectSchema subSchema ->
-            schemaToForm formValues errors subSchema
+            textInput [ width (Element.minimum 300 fill) ]
+                NameExecution
+                formValues.executionName
+                "Execution name"
+                "New execution name"
+                :: schemaToForm
+                    formValues.fromSchema
+                    errors
+                    subSchema
 
 
 executionAssetsList : List StacAsset -> List (Element Msg)
@@ -1062,7 +1118,7 @@ taskList model =
                             (\selected ->
                                 executionInput model.formValues model.taskValidationErrors selected
                                     ++ [ row []
-                                            [ submitButton (allowModelSubmit model.activeSchema)
+                                            [ submitButton (allowTaskSubmit model.activeSchema)
                                                 model.formValues
                                                 "Some inputs are invalid"
                                                 (toExecutionCreate selected.name selected.id model.formValues |> CreateExecution)
