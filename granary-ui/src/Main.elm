@@ -1,7 +1,9 @@
 module Main exposing (main)
 
+import Array
 import Browser
 import Browser.Navigation as Nav
+import Dict exposing (Dict)
 import Element
     exposing
         ( Element
@@ -10,7 +12,6 @@ import Element
         , fill
         , fillPortion
         , height
-        , link
         , padding
         , rgb255
         , row
@@ -22,17 +23,29 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
+import Framework.Button as Button
+import Framework.Card as Card
 import Http as Http
 import HttpBuilder as B
-import Iso8601
 import Json.Decode as JD
 import Json.Decode.Extra as JDE
 import Json.Encode as JE
 import Json.Schema as Schema
 import Json.Schema.Definitions as Schema
+    exposing
+        ( Schema(..)
+        , SingleType(..)
+        , Type(..)
+        )
 import Json.Schema.Validation as Validation
+import Maybe.Extra exposing (orElse)
+import Result
+import Set exposing (Set)
+import String
 import Time
 import Url
+import Url.Parser as Parser exposing ((<?>))
+import Url.Parser.Query as Query
 import Uuid as Uuid
 
 
@@ -43,30 +56,35 @@ type alias PaginatedResponse a =
     }
 
 
-type alias TaskDetail =
-    { executions : List GranaryExecution
-    , task : GranaryTask
-    , addingExecution : Bool
-    , newExecution : Result (List Validation.Error) JD.Value
-    , newExecutionRaw : String
-    }
-
-
 type alias GranaryToken =
     String
 
 
-type alias Breadcrumb =
-    { url : String
-    , name : String
+type alias FormValues =
+    { fromSchema : Dict String (Result String JD.Value)
+    , executionName : Maybe String
+    }
+
+
+emptyFormValues : FormValues
+emptyFormValues =
+    { fromSchema = Dict.empty
+    , executionName = Nothing
     }
 
 
 type alias Model =
     { url : Url.Url
     , key : Nav.Key
+    , route : Route
     , granaryTasks : List GranaryTask
-    , taskDetail : Maybe TaskDetail
+    , granaryExecutions : List GranaryExecution
+    , executionNameSearch : Maybe String
+    , activeSchema : Maybe Schema
+    , taskValidationErrors : Dict String (List Validation.Error)
+    , formValues : FormValues
+    , selectedTask : Maybe GranaryTask
+    , selectedExecutions : Set String
     , secrets : Maybe GranaryToken
     , secretsUnsubmitted : Maybe GranaryToken
     }
@@ -75,7 +93,7 @@ type alias Model =
 type alias GranaryTask =
     { id : Uuid.Uuid
     , name : String
-    , validator : Schema.Schema
+    , validator : Schema
     , jobDefinition : String
     , jobQueue : String
     }
@@ -97,11 +115,13 @@ type alias GranaryExecution =
     , statusReason : Maybe String
     , results : List StacAsset
     , webhookId : Maybe Uuid.Uuid
+    , name : String
     }
 
 
 type alias ExecutionCreate =
-    { taskId : Uuid.Uuid
+    { name : String
+    , taskId : Uuid.Uuid
     , arguments : JD.Value
     }
 
@@ -111,6 +131,7 @@ encodeExecutionCreate executionCreate =
     JE.object
         [ ( "taskId", Uuid.encode executionCreate.taskId )
         , ( "arguments", executionCreate.arguments )
+        , ( "name", JE.string executionCreate.name )
         ]
 
 
@@ -138,7 +159,7 @@ decoderStacAsset =
 
 decoderGranaryExecution : JD.Decoder GranaryExecution
 decoderGranaryExecution =
-    JD.map6
+    JD.map7
         GranaryExecution
         (JD.field "id" Uuid.decoder)
         (JD.field "taskId" Uuid.decoder)
@@ -146,6 +167,7 @@ decoderGranaryExecution =
         (JD.field "statusReason" <| JD.maybe JD.string)
         (JD.field "results" <| JD.list decoderStacAsset)
         (JD.field "webhookId" <| JD.maybe Uuid.decoder)
+        (JD.field "name" JD.string)
 
 
 paginatedDecoder : JD.Decoder a -> JD.Decoder (PaginatedResponse a)
@@ -157,16 +179,42 @@ paginatedDecoder ofDecoder =
         (JD.field "results" <| JD.list ofDecoder)
 
 
+type Route
+    = Login
+    | TaskList
+    | ExecutionList (Maybe Uuid.Uuid)
+
+
+routeParser : Parser.Parser (Route -> a) a
+routeParser =
+    let
+        uuidQueryParam strings =
+            List.head strings |> Maybe.andThen Uuid.fromString
+    in
+    Parser.oneOf
+        [ Parser.map ExecutionList
+            (Parser.s "executions" <?> Query.custom "taskId" uuidQueryParam)
+        , Parser.map TaskList (Parser.s "tasks")
+        ]
+
+
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url key =
     ( { url = url
       , key = key
+      , route = Login
       , granaryTasks = []
-      , taskDetail = Nothing
+      , granaryExecutions = []
+      , executionNameSearch = Nothing
+      , selectedTask = Nothing
+      , selectedExecutions = Set.empty
+      , activeSchema = Nothing
+      , taskValidationErrors = Dict.empty
+      , formValues = emptyFormValues
       , secrets = Nothing
       , secretsUnsubmitted = Nothing
       }
-    , Cmd.none
+    , Nav.pushUrl key (Url.toString url)
     )
 
 
@@ -174,61 +222,70 @@ init _ url key =
 ---- UPDATE ----
 
 
-getExecutionCreate : TaskDetail -> Maybe ExecutionCreate
-getExecutionCreate detail =
-    (Result.toMaybe << .newExecution) detail
-        |> Maybe.map (ExecutionCreate detail.task.id)
+toExecutionCreate : String -> Uuid.Uuid -> FormValues -> ExecutionCreate
+toExecutionCreate fallbackName taskId formValues =
+    let
+        goodFields =
+            Dict.toList formValues.fromSchema
+                |> List.filterMap
+                    (\( k, v ) ->
+                        Result.toMaybe v
+                            |> Maybe.map (\goodVal -> ( k, goodVal ))
+                    )
+
+        executionName =
+            formValues.executionName |> Maybe.withDefault fallbackName
+    in
+    ExecutionCreate executionName taskId (JE.object goodFields)
 
 
-modelUrl : Uuid.Uuid -> String
-modelUrl =
-    (++) "/api/tasks/" << Uuid.toString
+apiExecutionsUrl : Maybe String -> Maybe Uuid.Uuid -> String
+apiExecutionsUrl namesLike taskId =
+    "/api" ++ executionsUrl namesLike taskId
 
 
-executionsUrl : Uuid.Uuid -> String
-executionsUrl =
-    (++) "/api/executions?taskId=" << Uuid.toString
+executionsUrl : Maybe String -> Maybe Uuid.Uuid -> String
+executionsUrl namesLike taskId =
+    let
+        baseUrl =
+            "/executions"
+
+        taskSearch =
+            taskId
+                |> Maybe.map ((++) "taskId=" << Uuid.toString)
+
+        nameSearch =
+            namesLike
+                |> Maybe.map ((++) "name=")
+
+        qp =
+            [ taskSearch, nameSearch ]
+                |> List.filterMap identity
+                |> List.intersperse "&"
+                |> String.concat
+    in
+    if String.isEmpty qp then
+        baseUrl
+
+    else
+        baseUrl ++ "?" ++ qp
 
 
-fetchModels : Maybe GranaryToken -> Cmd.Cmd Msg
-fetchModels token =
-    token
-        |> Maybe.map
-            (\t ->
-                B.get "/api/tasks"
-                    |> B.withExpect (Http.expectJson GotTasks (paginatedDecoder decoderGranaryModel))
-                    |> B.withBearerToken t
-                    |> B.request
-            )
-        |> Maybe.withDefault Cmd.none
+fetchTasks : GranaryToken -> Cmd.Cmd Msg
+fetchTasks token =
+    B.get "/api/tasks"
+        |> B.withExpect (Http.expectJson GotTasks (paginatedDecoder decoderGranaryModel))
+        |> B.withBearerToken token
+        |> B.request
 
 
-fetchModel : Maybe GranaryToken -> Uuid.Uuid -> Cmd.Cmd Msg
-fetchModel token modelId =
-    token
-        |> Maybe.map
-            (\t ->
-                modelUrl modelId
-                    |> B.get
-                    |> B.withExpect (Http.expectJson GotTask decoderGranaryModel)
-                    |> B.withBearerToken t
-                    |> B.request
-            )
-        |> Maybe.withDefault Cmd.none
-
-
-fetchExecutions : Maybe GranaryToken -> Uuid.Uuid -> Cmd.Cmd Msg
-fetchExecutions token modelId =
-    token
-        |> Maybe.map
-            (\t ->
-                executionsUrl modelId
-                    |> B.get
-                    |> B.withExpect (Http.expectJson GotExecutions (paginatedDecoder decoderGranaryExecution))
-                    |> B.withBearerToken t
-                    |> B.request
-            )
-        |> Maybe.withDefault Cmd.none
+fetchExecutions : Maybe String -> Maybe Uuid.Uuid -> GranaryToken -> Cmd.Cmd Msg
+fetchExecutions namesLike taskId token =
+    apiExecutionsUrl namesLike taskId
+        |> B.get
+        |> B.withExpect (Http.expectJson (GotExecutions taskId) (paginatedDecoder decoderGranaryExecution))
+        |> B.withBearerToken token
+        |> B.request
 
 
 postExecution : GranaryToken -> ExecutionCreate -> Cmd.Cmd Msg
@@ -240,30 +297,33 @@ postExecution token executionCreate =
         |> B.request
 
 
-maybePostExecution : Maybe GranaryToken -> Maybe TaskDetail -> Cmd.Cmd Msg
-maybePostExecution tokenM detailM =
-    case ( tokenM, detailM ) of
-        ( Just token, Just detail ) ->
-            getExecutionCreate detail
-                |> Maybe.map (postExecution token)
-                |> Maybe.withDefault Cmd.none
-
-        _ ->
-            Cmd.none
+maybePostExecution : Maybe GranaryToken -> ExecutionCreate -> Cmd.Cmd Msg
+maybePostExecution tokenM executionCreate =
+    tokenM
+        |> Maybe.map (\token -> postExecution token executionCreate)
+        |> Maybe.withDefault Cmd.none
 
 
 type Msg
     = GotTasks (Result Http.Error (PaginatedResponse GranaryTask))
-    | GotTask (Result Http.Error GranaryTask)
-    | GotExecutions (Result Http.Error (PaginatedResponse GranaryExecution))
-    | NewExecution Uuid.Uuid Schema.Schema
+    | GotExecutions (Maybe Uuid.Uuid) (Result Http.Error (PaginatedResponse GranaryExecution))
     | Navigation Browser.UrlRequest
     | UrlChanged Url.Url
-    | ExecutionInput String
     | TokenInput String
     | TokenSubmit
-    | ExecutionSubmit
     | CreatedExecution (Result Http.Error GranaryExecution)
+    | TaskSelect GranaryTask
+    | ValidateWith
+        { schema : Schema.SubSchema
+        , fieldName : String
+        , fieldValue : Result String JD.Value
+        }
+    | NameExecution String
+    | CreateExecution ExecutionCreate
+    | ToggleShowAssets Uuid.Uuid
+    | SearchExecutionName String
+    | AddTokenParam GranaryToken
+    | GoHome
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -271,19 +331,30 @@ update msg model =
     case msg of
         UrlChanged url ->
             let
-                maybeModelId =
-                    String.dropLeft 1 url.path |> Uuid.fromString
+                routeResult =
+                    Parser.parse routeParser url
 
-                cmdM =
-                    maybeModelId
-                        |> Maybe.map (fetchModel model.secrets)
+                getCmd f t =
+                    Maybe.map f t
+                        |> Maybe.withDefault Cmd.none
+
+                cmd =
+                    case ( routeResult, model.secrets ) of
+                        ( Just TaskList, modelToken ) ->
+                            getCmd fetchTasks modelToken
+
+                        ( Just (ExecutionList taskId), modelToken ) ->
+                            getCmd (fetchExecutions Nothing taskId) modelToken
+
+                        -- we have a token available, but this is not a url we know how to handle
+                        -- possibly premature for actually storing the token in local storage
+                        ( _, Just _ ) ->
+                            Nav.pushUrl model.key "/tasks"
+
+                        ( _, Nothing ) ->
+                            Cmd.none
             in
-            case cmdM of
-                Nothing ->
-                    ( { model | taskDetail = Nothing }, fetchModels model.secrets )
-
-                Just cmd ->
-                    ( model, cmd )
+            ( { model | url = url }, cmd )
 
         Navigation urlRequest ->
             case urlRequest of
@@ -293,97 +364,42 @@ update msg model =
                 Browser.External href ->
                     ( model, Nav.load href )
 
-        GotTask (Ok granaryTask) ->
+        TaskSelect task ->
             ( { model
-                | granaryTasks = []
-                , taskDetail = Just <| TaskDetail [] granaryTask False (Result.Err []) "{}"
+                | selectedTask = Just task
+                , taskValidationErrors = Dict.empty
+                , formValues = emptyFormValues
+                , activeSchema = Just task.validator
               }
-            , fetchExecutions model.secrets granaryTask.id
+            , Cmd.none
             )
 
-        GotTask (Err _) ->
-            ( model, Nav.pushUrl model.key "/" )
-
         GotTasks (Ok tasks) ->
-            ( { model | granaryTasks = tasks.results }, Cmd.none )
+            ( { model | granaryTasks = tasks.results, route = TaskList, secretsUnsubmitted = Nothing }, Cmd.none )
 
         GotTasks (Err _) ->
             ( model, Cmd.none )
 
-        GotExecutions (Ok executions) ->
-            let
-                baseTaskDetail =
-                    model.taskDetail
+        GotExecutions taskId (Ok executionsPage) ->
+            ( { model | route = ExecutionList taskId, granaryExecutions = executionsPage.results }, Cmd.none )
 
-                updatedTaskDetail =
-                    Maybe.map (\rec -> { rec | executions = executions.results }) baseTaskDetail
-            in
-            ( { model | taskDetail = updatedTaskDetail }, Cmd.none )
-
-        GotExecutions (Err _) ->
-            ( model, Cmd.none )
-
-        NewExecution _ _ ->
-            let
-                baseTaskDetail =
-                    model.taskDetail
-
-                updatedTaskDetail =
-                    Maybe.map (\rec -> { rec | addingExecution = True }) baseTaskDetail
-            in
-            ( { model | taskDetail = updatedTaskDetail }, Cmd.none )
-
-        ExecutionInput s ->
-            let
-                baseTaskDetail =
-                    model.taskDetail
-
-                valueDecodeResult =
-                    JD.decodeString JD.value s
-                        |> Result.mapError
-                            (always
-                                [ { details = Validation.AlwaysFail
-                                  , jsonPointer =
-                                        { ns = ""
-                                        , path = []
-                                        }
-                                  }
-                                ]
-                            )
-
-                updatedTaskDetail =
-                    baseTaskDetail
-                        |> Maybe.map
-                            (\rec ->
-                                { rec
-                                    | newExecutionRaw = s
-                                    , newExecution =
-                                        valueDecodeResult
-                                            |> Result.andThen
-                                                (\value ->
-                                                    Schema.validateValue { applyDefaults = True }
-                                                        value
-                                                        rec.task.validator
-                                                )
-                                }
-                            )
-            in
-            ( { model | taskDetail = updatedTaskDetail }, Cmd.none )
+        GotExecutions _ (Err _) ->
+            ( model, Nav.pushUrl model.key "/" )
 
         TokenInput s ->
             ( { model | secretsUnsubmitted = Just s }, Cmd.none )
 
         TokenSubmit ->
-            ( { model | secrets = model.secretsUnsubmitted, secretsUnsubmitted = Nothing }
-            , fetchModels model.secretsUnsubmitted
+            ( { model | secrets = model.secretsUnsubmitted }
+            , Nav.pushUrl model.key "/tasks"
             )
 
         CreatedExecution (Ok _) ->
-            ( model
+            ( { model | formValues = emptyFormValues }
             , Nav.pushUrl model.key
-                ("/"
-                    ++ (model.taskDetail
-                            |> Maybe.map (Uuid.toString << .id << .task)
+                ("/executions?taskId="
+                    ++ (model.selectedTask
+                            |> Maybe.map (Uuid.toString << .id)
                             |> Maybe.withDefault ""
                        )
                 )
@@ -392,8 +408,141 @@ update msg model =
         CreatedExecution _ ->
             ( model, Cmd.none )
 
-        ExecutionSubmit ->
-            ( model, maybePostExecution model.secrets model.taskDetail )
+        ValidateWith validateOpts ->
+            let
+                validation =
+                    case validateOpts.fieldValue of
+                        Result.Ok jsonValue ->
+                            Schema.validateValue
+                                { applyDefaults = True }
+                                jsonValue
+                                (ObjectSchema validateOpts.schema)
+
+                        Result.Err _ ->
+                            [ { jsonPointer = Validation.JsonPointer "" [ validateOpts.fieldName ]
+                              , details = Validation.InvalidType ("Expected " ++ showType validateOpts.schema.type_ ++ " 😟")
+                              }
+                            ]
+                                |> Result.Err
+            in
+            case validation of
+                Result.Ok _ ->
+                    let
+                        formValues =
+                            model.formValues
+
+                        newFormValues =
+                            { formValues
+                                | fromSchema =
+                                    Dict.union (Dict.singleton validateOpts.fieldName validateOpts.fieldValue)
+                                        formValues.fromSchema
+                            }
+                    in
+                    ( { model
+                        | taskValidationErrors =
+                            Dict.remove validateOpts.fieldName
+                                model.taskValidationErrors
+                        , formValues = newFormValues
+                      }
+                    , Cmd.none
+                    )
+
+                Result.Err errs ->
+                    let
+                        formValues =
+                            model.formValues
+
+                        newFormValues =
+                            { formValues
+                                | fromSchema =
+                                    Dict.union (Dict.singleton validateOpts.fieldName validateOpts.fieldValue)
+                                        formValues.fromSchema
+                            }
+                    in
+                    ( { model
+                        | taskValidationErrors =
+                            Dict.union
+                                (Dict.singleton
+                                    validateOpts.fieldName
+                                    errs
+                                )
+                                model.taskValidationErrors
+                        , formValues = newFormValues
+                      }
+                    , Cmd.none
+                    )
+
+        CreateExecution executionCreate ->
+            ( model, maybePostExecution model.secrets executionCreate )
+
+        ToggleShowAssets executionId ->
+            let
+                stringExecutionId =
+                    Uuid.toString executionId
+
+                selectedExecutions =
+                    model.selectedExecutions
+            in
+            ( { model
+                | selectedExecutions =
+                    if Set.member stringExecutionId selectedExecutions then
+                        Set.remove stringExecutionId selectedExecutions
+
+                    else
+                        Set.insert stringExecutionId selectedExecutions
+              }
+            , Cmd.none
+            )
+
+        SearchExecutionName s ->
+            ( { model | executionNameSearch = Just s }
+            , model.secrets
+                |> Maybe.map (fetchExecutions (Just s) (Maybe.map .id model.selectedTask))
+                |> Maybe.withDefault Cmd.none
+            )
+
+        AddTokenParam token ->
+            let
+                baseUrl =
+                    model.url
+
+                hasToken =
+                    baseUrl.query |> Maybe.withDefault "" |> String.contains "token"
+
+                isEmpty =
+                    baseUrl.query |> Maybe.withDefault "" |> String.isEmpty
+
+                tokenQp =
+                    "token=" ++ token
+
+                newQp =
+                    case ( hasToken, isEmpty ) of
+                        -- technically, (True, False) can't happen
+                        ( True, _ ) ->
+                            baseUrl.query
+                                |> Maybe.withDefault ""
+
+                        ( False, False ) ->
+                            tokenQp
+                                |> (++) ((baseUrl.query |> Maybe.withDefault "") ++ "&")
+
+                        ( False, True ) ->
+                            tokenQp
+            in
+            ( model, Nav.pushUrl model.key (Url.toString { baseUrl | query = Just newQp }) )
+
+        GoHome ->
+            ( { model | selectedTask = Nothing }, Nav.pushUrl model.key "/tasks" )
+
+        NameExecution s ->
+            let
+                formValues =
+                    model.formValues
+
+                newFormValues =
+                    { formValues | executionName = Just s }
+            in
+            ( { model | formValues = newFormValues }, Cmd.none )
 
 
 
@@ -405,193 +554,399 @@ fontRed =
     rgb255 255 0 0 |> Font.color
 
 
-fuschia : Element.Color
-fuschia =
-    rgb255 255 0 255
+primary : Element.Color
+primary =
+    rgb255 75 59 64
 
 
-homeCrumb : Breadcrumb
-homeCrumb =
-    Breadcrumb "/" "Home"
+secondary : Element.Color
+secondary =
+    rgb255 246 141 17
 
 
-taskCrumb : GranaryTask -> Breadcrumb
-taskCrumb granaryModel =
-    Breadcrumb ("/" ++ Uuid.toString granaryModel.id) granaryModel.name
+accent : Element.Color
+accent =
+    rgb255 253 233 135
 
 
-mkHeaderName : String -> Element msg
-mkHeaderName s =
-    el
-        [ Font.bold
-        , Font.size 24
-        , Border.widthEach
-            { bottom = 1
-            , left = 0
-            , right = 0
-            , top = 0
-            }
-        ]
-        (text s)
-
-
-mkRowElement : String -> Element msg
-mkRowElement s =
-    el [ Font.size 16 ] (text s)
-
-
-taskLink : GranaryTask -> Element msg
-taskLink grModel =
-    link []
-        { url = "/" ++ (grModel.id |> Uuid.toString)
-        , label = mkRowElement grModel.name
+secondaryShadow : Element.Attr deco msg
+secondaryShadow =
+    Border.shadow
+        { offset = ( 0.1, 0.1 )
+        , size = 2
+        , blur = 3
+        , color = secondary
         }
 
 
-newExecutionButton : Uuid.Uuid -> Schema.Schema -> Element Msg
-newExecutionButton modelId modelSchema =
-    Input.button
-        [ Background.color <| rgb255 0 255 255
-        , Element.focused [ Background.color fuschia ]
-        ]
-        { onPress = Just (NewExecution modelId modelSchema)
-        , label = Element.el [ Font.bold ] (text "New!")
-        }
+styledPrimaryText : List (Element.Attribute msg) -> String -> Element msg
+styledPrimaryText attrs s =
+    el (Font.color primary :: attrs) (text s)
 
 
-taskTable : Model -> Element Msg
-taskTable model =
-    Element.table [ padding 3, spacing 10, Element.alignLeft ]
-        { data = model.granaryTasks
-        , columns =
-            [ { header = mkHeaderName "Task name"
-              , width = fill
-              , view = \granaryModel -> taskLink granaryModel
-              }
-            , { header = mkHeaderName "Job Definition"
-              , width = fill
-              , view = \granaryModel -> mkRowElement granaryModel.jobDefinition
-              }
-            , { header = mkHeaderName "Job Queue"
-              , width = fill
-              , view = \granaryModel -> mkRowElement granaryModel.jobQueue
-              }
-            ]
-        }
+styledSecondaryText : List (Element.Attribute msg) -> String -> Element msg
+styledSecondaryText attrs s =
+    el (Font.color secondary :: attrs) (text s)
 
 
-executionsTable : TaskDetail -> Element msg
-executionsTable detail =
-    Element.table [ padding 3, spacing 10, Element.alignLeft ]
-        { data = detail.executions
-        , columns =
-            [ { header = mkHeaderName "Invocation time"
-              , width = fill
-              , view =
-                    \execution ->
-                        let
-                            invokedAt =
-                                execution.invokedAt
-                        in
-                        text <| Iso8601.fromTime invokedAt
-              }
-            , { header = mkHeaderName "Status"
-              , width = fill
-              , view =
-                    \execution ->
-                        text <|
-                            case ( execution.statusReason, execution.results ) of
-                                ( Nothing, [] ) ->
-                                    "In progress"
-
-                                ( Just _, _ ) ->
-                                    "Failed"
-
-                                ( _, _ ) ->
-                                    "Succeeded"
-              }
-            ]
-        }
-
-
-titleBar : String -> Element msg
-titleBar s =
-    row
-        [ width fill
-        , height (fillPortion 1)
-        , padding 10
-        , Background.color (rgb255 0 255 255)
-        , Font.bold
-        , Font.italic
-        , Font.size 32
-        ]
-        [ text s ]
-
-
-navBar : List Breadcrumb -> Element Msg
-navBar links =
-    links
-        |> List.map
-            (\crumb ->
-                column [ spacing 3 ]
-                    [ link
-                        []
-                        { url = crumb.url
-                        , label = text crumb.name
-                        }
-                    ]
+submitButton : (a -> Bool) -> a -> String -> Msg -> Element Msg
+submitButton predicate value hint msg =
+    let
+        allowSubmit =
+            predicate value
+    in
+    Element.el
+        []
+        (Input.button
+            (Button.simple
+                ++ [ Background.color accent
+                   , Element.centerX
+                   , Border.color primary
+                   ]
             )
-        |> List.intersperse (Element.text " :> ")
-        |> row [ spacing 3, Background.color fuschia, width fill ]
+            { onPress =
+                if allowSubmit then
+                    Just msg
+
+                else
+                    Nothing
+            , label = styledPrimaryText [] "Submit"
+            }
+        )
+        :: (if allowSubmit then
+                []
+
+            else
+                [ styledSecondaryText [] hint
+                ]
+           )
+        |> column [ spacing 5 ]
 
 
-submitButton : Msg -> Element Msg
-submitButton msg =
-    Input.button
-        [ Element.centerX
-        , Background.color (rgb255 0 255 255)
-        , Border.solid
-        , Border.color (rgb255 0 0 0)
-        , Border.width 1
-        ]
-        { onPress = Just msg
-        , label = text "Submit"
+textInput : List (Element.Attribute msg) -> (String -> msg) -> Maybe String -> String -> String -> Element msg
+textInput attrs f maybeText placeholder label =
+    Input.text
+        (Element.focused
+            [ secondaryShadow ]
+            :: attrs
+        )
+        { onChange = f
+        , text = maybeText |> Maybe.withDefault ""
+        , placeholder = Input.placeholder [] (text placeholder) |> Just
+        , label = Input.labelHidden label
         }
 
 
-boldKvPair : String -> String -> List (Element msg)
-boldKvPair s1 s2 =
-    [ Element.el
-        [ Font.bold
-        ]
-        (text s1)
-    , Element.el [] (text s2)
-    ]
+logo : List (Element.Attribute msg) -> Int -> Element msg
+logo attrs maxSize =
+    Element.image
+        ([ fillPortion 1 |> Element.minimum 100 |> Element.maximum maxSize |> height
+         , padding 10
+         ]
+            ++ attrs
+        )
+        { src = "logo.svg"
+        , description = "Granary logo"
+        }
 
 
-taskDetailColumn : List (Element msg) -> Element msg
-taskDetailColumn =
-    column [ height (fillPortion 2), width fill, Element.alignTop, padding 10, spacing 10 ]
+tasksLink : Maybe Uuid.Uuid -> GranaryTask -> Element Msg
+tasksLink selectedId task =
+    if selectedId == Just task.id then
+        row [ width fill ]
+            [ row []
+                [ Element.link []
+                    { url = executionsUrl Nothing (Just task.id)
+                    , label = styledSecondaryText [ Font.underline ] "Executions"
+                    }
+                ]
+            ]
+
+    else
+        row [] []
 
 
-granaryTaskDetailPairs : TaskDetail -> List (Element msg)
-granaryTaskDetailPairs detail =
-    [ row [ Font.bold ]
-        [ Element.el
-            [ Border.widthEach
-                { bottom = 1
-                , left = 0
-                , right = 0
-                , top = 0
+taskCard : Maybe Uuid.Uuid -> GranaryTask -> Element Msg
+taskCard selectedId task =
+    column (width fill :: spacing 5 :: Element.centerY :: Button.simple)
+        [ row
+            (Font.color primary
+                :: (if Just task.id == selectedId then
+                        [ secondaryShadow ]
+
+                    else
+                        []
+                   )
+            )
+            [ Input.button
+                []
+                { label = text task.name
+                , onPress = TaskSelect task |> Just
                 }
             ]
-            (text "Model Details")
+        , tasksLink selectedId task
         ]
-    , row [] <| boldKvPair "Name: " detail.task.name
-    , row [] <| boldKvPair "Task ID: " (Uuid.toString detail.task.id)
-    , row [] <| boldKvPair "Job Definition: " detail.task.jobDefinition
-    , row [] <| boldKvPair "Job Queue: " detail.task.jobQueue
-    ]
+
+
+isOk : Result e a -> Bool
+isOk res =
+    case res of
+        Result.Ok _ ->
+            True
+
+        Result.Err _ ->
+            False
+
+
+toEmoji : GranaryExecution -> String
+toEmoji execution =
+    case ( execution.statusReason, execution.results ) of
+        ( Just _, _ ) ->
+            "❌"
+
+        ( _, _ :: _ ) ->
+            "✅"
+
+        _ ->
+            "🏃\u{200D}♀️"
+
+
+numProperties : Schema -> Int
+numProperties schema =
+    let
+        schemataLength (Schema.Schemata props) =
+            List.length props
+    in
+    case schema of
+        ObjectSchema subSchema ->
+            subSchema.properties |> Maybe.map schemataLength |> Maybe.withDefault 0
+
+        BooleanSchema _ ->
+            0
+
+
+allowTaskSubmit : Maybe Schema -> FormValues -> Bool
+allowTaskSubmit schema formValues =
+    case ( formValues.executionName, schema ) of
+        ( Nothing, _ ) ->
+            False
+
+        ( _, Nothing ) ->
+            False
+
+        ( Just s, Just schm ) ->
+            not (String.isEmpty s)
+                && List.foldl (\x y -> x && y) True (List.map isOk (Dict.values formValues.fromSchema))
+                && (Dict.size formValues.fromSchema
+                        == numProperties schm
+                   )
+
+
+toResult : String -> Maybe JD.Value -> Result String JD.Value
+toResult s m =
+    case m of
+        Just v ->
+            Result.Ok v
+
+        Nothing ->
+            Result.Err s
+
+
+showType : Schema.Type -> String
+showType t =
+    case t of
+        SingleType IntegerType ->
+            "int"
+
+        SingleType NumberType ->
+            "float"
+
+        SingleType StringType ->
+            "string"
+
+        SingleType BooleanType ->
+            "boolean"
+
+        SingleType ArrayType ->
+            "array"
+
+        SingleType ObjectType ->
+            "object"
+
+        SingleType NullType ->
+            "null"
+
+        AnyType ->
+            "any"
+
+        NullableType st ->
+            "Maybe " ++ showType (SingleType st)
+
+        UnionType sts ->
+            List.map (showType << SingleType) sts
+                |> List.intersperse ", "
+                |> List.foldl (++) ""
+                |> (++) "one of "
+
+
+encodeValue : Schema.Type -> String -> Result String JD.Value
+encodeValue t s =
+    let
+        defaulter =
+            toResult s
+    in
+    case t of
+        SingleType IntegerType ->
+            String.toInt s |> Maybe.map JE.int |> defaulter
+
+        SingleType NumberType ->
+            String.toFloat s |> Maybe.map JE.float |> defaulter
+
+        SingleType StringType ->
+            Just (JE.string s) |> defaulter
+
+        SingleType BooleanType ->
+            (case s of
+                "true" ->
+                    Just (JE.bool True)
+
+                "false" ->
+                    Just (JE.bool False)
+
+                _ ->
+                    Nothing
+            )
+                |> defaulter
+
+        SingleType ArrayType ->
+            Just (JE.array JE.string (String.split "," s |> Array.fromList)) |> defaulter
+
+        SingleType ObjectType ->
+            (case JD.decodeString (JD.dict JD.value) s of
+                Result.Ok v ->
+                    Just (JE.dict identity identity v)
+
+                _ ->
+                    Nothing
+            )
+                |> defaulter
+
+        SingleType NullType ->
+            Just JE.null |> defaulter
+
+        AnyType ->
+            Just (JE.string s) |> defaulter
+
+        NullableType st ->
+            case s of
+                "null" ->
+                    Just JE.null
+                        |> defaulter
+
+                _ ->
+                    encodeValue (SingleType st) s
+
+        UnionType sts ->
+            List.map (\st -> encodeValue (SingleType st) s) sts
+                |> List.filter isOk
+                |> List.head
+                |> Maybe.withDefault (Result.Err s)
+
+
+toValue : Schema.SubSchema -> String -> Result String JD.Value
+toValue schema s =
+    encodeValue schema.type_ s
+
+
+schemaToForm : Dict String (Result String JD.Value) -> Dict String (List Validation.Error) -> Schema.SubSchema -> List (Element Msg)
+schemaToForm formValues errors schema =
+    let
+        errs ( k, _ ) =
+            Dict.get k errors |> Maybe.withDefault [] |> List.concatMap makeErr
+
+        toInput ( k, v ) =
+            if String.toLower k /= "task_grid" then
+                textInput [ width (Element.minimum 300 fill) ]
+                    (\s ->
+                        ValidateWith
+                            { schema = v
+                            , fieldName = k
+                            , fieldValue = toValue v s
+                            }
+                    )
+                    (case Dict.get k formValues of
+                        Just (Result.Ok jsonValue) ->
+                            Just
+                                (JE.encode 0 jsonValue
+                                    |> String.toList
+                                    |> List.filter ((/=) '"')
+                                    |> String.fromList
+                                )
+
+                        Just (Result.Err s) ->
+                            Just s
+
+                        _ ->
+                            Nothing
+                    )
+                    (k ++ ": " ++ showType v.type_)
+                    k
+
+            else
+                row [] [ text "file input goes here" ]
+
+        inputRow ( k, propSchema ) =
+            case propSchema of
+                ObjectSchema subSchema ->
+                    column [ spacing 10 ]
+                        [ row [] [ toInput ( k, subSchema ) ]
+                        , row [] (errs ( k, subSchema ))
+                        ]
+
+                BooleanSchema _ ->
+                    row [ spacing 5 ] [ toInput ( k, Schema.blankSubSchema ) ]
+
+        makeInput (Schema.Schemata definitions) =
+            List.map inputRow definitions
+    in
+    schema.properties
+        |> Maybe.map makeInput
+        |> Maybe.withDefault []
+
+
+executionInput : FormValues -> Dict String (List Validation.Error) -> GranaryTask -> List (Element Msg)
+executionInput formValues errors task =
+    case task.validator of
+        BooleanSchema _ ->
+            [ Element.el [] (text "oh no -- this task's schema decoded as a \"BooleanSchema\"") ]
+
+        ObjectSchema subSchema ->
+            textInput [ width (Element.minimum 300 fill) ]
+                NameExecution
+                formValues.executionName
+                "Execution name"
+                "New execution name"
+                :: schemaToForm
+                    formValues.fromSchema
+                    errors
+                    subSchema
+
+
+executionAssetsList : List StacAsset -> List (Element Msg)
+executionAssetsList =
+    List.map
+        (\asset ->
+            Element.link []
+                { url = asset.href
+                , label =
+                    styledSecondaryText [ Font.underline ]
+                        (asset.title
+                            |> orElse asset.description
+                            |> Maybe.withDefault
+                                (asset.roles |> List.intersperse ", " |> String.concat)
+                        )
+                }
+        )
 
 
 getErrField : Validation.Error -> String
@@ -616,118 +971,205 @@ makeErr err =
             [ row [] [ text "Invalid json" ] ]
 
         Validation.InvalidType t ->
-            [ row []
-                [ column []
-                    [ row [] [ text (t ++ " in ") ]
-                    , row [] [ Element.el [ fontRed ] (getErrField err |> text) ]
-                    ]
-                ]
-            ]
+            [ text t ]
 
         Validation.RequiredProperty ->
             []
 
         _ ->
-            [ row []
-                [ text "I can't tell what else is wrong with "
-                , err.jsonPointer.path
-                    |> List.head
-                    |> Maybe.withDefault "ROOT"
-                    |> (Element.el [ fontRed ] << text)
+            [ ("I can't tell what else is wrong with " ++ getErrField err)
+                |> text
+            ]
+
+
+logoTop : Maybe GranaryToken -> List (Element Msg) -> Element Msg
+logoTop secrets rest =
+    column [ width fill, Element.centerX ] <|
+        [ row [ Element.centerX, Element.maximum 400 fill |> width ] <|
+            [ column [ width (fillPortion 9), height fill ]
+                [ logo
+                    [ width fill ]
+                    100
+                ]
+            , column [ width (fillPortion 1), height fill ]
+                [ row [ Element.centerY ]
+                    [ pageLink secrets
+                    , homeLink
+                    ]
                 ]
             ]
-
-
-getErrorElem : Result (List Validation.Error) JD.Value -> String -> Element Msg
-getErrorElem result rawValue =
-    case ( result, rawValue ) of
-        ( _, "" ) ->
-            row [] [ text "Enter JSON for this model's schema" ]
-
-        -- should be a button, but _soon_
-        ( Result.Ok _, _ ) ->
-            row [] [ Element.el [] (submitButton ExecutionSubmit) ]
-
-        ( Err errs, _ ) ->
-            column [ spacing 3 ] (errs |> List.concatMap makeErr)
-
-
-executionsPane : TaskDetail -> List (Element Msg)
-executionsPane detail =
-    if detail.addingExecution then
-        [ row []
-            [ Input.multiline
-                []
-                { onChange = ExecutionInput
-                , text = detail.newExecutionRaw
-                , placeholder = Input.placeholder [] (text "{}") |> Just
-                , label = Input.labelAbove [] (text "Execution input")
-                , spellcheck = True
-                }
-            ]
-        , getErrorElem detail.newExecution detail.newExecutionRaw
         ]
+            ++ rest
+
+
+executionAssets : Bool -> GranaryExecution -> List (Element Msg)
+executionAssets showAssets execution =
+    if List.isEmpty execution.results then
+        []
 
     else
-        [ row [ Font.bold ]
-            [ text "Executions: "
-            , newExecutionButton detail.task.id detail.task.validator
+        row []
+            [ Input.button []
+                { onPress = ToggleShowAssets execution.id |> Just
+                , label = text "➕"
+                }
+            , styledPrimaryText [] " Show assets"
             ]
-        , executionsTable detail
+            :: (if showAssets then
+                    executionAssetsList execution.results
+
+                else
+                    []
+               )
+
+
+executionCard : Bool -> GranaryExecution -> Element Msg
+executionCard showAssets execution =
+    [ column
+        (width
+            (fill
+                |> Element.minimum 350
+                |> Element.maximum 400
+            )
+            :: spacing 5
+            :: Card.simple
+        )
+        ([ row [] [ styledPrimaryText [] execution.name ]
+         , row [] [ styledPrimaryText [] ("Status: " ++ toEmoji execution) ]
+         ]
+            ++ executionAssets showAssets execution
+        )
+    ]
+        |> row [ width fill ]
+
+
+nameSearchInput : Maybe String -> Element Msg
+nameSearchInput currValue =
+    textInput
+        [ width fill ]
+        SearchExecutionName
+        currValue
+        "Name like"
+        "Search"
+        |> List.singleton
+        |> row [ width fill ]
+
+
+homeLink : Element Msg
+homeLink =
+    Input.button []
+        { onPress = Just GoHome
+        , label = text "🏠"
+        }
+
+
+pageLink : Maybe GranaryToken -> Element Msg
+pageLink secrets =
+    Input.button []
+        { onPress = secrets |> Maybe.map AddTokenParam
+        , label = text "🔗"
+        }
+
+
+taskList : Model -> Element Msg
+taskList model =
+    logoTop model.secrets <|
+        [ row [ Element.centerX ]
+            [ column
+                [ fillPortion 1 |> width
+                , spacing 10
+                , padding 10
+                , Element.alignTop
+                ]
+                (model.granaryTasks
+                    |> List.map
+                        (taskCard
+                            (Maybe.map .id model.selectedTask)
+                        )
+                )
+            , column
+                [ fillPortion 3 |> width
+                , height fill
+                , spacing 10
+                , padding 10
+                ]
+                (Maybe.withDefault
+                    [ styledPrimaryText [] "👈 Choose a task on the left" ]
+                    (model.selectedTask
+                        |> Maybe.map
+                            (\selected ->
+                                executionInput model.formValues model.taskValidationErrors selected
+                                    ++ [ row []
+                                            [ submitButton (allowTaskSubmit model.activeSchema)
+                                                model.formValues
+                                                "Some inputs are invalid"
+                                                (toExecutionCreate selected.name selected.id model.formValues |> CreateExecution)
+                                            ]
+                                       ]
+                            )
+                    )
+                )
+            ]
+        ]
+
+
+executionList : Model -> Element Msg
+executionList model =
+    let
+        showAssets execution =
+            Set.member (Uuid.toString execution.id) model.selectedExecutions
+
+        card execution =
+            executionCard (showAssets execution) execution
+    in
+    logoTop model.secrets
+        [ nameSearchInput model.executionNameSearch
+            :: (model.granaryExecutions
+                    |> List.map card
+               )
+            |> column [ Element.centerX, spacing 10, padding 15 ]
+        ]
+
+
+loginPage : Model -> Element Msg
+loginPage model =
+    column [ spacing 3, Element.centerX, Element.centerY, width Element.shrink ]
+        [ row [ width fill ] [ logo [] 200 ]
+        , row [ width fill ]
+            [ textInput [] TokenInput model.secretsUnsubmitted "Enter a token" "Token input"
+            ]
+        , row [ width fill ]
+            [ submitButton (not << String.isEmpty)
+                (Maybe.withDefault "" model.secretsUnsubmitted)
+                "Please enter a token"
+                TokenSubmit
+            ]
         ]
 
 
 view : Model -> Browser.Document Msg
 view model =
-    case ( model.secrets, model.taskDetail ) of
-        ( Just _, Just detail ) ->
-            { title = detail.task.name
-            , body =
-                [ Element.layout [] <|
-                    column [ width fill ]
-                        [ titleBar detail.task.name
-                        , navBar [ homeCrumb, taskCrumb detail.task ]
-                        , row [ height fill, width fill ]
-                            [ taskDetailColumn <| granaryTaskDetailPairs detail
-                            , taskDetailColumn <| executionsPane detail
-                            ]
-                        ]
-                ]
-            }
-
-        ( Just _, Nothing ) ->
+    case ( model.route, model.secrets ) of
+        ( TaskList, Just _ ) ->
+            let
+                taskListBody =
+                    taskList model
+            in
             { title = "Available Models"
+            , body = [ Element.layout [] taskListBody ]
+            }
+
+        ( ExecutionList _, Just _ ) ->
+            { title = "Execution list"
             , body =
-                [ Element.layout [] <|
-                    column [ width fill ]
-                        [ titleBar "Granary"
-                        , navBar [ homeCrumb ]
-                        , row
-                            [ width fill
-                            , height fill
-                            , padding 10
-                            ]
-                            [ taskTable model ]
-                        ]
+                [ Element.layout [] <| executionList model
                 ]
             }
 
-        ( Nothing, _ ) ->
+        _ ->
             { title = "Granary Model Dashboard"
             , body =
-                [ Element.layout [] <|
-                    column [ spacing 3, Element.centerX, Element.centerY, width Element.shrink ]
-                        [ titleBar "Granary"
-                        , row [ width fill ]
-                            [ Input.text []
-                                { onChange = TokenInput
-                                , text = model.secretsUnsubmitted |> Maybe.withDefault ""
-                                , placeholder = Input.placeholder [] (text "Enter a token") |> Just
-                                , label = Input.labelHidden "Token input"
-                                }
-                            ]
-                        , row [ width fill ] [ submitButton TokenSubmit ]
-                        ]
+                [ Element.layout [] <| loginPage model
                 ]
             }
 

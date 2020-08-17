@@ -35,13 +35,14 @@ class ExecutionService[F[_]: Sync](
       token: Token,
       pageRequest: PageRequest,
       taskId: Option[UUID],
-      status: Option[JobStatus]
+      status: Option[JobStatus],
+      name: Option[String]
   ): F[Either[CrudError, PaginatedResponse[Execution]]] = {
     val forPage = pageRequest `combine` defaultPageRequest
     mkContext("listExecutions", Map.empty, contextBuilder) use { _ =>
       Functor[F].map(
         ExecutionDao
-          .listExecutions(token, forPage, taskId, status)
+          .listExecutions(token, forPage, taskId, status, name)
           .transact(xa)
       ) { executions =>
         val updatedExecutions = executions.map(_.signS3OutputLocation(s3Client))
