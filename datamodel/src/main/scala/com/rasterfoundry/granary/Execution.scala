@@ -19,7 +19,8 @@ case class Execution(
     statusReason: Option[String],
     results: List[StacItemAsset],
     webhookId: Option[UUID],
-    owner: Option[UUID]
+    owner: Option[UUID],
+    name: String
 ) {
 
   def signS3OutputLocation(s3Client: AmazonS3): Execution = {
@@ -43,6 +44,7 @@ object Execution {
   implicit val decExecution: Decoder[Execution] = deriveDecoder
 
   case class Create(
+      name: String,
       taskId: UUID,
       arguments: Json
   )

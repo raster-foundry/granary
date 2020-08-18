@@ -33,7 +33,7 @@ object ExecutionDao {
     fr"""
       SELECT
         id, task_id, invoked_at, arguments, status,
-        status_reason, results, webhook_id, owner
+        status_reason, results, webhook_id, owner, name
       FROM executions
     """
 
@@ -41,7 +41,8 @@ object ExecutionDao {
       token: Token,
       pageRequest: PageRequest,
       taskId: Option[UUID],
-      status: Option[JobStatus]
+      status: Option[JobStatus],
+      name: Option[String]
   ): ConnectionIO[List[Execution]] =
     Page(
       selectF ++ Fragments.whereAndOpt(
@@ -49,7 +50,10 @@ object ExecutionDao {
         status map { s =>
           fr"status = $s"
         },
-        tokenToFilter(token)
+        tokenToFilter(token),
+        name map { s =>
+          Fragment.const(s"name like '%$s%'")
+        }
       ),
       pageRequest
     ).query[Execution]
@@ -118,7 +122,8 @@ object ExecutionDao {
             "status_reason",
             "results",
             "webhook_id",
-            "owner"
+            "owner",
+            "name"
           ) map { Right(_) }
       }
     }
@@ -151,10 +156,10 @@ object ExecutionDao {
     val owner    = tokenToUserId(token)
     val fragment = fr"""
       INSERT INTO executions
-        (id, task_id, invoked_at, arguments, status, status_reason, results, webhook_id, owner)
+        (id, task_id, invoked_at, arguments, status, status_reason, results, webhook_id, owner, name)
       VALUES
         (uuid_generate_v4(), ${execution.taskId}, now(), ${execution.arguments},
-        'CREATED', NULL, '[]' :: jsonb, uuid_generate_v4(), $owner)
+        'CREATED', NULL, '[]' :: jsonb, uuid_generate_v4(), $owner, ${execution.name})
     """
     val insertIO: OptionT[ConnectionIO, Either[ExecutionDaoError, Execution]] = for {
       task <- OptionT { TaskDao.getTask(token, execution.taskId) }
@@ -173,7 +178,8 @@ object ExecutionDao {
               "status_reason",
               "results",
               "webhook_id",
-              "owner"
+              "owner",
+              "name"
             ) map { Right(_) }
         }
       }
@@ -233,7 +239,8 @@ object ExecutionDao {
           "status_reason",
           "results",
           "webhook_id",
-          "owner"
+          "owner",
+          "name"
         )
       }
     } yield update

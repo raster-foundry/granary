@@ -87,7 +87,8 @@ println {
     "A descriptive task name",
     Validator(jsonSchema),
     "perfectAccuracyTask:1",
-    "veryExpensiveOnDemandQueue"
+    "veryExpensiveOnDemandQueue",
+    None
   ).asJson.spaces2
 }
 println("```")
@@ -163,6 +164,7 @@ created when you `POST` a task id and arguments to `/api/executions`.
 println("```json")
 println {
   Execution.Create(
+    "top tier task execution",
     taskId, // the taskId to associate with this execution
     jsonPayload, // the arguments to pass to the task
   ).asJson.spaces2
@@ -186,7 +188,9 @@ println {
     JobStatus.Started,
     None,
     Nil,
-    Some(webhookId)
+    Some(webhookId),
+    None,
+    "top tier task execution"
   ).asJson.spaces2
 }
 println("```")
@@ -219,7 +223,7 @@ println {
         "s3://where/the/results/live.json",
   	    Some("Execution Results"),
   	    Some("results for a very important execution"),
-  	    List(StacAssetRole.Data),
+  	    Set(StacAssetRole.Data),
   	    Some(`application/json`)
   	  )
 	)
