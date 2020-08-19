@@ -14,7 +14,7 @@ nvm use
 ```
 
 Then start the server with `[AWS_PROFILE=<profile>] [AWS_REGION=<region>] ./scripts/server`.
-You should then be able to hit `localhost:8080/index.html` in a browser.
+You should then be able to hit `localhost:8080` in a browser.
 
 ## Developing
 
