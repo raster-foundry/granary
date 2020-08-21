@@ -1,6 +1,5 @@
 module Main exposing (main)
 
-import Array
 import Browser
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
@@ -23,7 +22,6 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import Framework.Button as Button
 import Framework.Card as Card
 import Http as Http
 import HttpBuilder as B
@@ -39,63 +37,30 @@ import Json.Schema.Definitions as Schema
         )
 import Json.Schema.Validation as Validation
 import Maybe.Extra exposing (orElse)
+import Pages.TaskList exposing (FormValues, TaskListModel, decoderGranaryTask, emptyFormValues, emptyTaskListModel, showType, taskList)
 import Result
 import Set exposing (Set)
 import String
+import Styled exposing (styledPrimaryText, styledSecondaryText, submitButton, textInput)
 import Time
+import Types exposing (GranaryTask, GranaryToken, Msg(..), PaginatedResponse)
 import Url
 import Url.Parser as Parser exposing ((<?>))
 import Url.Parser.Query as Query
+import Urls exposing (apiExecutionsUrl)
 import Uuid as Uuid
-
-
-type alias PaginatedResponse a =
-    { page : Int
-    , limit : Int
-    , results : List a
-    }
-
-
-type alias GranaryToken =
-    String
-
-
-type alias FormValues =
-    { fromSchema : Dict String (Result String JD.Value)
-    , executionName : Maybe String
-    }
-
-
-emptyFormValues : FormValues
-emptyFormValues =
-    { fromSchema = Dict.empty
-    , executionName = Nothing
-    }
 
 
 type alias Model =
     { url : Url.Url
+    , taskListModel : Maybe TaskListModel
     , key : Nav.Key
     , route : Route
-    , granaryTasks : List GranaryTask
     , granaryExecutions : List GranaryExecution
     , executionNameSearch : Maybe String
-    , activeSchema : Maybe Schema
-    , taskValidationErrors : Dict String (List Validation.Error)
-    , formValues : FormValues
-    , selectedTask : Maybe GranaryTask
     , selectedExecutions : Set String
     , secrets : Maybe GranaryToken
     , secretsUnsubmitted : Maybe GranaryToken
-    }
-
-
-type alias GranaryTask =
-    { id : Uuid.Uuid
-    , name : String
-    , validator : Schema
-    , jobDefinition : String
-    , jobQueue : String
     }
 
 
@@ -133,17 +98,6 @@ encodeExecutionCreate executionCreate =
         , ( "arguments", executionCreate.arguments )
         , ( "name", JE.string executionCreate.name )
         ]
-
-
-decoderGranaryModel : JD.Decoder GranaryTask
-decoderGranaryModel =
-    JD.map5
-        GranaryTask
-        (JD.field "id" Uuid.decoder)
-        (JD.field "name" JD.string)
-        (JD.field "validator" (JD.field "schema" Schema.decoder))
-        (JD.field "jobDefinition" JD.string)
-        (JD.field "jobQueue" JD.string)
 
 
 decoderStacAsset : JD.Decoder StacAsset
@@ -203,16 +157,12 @@ init _ url key =
     ( { url = url
       , key = key
       , route = Login
-      , granaryTasks = []
       , granaryExecutions = []
       , executionNameSearch = Nothing
-      , selectedTask = Nothing
       , selectedExecutions = Set.empty
-      , activeSchema = Nothing
-      , taskValidationErrors = Dict.empty
-      , formValues = emptyFormValues
       , secrets = Nothing
       , secretsUnsubmitted = Nothing
+      , taskListModel = Nothing
       }
     , Nav.pushUrl key (Url.toString url)
     )
@@ -222,59 +172,10 @@ init _ url key =
 ---- UPDATE ----
 
 
-toExecutionCreate : String -> Uuid.Uuid -> FormValues -> ExecutionCreate
-toExecutionCreate fallbackName taskId formValues =
-    let
-        goodFields =
-            Dict.toList formValues.fromSchema
-                |> List.filterMap
-                    (\( k, v ) ->
-                        Result.toMaybe v
-                            |> Maybe.map (\goodVal -> ( k, goodVal ))
-                    )
-
-        executionName =
-            formValues.executionName |> Maybe.withDefault fallbackName
-    in
-    ExecutionCreate executionName taskId (JE.object goodFields)
-
-
-apiExecutionsUrl : Maybe String -> Maybe Uuid.Uuid -> String
-apiExecutionsUrl namesLike taskId =
-    "/api" ++ executionsUrl namesLike taskId
-
-
-executionsUrl : Maybe String -> Maybe Uuid.Uuid -> String
-executionsUrl namesLike taskId =
-    let
-        baseUrl =
-            "/executions"
-
-        taskSearch =
-            taskId
-                |> Maybe.map ((++) "taskId=" << Uuid.toString)
-
-        nameSearch =
-            namesLike
-                |> Maybe.map ((++) "name=")
-
-        qp =
-            [ taskSearch, nameSearch ]
-                |> List.filterMap identity
-                |> List.intersperse "&"
-                |> String.concat
-    in
-    if String.isEmpty qp then
-        baseUrl
-
-    else
-        baseUrl ++ "?" ++ qp
-
-
 fetchTasks : GranaryToken -> Cmd.Cmd Msg
 fetchTasks token =
     B.get "/api/tasks"
-        |> B.withExpect (Http.expectJson GotTasks (paginatedDecoder decoderGranaryModel))
+        |> B.withExpect (Http.expectJson GotTasks (paginatedDecoder decoderGranaryTask))
         |> B.withBearerToken token
         |> B.request
 
@@ -304,26 +205,16 @@ maybePostExecution tokenM executionCreate =
         |> Maybe.withDefault Cmd.none
 
 
-type Msg
-    = GotTasks (Result Http.Error (PaginatedResponse GranaryTask))
-    | GotExecutions (Maybe Uuid.Uuid) (Result Http.Error (PaginatedResponse GranaryExecution))
-    | Navigation Browser.UrlRequest
-    | UrlChanged Url.Url
-    | TokenInput String
-    | TokenSubmit
-    | CreatedExecution (Result Http.Error GranaryExecution)
-    | TaskSelect GranaryTask
-    | ValidateWith
-        { schema : Schema.SubSchema
-        , fieldName : String
-        , fieldValue : Result String JD.Value
-        }
-    | NameExecution String
-    | CreateExecution ExecutionCreate
-    | ToggleShowAssets Uuid.Uuid
-    | SearchExecutionName String
-    | AddTokenParam GranaryToken
-    | GoHome
+updateTaskListModel : (TaskListModel -> TaskListModel) -> Model -> Model
+updateTaskListModel f mod =
+    let
+        baseTaskListModel =
+            mod.taskListModel
+
+        updated =
+            Maybe.map f baseTaskListModel
+    in
+    { mod | taskListModel = updated }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -365,17 +256,25 @@ update msg model =
                     ( model, Nav.load href )
 
         TaskSelect task ->
-            ( { model
-                | selectedTask = Just task
-                , taskValidationErrors = Dict.empty
-                , formValues = emptyFormValues
-                , activeSchema = Just task.validator
-              }
+            ( updateTaskListModel
+                (\tlm ->
+                    { tlm
+                        | selectedTask = Just task
+                        , taskValidationErrors = Dict.empty
+                        , formValues = emptyFormValues
+                        , activeSchema = Just task.validator
+                    }
+                )
+                model
             , Cmd.none
             )
 
         GotTasks (Ok tasks) ->
-            ( { model | granaryTasks = tasks.results, route = TaskList, secretsUnsubmitted = Nothing }, Cmd.none )
+            let
+                updatedTlm =
+                    updateTaskListModel (always { emptyTaskListModel | tasks = tasks.results }) model
+            in
+            ( { updatedTlm | route = TaskList, secretsUnsubmitted = Nothing }, Cmd.none )
 
         GotTasks (Err _) ->
             ( model, Cmd.none )
@@ -395,10 +294,11 @@ update msg model =
             )
 
         CreatedExecution (Ok _) ->
-            ( { model | formValues = emptyFormValues }
+            ( { model | taskListModel = Nothing }
             , Nav.pushUrl model.key
                 ("/executions?taskId="
-                    ++ (model.selectedTask
+                    ++ (model.taskListModel
+                            |> Maybe.andThen .selectedTask
                             |> Maybe.map (Uuid.toString << .id)
                             |> Maybe.withDefault ""
                        )
@@ -429,7 +329,9 @@ update msg model =
                 Result.Ok _ ->
                     let
                         formValues =
-                            model.formValues
+                            model.taskListModel
+                                |> Maybe.map .formValues
+                                |> Maybe.withDefault emptyFormValues
 
                         newFormValues =
                             { formValues
@@ -437,20 +339,32 @@ update msg model =
                                     Dict.union (Dict.singleton validateOpts.fieldName validateOpts.fieldValue)
                                         formValues.fromSchema
                             }
+
+                        baseValidationErrors =
+                            model.taskListModel
+                                |> Maybe.map .taskValidationErrors
+                                |> Maybe.withDefault Dict.empty
+
+                        updatedTlm =
+                            updateTaskListModel
+                                (\tlm ->
+                                    { tlm
+                                        | taskValidationErrors = Dict.remove validateOpts.fieldName baseValidationErrors
+                                        , formValues = newFormValues
+                                    }
+                                )
+                                model
                     in
-                    ( { model
-                        | taskValidationErrors =
-                            Dict.remove validateOpts.fieldName
-                                model.taskValidationErrors
-                        , formValues = newFormValues
-                      }
+                    ( updatedTlm
                     , Cmd.none
                     )
 
                 Result.Err errs ->
                     let
                         formValues =
-                            model.formValues
+                            model.taskListModel
+                                |> Maybe.map .formValues
+                                |> Maybe.withDefault emptyFormValues
 
                         newFormValues =
                             { formValues
@@ -458,17 +372,24 @@ update msg model =
                                     Dict.union (Dict.singleton validateOpts.fieldName validateOpts.fieldValue)
                                         formValues.fromSchema
                             }
-                    in
-                    ( { model
-                        | taskValidationErrors =
-                            Dict.union
-                                (Dict.singleton
-                                    validateOpts.fieldName
-                                    errs
+
+                        updatedTlm =
+                            updateTaskListModel
+                                (\tlm ->
+                                    { tlm
+                                        | taskValidationErrors =
+                                            Dict.union
+                                                (Dict.singleton
+                                                    validateOpts.fieldName
+                                                    errs
+                                                )
+                                                tlm.taskValidationErrors
+                                        , formValues = newFormValues
+                                    }
                                 )
-                                model.taskValidationErrors
-                        , formValues = newFormValues
-                      }
+                                model
+                    in
+                    ( updatedTlm
                     , Cmd.none
                     )
 
@@ -497,7 +418,13 @@ update msg model =
         SearchExecutionName s ->
             ( { model | executionNameSearch = Just s }
             , model.secrets
-                |> Maybe.map (fetchExecutions (Just s) (Maybe.map .id model.selectedTask))
+                |> Maybe.map
+                    (fetchExecutions (Just s)
+                        (model.taskListModel
+                            |> Maybe.andThen .selectedTask
+                            |> Maybe.map .id
+                        )
+                    )
                 |> Maybe.withDefault Cmd.none
             )
 
@@ -532,109 +459,26 @@ update msg model =
             ( model, Nav.pushUrl model.key (Url.toString { baseUrl | query = Just newQp }) )
 
         GoHome ->
-            ( { model | selectedTask = Nothing }, Nav.pushUrl model.key "/tasks" )
+            ( { model | taskListModel = Nothing }, Nav.pushUrl model.key "/tasks" )
 
         NameExecution s ->
             let
                 formValues =
-                    model.formValues
+                    model.taskListModel
+                        |> Maybe.map .formValues
+                        |> Maybe.withDefault emptyFormValues
 
                 newFormValues =
                     { formValues | executionName = Just s }
+
+                updatedTlm =
+                    updateTaskListModel (\tlm -> { tlm | formValues = newFormValues }) model
             in
-            ( { model | formValues = newFormValues }, Cmd.none )
+            ( updatedTlm, Cmd.none )
 
 
 
 ---- VIEW ----
-
-
-fontRed : Element.Attr d m
-fontRed =
-    rgb255 255 0 0 |> Font.color
-
-
-primary : Element.Color
-primary =
-    rgb255 75 59 64
-
-
-secondary : Element.Color
-secondary =
-    rgb255 246 141 17
-
-
-accent : Element.Color
-accent =
-    rgb255 253 233 135
-
-
-secondaryShadow : Element.Attr deco msg
-secondaryShadow =
-    Border.shadow
-        { offset = ( 0.1, 0.1 )
-        , size = 2
-        , blur = 3
-        , color = secondary
-        }
-
-
-styledPrimaryText : List (Element.Attribute msg) -> String -> Element msg
-styledPrimaryText attrs s =
-    el (Font.color primary :: attrs) (text s)
-
-
-styledSecondaryText : List (Element.Attribute msg) -> String -> Element msg
-styledSecondaryText attrs s =
-    el (Font.color secondary :: attrs) (text s)
-
-
-submitButton : (a -> Bool) -> a -> String -> Msg -> Element Msg
-submitButton predicate value hint msg =
-    let
-        allowSubmit =
-            predicate value
-    in
-    Element.el
-        []
-        (Input.button
-            (Button.simple
-                ++ [ Background.color accent
-                   , Element.centerX
-                   , Border.color primary
-                   ]
-            )
-            { onPress =
-                if allowSubmit then
-                    Just msg
-
-                else
-                    Nothing
-            , label = styledPrimaryText [] "Submit"
-            }
-        )
-        :: (if allowSubmit then
-                []
-
-            else
-                [ styledSecondaryText [] hint
-                ]
-           )
-        |> column [ spacing 5 ]
-
-
-textInput : List (Element.Attribute msg) -> (String -> msg) -> Maybe String -> String -> String -> Element msg
-textInput attrs f maybeText placeholder label =
-    Input.text
-        (Element.focused
-            [ secondaryShadow ]
-            :: attrs
-        )
-        { onChange = f
-        , text = maybeText |> Maybe.withDefault ""
-        , placeholder = Input.placeholder [] (text placeholder) |> Just
-        , label = Input.labelHidden label
-        }
 
 
 logo : List (Element.Attribute msg) -> Int -> Element msg
@@ -650,54 +494,6 @@ logo attrs maxSize =
         }
 
 
-tasksLink : Maybe Uuid.Uuid -> GranaryTask -> Element Msg
-tasksLink selectedId task =
-    if selectedId == Just task.id then
-        row [ width fill ]
-            [ row []
-                [ Element.link []
-                    { url = executionsUrl Nothing (Just task.id)
-                    , label = styledSecondaryText [ Font.underline ] "Executions"
-                    }
-                ]
-            ]
-
-    else
-        row [] []
-
-
-taskCard : Maybe Uuid.Uuid -> GranaryTask -> Element Msg
-taskCard selectedId task =
-    column (width fill :: spacing 5 :: Element.centerY :: Button.simple)
-        [ row
-            (Font.color primary
-                :: (if Just task.id == selectedId then
-                        [ secondaryShadow ]
-
-                    else
-                        []
-                   )
-            )
-            [ Input.button
-                []
-                { label = text task.name
-                , onPress = TaskSelect task |> Just
-                }
-            ]
-        , tasksLink selectedId task
-        ]
-
-
-isOk : Result e a -> Bool
-isOk res =
-    case res of
-        Result.Ok _ ->
-            True
-
-        Result.Err _ ->
-            False
-
-
 toEmoji : GranaryExecution -> String
 toEmoji execution =
     case ( execution.statusReason, execution.results ) of
@@ -709,227 +505,6 @@ toEmoji execution =
 
         _ ->
             "🏃\u{200D}♀️"
-
-
-numProperties : Schema -> Int
-numProperties schema =
-    let
-        schemataLength (Schema.Schemata props) =
-            List.length props
-    in
-    case schema of
-        ObjectSchema subSchema ->
-            subSchema.properties |> Maybe.map schemataLength |> Maybe.withDefault 0
-
-        BooleanSchema _ ->
-            0
-
-
-allowTaskSubmit : Maybe Schema -> FormValues -> Bool
-allowTaskSubmit schema formValues =
-    case ( formValues.executionName, schema ) of
-        ( Nothing, _ ) ->
-            False
-
-        ( _, Nothing ) ->
-            False
-
-        ( Just s, Just schm ) ->
-            not (String.isEmpty s)
-                && List.foldl (\x y -> x && y) True (List.map isOk (Dict.values formValues.fromSchema))
-                && (Dict.size formValues.fromSchema
-                        == numProperties schm
-                   )
-
-
-toResult : String -> Maybe JD.Value -> Result String JD.Value
-toResult s m =
-    case m of
-        Just v ->
-            Result.Ok v
-
-        Nothing ->
-            Result.Err s
-
-
-showType : Schema.Type -> String
-showType t =
-    case t of
-        SingleType IntegerType ->
-            "int"
-
-        SingleType NumberType ->
-            "float"
-
-        SingleType StringType ->
-            "string"
-
-        SingleType BooleanType ->
-            "boolean"
-
-        SingleType ArrayType ->
-            "array"
-
-        SingleType ObjectType ->
-            "object"
-
-        SingleType NullType ->
-            "null"
-
-        AnyType ->
-            "any"
-
-        NullableType st ->
-            "Maybe " ++ showType (SingleType st)
-
-        UnionType sts ->
-            List.map (showType << SingleType) sts
-                |> List.intersperse ", "
-                |> List.foldl (++) ""
-                |> (++) "one of "
-
-
-encodeValue : Schema.Type -> String -> Result String JD.Value
-encodeValue t s =
-    let
-        defaulter =
-            toResult s
-    in
-    case t of
-        SingleType IntegerType ->
-            String.toInt s |> Maybe.map JE.int |> defaulter
-
-        SingleType NumberType ->
-            String.toFloat s |> Maybe.map JE.float |> defaulter
-
-        SingleType StringType ->
-            Just (JE.string s) |> defaulter
-
-        SingleType BooleanType ->
-            (case s of
-                "true" ->
-                    Just (JE.bool True)
-
-                "false" ->
-                    Just (JE.bool False)
-
-                _ ->
-                    Nothing
-            )
-                |> defaulter
-
-        SingleType ArrayType ->
-            Just (JE.array JE.string (String.split "," s |> Array.fromList)) |> defaulter
-
-        SingleType ObjectType ->
-            (case JD.decodeString (JD.dict JD.value) s of
-                Result.Ok v ->
-                    Just (JE.dict identity identity v)
-
-                _ ->
-                    Nothing
-            )
-                |> defaulter
-
-        SingleType NullType ->
-            Just JE.null |> defaulter
-
-        AnyType ->
-            Just (JE.string s) |> defaulter
-
-        NullableType st ->
-            case s of
-                "null" ->
-                    Just JE.null
-                        |> defaulter
-
-                _ ->
-                    encodeValue (SingleType st) s
-
-        UnionType sts ->
-            List.map (\st -> encodeValue (SingleType st) s) sts
-                |> List.filter isOk
-                |> List.head
-                |> Maybe.withDefault (Result.Err s)
-
-
-toValue : Schema.SubSchema -> String -> Result String JD.Value
-toValue schema s =
-    encodeValue schema.type_ s
-
-
-schemaToForm : Dict String (Result String JD.Value) -> Dict String (List Validation.Error) -> Schema.SubSchema -> List (Element Msg)
-schemaToForm formValues errors schema =
-    let
-        errs ( k, _ ) =
-            Dict.get k errors |> Maybe.withDefault [] |> List.concatMap makeErr
-
-        toInput ( k, v ) =
-            if String.toLower k /= "task_grid" then
-                textInput [ width (Element.minimum 300 fill) ]
-                    (\s ->
-                        ValidateWith
-                            { schema = v
-                            , fieldName = k
-                            , fieldValue = toValue v s
-                            }
-                    )
-                    (case Dict.get k formValues of
-                        Just (Result.Ok jsonValue) ->
-                            Just
-                                (JE.encode 0 jsonValue
-                                    |> String.toList
-                                    |> List.filter ((/=) '"')
-                                    |> String.fromList
-                                )
-
-                        Just (Result.Err s) ->
-                            Just s
-
-                        _ ->
-                            Nothing
-                    )
-                    (k ++ ": " ++ showType v.type_)
-                    k
-
-            else
-                row [] [ text "file input goes here" ]
-
-        inputRow ( k, propSchema ) =
-            case propSchema of
-                ObjectSchema subSchema ->
-                    column [ spacing 10 ]
-                        [ row [] [ toInput ( k, subSchema ) ]
-                        , row [] (errs ( k, subSchema ))
-                        ]
-
-                BooleanSchema _ ->
-                    row [ spacing 5 ] [ toInput ( k, Schema.blankSubSchema ) ]
-
-        makeInput (Schema.Schemata definitions) =
-            List.map inputRow definitions
-    in
-    schema.properties
-        |> Maybe.map makeInput
-        |> Maybe.withDefault []
-
-
-executionInput : FormValues -> Dict String (List Validation.Error) -> GranaryTask -> List (Element Msg)
-executionInput formValues errors task =
-    case task.validator of
-        BooleanSchema _ ->
-            [ Element.el [] (text "oh no -- this task's schema decoded as a \"BooleanSchema\"") ]
-
-        ObjectSchema subSchema ->
-            textInput [ width (Element.minimum 300 fill) ]
-                NameExecution
-                formValues.executionName
-                "Execution name"
-                "New execution name"
-                :: schemaToForm
-                    formValues.fromSchema
-                    errors
-                    subSchema
 
 
 executionAssetsList : List StacAsset -> List (Element Msg)
@@ -949,41 +524,8 @@ executionAssetsList =
         )
 
 
-getErrField : Validation.Error -> String
-getErrField err =
-    case err.jsonPointer.path of
-        [] ->
-            "ROOT"
-
-        errs ->
-            List.intersperse "." errs
-                |> String.concat
-
-
-makeErr : Validation.Error -> List (Element Msg)
-makeErr err =
-    case err.details of
-        Validation.Required fields ->
-            fields
-                |> List.map (\s -> row [] [ text "Missing field: ", Element.el [ fontRed ] (text s) ])
-
-        Validation.AlwaysFail ->
-            [ row [] [ text "Invalid json" ] ]
-
-        Validation.InvalidType t ->
-            [ text t ]
-
-        Validation.RequiredProperty ->
-            []
-
-        _ ->
-            [ ("I can't tell what else is wrong with " ++ getErrField err)
-                |> text
-            ]
-
-
-logoTop : Maybe GranaryToken -> List (Element Msg) -> Element Msg
-logoTop secrets rest =
+logoTop : List (Element Msg) -> Element Msg
+logoTop rest =
     column [ width fill, Element.centerX ] <|
         [ row [ Element.centerX, Element.maximum 400 fill |> width ] <|
             [ column [ width (fillPortion 9), height fill ]
@@ -993,8 +535,7 @@ logoTop secrets rest =
                 ]
             , column [ width (fillPortion 1), height fill ]
                 [ row [ Element.centerY ]
-                    [ pageLink secrets
-                    , homeLink
+                    [ homeLink
                     ]
                 ]
             ]
@@ -1071,48 +612,6 @@ pageLink secrets =
         }
 
 
-taskList : Model -> Element Msg
-taskList model =
-    logoTop model.secrets <|
-        [ row [ Element.centerX ]
-            [ column
-                [ fillPortion 1 |> width
-                , spacing 10
-                , padding 10
-                , Element.alignTop
-                ]
-                (model.granaryTasks
-                    |> List.map
-                        (taskCard
-                            (Maybe.map .id model.selectedTask)
-                        )
-                )
-            , column
-                [ fillPortion 3 |> width
-                , height fill
-                , spacing 10
-                , padding 10
-                ]
-                (Maybe.withDefault
-                    [ styledPrimaryText [] "👈 Choose a task on the left" ]
-                    (model.selectedTask
-                        |> Maybe.map
-                            (\selected ->
-                                executionInput model.formValues model.taskValidationErrors selected
-                                    ++ [ row []
-                                            [ submitButton (allowTaskSubmit model.activeSchema)
-                                                model.formValues
-                                                "Some inputs are invalid"
-                                                (toExecutionCreate selected.name selected.id model.formValues |> CreateExecution)
-                                            ]
-                                       ]
-                            )
-                    )
-                )
-            ]
-        ]
-
-
 executionList : Model -> Element Msg
 executionList model =
     let
@@ -1122,7 +621,7 @@ executionList model =
         card execution =
             executionCard (showAssets execution) execution
     in
-    logoTop model.secrets
+    logoTop
         [ nameSearchInput model.executionNameSearch
             :: (model.granaryExecutions
                     |> List.map card
@@ -1149,17 +648,17 @@ loginPage model =
 
 view : Model -> Browser.Document Msg
 view model =
-    case ( model.route, model.secrets ) of
-        ( TaskList, Just _ ) ->
+    case ( model.route, model.secrets, model.taskListModel ) of
+        ( TaskList, Just _, Just tlm ) ->
             let
                 taskListBody =
-                    taskList model
+                    taskList tlm
             in
-            { title = "Available Models"
+            { title = "Available Tasks"
             , body = [ Element.layout [] taskListBody ]
             }
 
-        ( ExecutionList _, Just _ ) ->
+        ( ExecutionList _, Just _, _ ) ->
             { title = "Execution list"
             , body =
                 [ Element.layout [] <| executionList model
