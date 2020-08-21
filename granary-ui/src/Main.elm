@@ -16,9 +16,7 @@ import Element
         , text
         , width
         )
-import Element.Font as Font
 import Element.Input as Input
-import Framework.Card as Card
 import Http as Http
 import HttpBuilder as B
 import Json.Decode as JD
@@ -32,12 +30,12 @@ import Json.Schema.Definitions as Schema
         , Type(..)
         )
 import Json.Schema.Validation as Validation
-import Maybe.Extra exposing (orElse)
+import Pages.ExecutionList exposing (ExecutionListModel, emptyExecutionListModel, executionList)
 import Pages.TaskList exposing (TaskListModel, decoderGranaryTask, emptyFormValues, emptyTaskListModel, showType, taskList)
 import Result
-import Set exposing (Set)
+import Set as Set
 import String
-import Styled exposing (styledPrimaryText, styledSecondaryText, submitButton, textInput)
+import Styled exposing (submitButton, textInput)
 import Time
 import Types exposing (GranaryToken, Msg(..), PaginatedResponse)
 import Url
@@ -50,11 +48,9 @@ import Uuid as Uuid
 type alias Model =
     { url : Url.Url
     , taskListModel : Maybe TaskListModel
+    , executionListModel : Maybe ExecutionListModel
     , key : Nav.Key
     , route : Route
-    , granaryExecutions : List GranaryExecution
-    , executionNameSearch : Maybe String
-    , selectedExecutions : Set String
     , secrets : Maybe GranaryToken
     , secretsUnsubmitted : Maybe GranaryToken
     }
@@ -153,12 +149,10 @@ init _ url key =
     ( { url = url
       , key = key
       , route = Login
-      , granaryExecutions = []
-      , executionNameSearch = Nothing
-      , selectedExecutions = Set.empty
       , secrets = Nothing
       , secretsUnsubmitted = Nothing
       , taskListModel = Nothing
+      , executionListModel = Nothing
       }
     , Nav.pushUrl key (Url.toString url)
     )
@@ -199,6 +193,18 @@ maybePostExecution tokenM executionCreate =
     tokenM
         |> Maybe.map (\token -> postExecution token executionCreate)
         |> Maybe.withDefault Cmd.none
+
+
+updateExecutionListModel : (ExecutionListModel -> ExecutionListModel) -> Model -> Model
+updateExecutionListModel f mod =
+    let
+        baseExecutionListModel =
+            mod.executionListModel
+
+        updated =
+            Maybe.map f baseExecutionListModel
+    in
+    { mod | executionListModel = updated }
 
 
 updateTaskListModel : (TaskListModel -> TaskListModel) -> Model -> Model
@@ -276,7 +282,11 @@ update msg model =
             ( model, Cmd.none )
 
         GotExecutions taskId (Ok executionsPage) ->
-            ( { model | route = ExecutionList taskId, granaryExecutions = executionsPage.results }, Cmd.none )
+            let
+                updatedElm =
+                    updateExecutionListModel (always { emptyExecutionListModel | executions = executionsPage.results }) model
+            in
+            ( { updatedElm | route = ExecutionList taskId }, Cmd.none )
 
         GotExecutions _ (Err _) ->
             ( model, Nav.pushUrl model.key "/" )
@@ -398,27 +408,35 @@ update msg model =
                     Uuid.toString executionId
 
                 selectedExecutions =
-                    model.selectedExecutions
-            in
-            ( { model
-                | selectedExecutions =
+                    model.executionListModel
+                        |> Maybe.map .selectedExecutions
+                        |> Maybe.withDefault Set.empty
+
+                newSelected =
                     if Set.member stringExecutionId selectedExecutions then
                         Set.remove stringExecutionId selectedExecutions
 
                     else
                         Set.insert stringExecutionId selectedExecutions
-              }
+
+                updatedElm =
+                    updateExecutionListModel (\elm -> { elm | selectedExecutions = newSelected }) model
+            in
+            ( updatedElm
             , Cmd.none
             )
 
         SearchExecutionName s ->
-            ( { model | executionNameSearch = Just s }
+            let
+                updatedElm =
+                    updateExecutionListModel (\elm -> { elm | executionNameSearch = Just s }) model
+            in
+            ( updatedElm
             , model.secrets
                 |> Maybe.map
                     (fetchExecutions (Just s)
-                        (model.taskListModel
-                            |> Maybe.andThen .selectedTask
-                            |> Maybe.map .id
+                        (model.executionListModel
+                            |> Maybe.andThen .forTask
                         )
                     )
                 |> Maybe.withDefault Cmd.none
@@ -490,36 +508,6 @@ logo attrs maxSize =
         }
 
 
-toEmoji : GranaryExecution -> String
-toEmoji execution =
-    case ( execution.statusReason, execution.results ) of
-        ( Just _, _ ) ->
-            "❌"
-
-        ( _, _ :: _ ) ->
-            "✅"
-
-        _ ->
-            "🏃\u{200D}♀️"
-
-
-executionAssetsList : List StacAsset -> List (Element Msg)
-executionAssetsList =
-    List.map
-        (\asset ->
-            Element.link []
-                { url = asset.href
-                , label =
-                    styledSecondaryText [ Font.underline ]
-                        (asset.title
-                            |> orElse asset.description
-                            |> Maybe.withDefault
-                                (asset.roles |> List.intersperse ", " |> String.concat)
-                        )
-                }
-        )
-
-
 logoTop : List (Element Msg) -> Element Msg
 logoTop rest =
     column [ width fill, Element.centerX ] <|
@@ -539,83 +527,12 @@ logoTop rest =
             ++ rest
 
 
-executionAssets : Bool -> GranaryExecution -> List (Element Msg)
-executionAssets showAssets execution =
-    if List.isEmpty execution.results then
-        []
-
-    else
-        row []
-            [ Input.button []
-                { onPress = ToggleShowAssets execution.id |> Just
-                , label = text "➕"
-                }
-            , styledPrimaryText [] " Show assets"
-            ]
-            :: (if showAssets then
-                    executionAssetsList execution.results
-
-                else
-                    []
-               )
-
-
-executionCard : Bool -> GranaryExecution -> Element Msg
-executionCard showAssets execution =
-    [ column
-        (width
-            (fill
-                |> Element.minimum 350
-                |> Element.maximum 400
-            )
-            :: spacing 5
-            :: Card.simple
-        )
-        ([ row [] [ styledPrimaryText [] execution.name ]
-         , row [] [ styledPrimaryText [] ("Status: " ++ toEmoji execution) ]
-         ]
-            ++ executionAssets showAssets execution
-        )
-    ]
-        |> row [ width fill ]
-
-
-nameSearchInput : Maybe String -> Element Msg
-nameSearchInput currValue =
-    textInput
-        [ width fill ]
-        SearchExecutionName
-        currValue
-        "Name like"
-        "Search"
-        |> List.singleton
-        |> row [ width fill ]
-
-
 homeLink : Element Msg
 homeLink =
     Input.button []
         { onPress = Just GoHome
         , label = text "🏠"
         }
-
-
-executionList : Model -> Element Msg
-executionList model =
-    let
-        showAssets execution =
-            Set.member (Uuid.toString execution.id) model.selectedExecutions
-
-        card execution =
-            executionCard (showAssets execution) execution
-    in
-    logoTop
-        [ nameSearchInput model.executionNameSearch
-            :: (model.granaryExecutions
-                    |> List.map card
-               )
-            |> column [ Element.centerX, spacing 10, padding 15 ]
-        ]
 
 
 loginPage : Model -> Element Msg
@@ -636,20 +553,20 @@ loginPage model =
 
 view : Model -> Browser.Document Msg
 view model =
-    case ( model.route, model.secrets, model.taskListModel ) of
-        ( TaskList, Just _, Just tlm ) ->
+    case ( model.route, model.secrets, ( model.taskListModel, model.executionListModel ) ) of
+        ( TaskList, Just _, ( Just tlm, _ ) ) ->
             let
                 taskListBody =
                     taskList tlm
             in
             { title = "Available Tasks"
-            , body = [ Element.layout [] taskListBody ]
+            , body = [ Element.layout [] (logoTop [ taskListBody ]) ]
             }
 
-        ( ExecutionList _, Just _, _ ) ->
+        ( ExecutionList _, Just _, ( _, Just elm ) ) ->
             { title = "Execution list"
             , body =
-                [ Element.layout [] <| executionList model
+                [ Element.layout [] <| logoTop [ executionList elm ]
                 ]
             }
 

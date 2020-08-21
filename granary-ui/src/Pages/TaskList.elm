@@ -116,7 +116,7 @@ decoderGranaryTask =
 
 
 
--- Pure transformation functions
+-- Helper functions
 
 
 isOk : Result e a -> Bool
