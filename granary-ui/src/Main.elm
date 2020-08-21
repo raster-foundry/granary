@@ -36,8 +36,7 @@ import Result
 import Set as Set
 import String
 import Styled exposing (submitButton, textInput)
-import Time
-import Types exposing (GranaryToken, Msg(..), PaginatedResponse)
+import Types exposing (ExecutionCreate, GranaryExecution, GranaryToken, Msg(..), PaginatedResponse, StacAsset)
 import Url
 import Url.Parser as Parser exposing ((<?>))
 import Url.Parser.Query as Query
@@ -53,33 +52,6 @@ type alias Model =
     , route : Route
     , secrets : Maybe GranaryToken
     , secretsUnsubmitted : Maybe GranaryToken
-    }
-
-
-type alias StacAsset =
-    { href : String
-    , title : Maybe String
-    , description : Maybe String
-    , roles : List String
-    , mediaType : String
-    }
-
-
-type alias GranaryExecution =
-    { id : Uuid.Uuid
-    , taskId : Uuid.Uuid
-    , invokedAt : Time.Posix
-    , statusReason : Maybe String
-    , results : List StacAsset
-    , webhookId : Maybe Uuid.Uuid
-    , name : String
-    }
-
-
-type alias ExecutionCreate =
-    { name : String
-    , taskId : Uuid.Uuid
-    , arguments : JD.Value
     }
 
 
