@@ -273,20 +273,44 @@ update msg model =
 
         GotTasks (Ok tasks) ->
             let
-                updatedTlm =
-                    updateTaskListModel (always { emptyTaskListModel | tasks = tasks.results }) model
+                withTasks =
+                    { emptyTaskListModel | tasks = tasks.results }
             in
-            ( { updatedTlm | route = TaskList, secretsUnsubmitted = Nothing }, Cmd.none )
+            ( { model
+                | route = TaskList
+                , secretsUnsubmitted = Nothing
+                , taskListModel = Just withTasks
+              }
+            , Cmd.none
+            )
 
         GotTasks (Err _) ->
             ( model, Cmd.none )
 
         GotExecutions taskId (Ok executionsPage) ->
             let
-                updatedElm =
-                    updateExecutionListModel (always { emptyExecutionListModel | executions = executionsPage.results }) model
+                withExecutions =
+                    model.executionListModel
+                        |> Maybe.map
+                            (\elm ->
+                                { elm
+                                    | executions = executionsPage.results
+                                    , forTask = taskId
+                                }
+                            )
+                        |> Maybe.withDefault
+                            { emptyExecutionListModel
+                                | executions = executionsPage.results
+                                , forTask = taskId
+                            }
             in
-            ( { updatedElm | route = ExecutionList taskId }, Cmd.none )
+            ( { model
+                | route = ExecutionList taskId
+                , executionListModel = Just withExecutions
+                , taskListModel = Nothing
+              }
+            , Cmd.none
+            )
 
         GotExecutions _ (Err _) ->
             ( model, Nav.pushUrl model.key "/" )
@@ -300,7 +324,7 @@ update msg model =
             )
 
         CreatedExecution (Ok _) ->
-            ( { model | taskListModel = Nothing }
+            ( model
             , Nav.pushUrl model.key
                 ("/executions?taskId="
                     ++ (model.taskListModel

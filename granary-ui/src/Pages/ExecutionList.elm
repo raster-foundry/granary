@@ -26,7 +26,7 @@ type alias ExecutionListModel =
 emptyExecutionListModel : ExecutionListModel
 emptyExecutionListModel =
     { selectedExecutions = Set.empty
-    , executionNameSearch = Maybe.Nothing
+    , executionNameSearch = Nothing
     , executions = []
     , forTask = Nothing
     }
