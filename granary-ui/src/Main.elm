@@ -2,24 +2,20 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
-import Dict exposing (Dict)
+import Dict as Dict
 import Element
     exposing
         ( Element
         , column
-        , el
         , fill
         , fillPortion
         , height
         , padding
-        , rgb255
         , row
         , spacing
         , text
         , width
         )
-import Element.Background as Background
-import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Framework.Card as Card
@@ -37,13 +33,13 @@ import Json.Schema.Definitions as Schema
         )
 import Json.Schema.Validation as Validation
 import Maybe.Extra exposing (orElse)
-import Pages.TaskList exposing (FormValues, TaskListModel, decoderGranaryTask, emptyFormValues, emptyTaskListModel, showType, taskList)
+import Pages.TaskList exposing (TaskListModel, decoderGranaryTask, emptyFormValues, emptyTaskListModel, showType, taskList)
 import Result
 import Set exposing (Set)
 import String
 import Styled exposing (styledPrimaryText, styledSecondaryText, submitButton, textInput)
 import Time
-import Types exposing (GranaryTask, GranaryToken, Msg(..), PaginatedResponse)
+import Types exposing (GranaryToken, Msg(..), PaginatedResponse)
 import Url
 import Url.Parser as Parser exposing ((<?>))
 import Url.Parser.Query as Query
@@ -601,14 +597,6 @@ homeLink =
     Input.button []
         { onPress = Just GoHome
         , label = text "🏠"
-        }
-
-
-pageLink : Maybe GranaryToken -> Element Msg
-pageLink secrets =
-    Input.button []
-        { onPress = secrets |> Maybe.map AddTokenParam
-        , label = text "🔗"
         }
 
 

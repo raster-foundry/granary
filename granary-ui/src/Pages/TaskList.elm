@@ -39,7 +39,7 @@ import Json.Schema.Definitions as Schema
         )
 import Json.Schema.Validation as Validation
 import Styled exposing (primary, secondaryShadow, styledPrimaryText, styledSecondaryText, submitButton, textInput)
-import Types exposing (ExecutionCreate, GranaryTask, GranaryToken, Msg(..))
+import Types exposing (ExecutionCreate, GranaryTask, Msg(..))
 import Urls exposing (executionsUrl)
 import Uuid as Uuid
 
