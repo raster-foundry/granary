@@ -1,14 +1,17 @@
 module Types exposing
     ( ExecutionCreate
+    , ExecutionCreateError(..)
     , GranaryExecution
     , GranaryTask
     , GranaryToken
+    , InputEvent(..)
     , Msg(..)
     , PaginatedResponse
     , StacAsset
     )
 
 import Browser
+import File exposing (File)
 import Http as Http
 import Json.Decode as JD
 import Json.Schema.Definitions as Schema
@@ -17,6 +20,7 @@ import Json.Schema.Definitions as Schema
         , SingleType(..)
         , Type(..)
         )
+import Json.Schema.Validation as Validation
 import Time
 import Url
 import Uuid as Uuid
@@ -69,6 +73,18 @@ type alias ExecutionCreate =
     }
 
 
+type ExecutionCreateError
+    = SchemaError (List Validation.Error)
+    | DecodingError JD.Error
+
+
+type InputEvent
+    = Over
+    | Enter
+    | Leave
+    | Pick
+
+
 type Msg
     = GotTasks (Result Http.Error (PaginatedResponse GranaryTask))
     | GotExecutions (Maybe Uuid.Uuid) (Result Http.Error (PaginatedResponse GranaryExecution))
@@ -89,3 +105,6 @@ type Msg
     | SearchExecutionName String
     | AddTokenParam GranaryToken
     | GoHome
+    | GotFiles File (List File)
+    | GeoJsonData String
+    | GeoJsonInputMouseInteraction InputEvent

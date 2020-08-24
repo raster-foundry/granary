@@ -17,6 +17,9 @@ import Element
         , width
         )
 import Element.Input as Input
+import File
+import File.Select as Select
+import GeoJson as GeoJson
 import Http as Http
 import HttpBuilder as B
 import Json.Decode as JD
@@ -31,12 +34,13 @@ import Json.Schema.Definitions as Schema
         )
 import Json.Schema.Validation as Validation
 import Pages.ExecutionList exposing (ExecutionListModel, emptyExecutionListModel, executionList)
-import Pages.TaskList exposing (TaskListModel, decoderGranaryTask, emptyFormValues, emptyTaskListModel, showType, taskList)
+import Pages.TaskList exposing (TaskListModel, decoderGranaryTask, emptyFormValues, emptyTaskListModel, setInputState, showType, taskList)
 import Result
 import Set as Set
 import String
 import Styled exposing (submitButton, textInput)
-import Types exposing (ExecutionCreate, GranaryExecution, GranaryToken, Msg(..), PaginatedResponse, StacAsset)
+import Task as Task
+import Types exposing (ExecutionCreate, ExecutionCreateError(..), GranaryExecution, GranaryToken, InputEvent(..), Msg(..), PaginatedResponse, StacAsset)
 import Url
 import Url.Parser as Parser exposing ((<?>))
 import Url.Parser.Query as Query
@@ -108,7 +112,7 @@ routeParser =
             List.head strings |> Maybe.andThen Uuid.fromString
     in
     Parser.oneOf
-        [ Parser.map (always (ExecutionList emptyExecutionListModel))
+        [ Parser.map (\maybeId -> ExecutionList { emptyExecutionListModel | forTask = maybeId })
             (Parser.s "executions" <?> Query.custom "taskId" uuidQueryParam)
         , Parser.map (TaskList emptyTaskListModel) (Parser.s "tasks")
         ]
@@ -378,7 +382,7 @@ update msg model =
                                     Dict.union
                                         (Dict.singleton
                                             validateOpts.fieldName
-                                            errs
+                                            (SchemaError errs)
                                         )
                                         tlm.taskValidationErrors
                                 , formValues = newFormValues
@@ -491,6 +495,83 @@ update msg model =
             in
             ( { model | route = updatedTlm }, Cmd.none )
 
+        GotFiles head _ ->
+            ( model, Task.perform GeoJsonData (File.toString head) )
+
+        GeoJsonData data ->
+            case ( JD.decodeString GeoJson.decoder data, model.route ) of
+                ( Result.Ok taskGrid, TaskList tlm ) ->
+                    let
+                        formValues =
+                            tlm.formValues
+
+                        addition =
+                            Dict.singleton "TASK_GRID" (Result.Ok (GeoJson.encode taskGrid))
+
+                        newFormValues =
+                            { formValues | fromSchema = Dict.union addition formValues.fromSchema }
+
+                        updated =
+                            { tlm | formValues = newFormValues }
+                    in
+                    ( { model | route = TaskList updated }, Cmd.none )
+
+                ( Result.Ok taskGrid, _ ) ->
+                    let
+                        formValues =
+                            { emptyFormValues
+                                | fromSchema = Dict.singleton "TASK_GRID" (Result.Ok (GeoJson.encode taskGrid))
+                            }
+                    in
+                    ( { model
+                        | route = TaskList { emptyTaskListModel | formValues = formValues }
+                      }
+                    , Cmd.none
+                    )
+
+                ( Result.Err err, TaskList tlm ) ->
+                    let
+                        validationErrors =
+                            tlm.taskValidationErrors
+
+                        addition =
+                            Dict.singleton "TASK_GRID" (DecodingError err)
+
+                        updated =
+                            { tlm | taskValidationErrors = Dict.union addition validationErrors }
+                    in
+                    ( { model | route = TaskList updated }, Cmd.none )
+
+                ( Result.Err err, _ ) ->
+                    let
+                        validationErrors =
+                            Dict.singleton "TASK_GRID" (DecodingError err)
+
+                        updated =
+                            { emptyTaskListModel | taskValidationErrors = validationErrors }
+                    in
+                    ( { model | route = TaskList updated }, Cmd.none )
+
+        GeoJsonInputMouseInteraction event ->
+            let
+                tlm =
+                    case model.route of
+                        TaskList taskListModel ->
+                            taskListModel
+
+                        _ ->
+                            emptyTaskListModel
+
+                cmd =
+                    case event of
+                        Pick ->
+                            Select.files [ "*.geojson", "*.json" ] GotFiles
+
+                        _ ->
+                            Cmd.none
+            in
+            ( { model | route = TaskList (setInputState event tlm) }, cmd )
+
 
 
 ---- VIEW ----
@@ -546,7 +627,6 @@ loginPage model =
         , row [ width fill ]
             [ submitButton (not << String.isEmpty)
                 (Maybe.withDefault "" model.secretsUnsubmitted)
-                "Please enter a token"
                 TokenSubmit
             ]
         ]

@@ -4777,6 +4777,184 @@ function _Http_track(router, xhr, tracker)
 	});
 }
 
+
+// DECODER
+
+var _File_decoder = _Json_decodePrim(function(value) {
+	// NOTE: checks if `File` exists in case this is run on node
+	return (typeof File !== 'undefined' && value instanceof File)
+		? $elm$core$Result$Ok(value)
+		: _Json_expecting('a FILE', value);
+});
+
+
+// METADATA
+
+function _File_name(file) { return file.name; }
+function _File_mime(file) { return file.type; }
+function _File_size(file) { return file.size; }
+
+function _File_lastModified(file)
+{
+	return $elm$time$Time$millisToPosix(file.lastModified);
+}
+
+
+// DOWNLOAD
+
+var _File_downloadNode;
+
+function _File_getDownloadNode()
+{
+	return _File_downloadNode || (_File_downloadNode = document.createElement('a'));
+}
+
+var _File_download = F3(function(name, mime, content)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var blob = new Blob([content], {type: mime});
+
+		// for IE10+
+		if (navigator.msSaveOrOpenBlob)
+		{
+			navigator.msSaveOrOpenBlob(blob, name);
+			return;
+		}
+
+		// for HTML5
+		var node = _File_getDownloadNode();
+		var objectUrl = URL.createObjectURL(blob);
+		node.href = objectUrl;
+		node.download = name;
+		_File_click(node);
+		URL.revokeObjectURL(objectUrl);
+	});
+});
+
+function _File_downloadUrl(href)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var node = _File_getDownloadNode();
+		node.href = href;
+		node.download = '';
+		node.origin === location.origin || (node.target = '_blank');
+		_File_click(node);
+	});
+}
+
+
+// IE COMPATIBILITY
+
+function _File_makeBytesSafeForInternetExplorer(bytes)
+{
+	// only needed by IE10 and IE11 to fix https://github.com/elm/file/issues/10
+	// all other browsers can just run `new Blob([bytes])` directly with no problem
+	//
+	return new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+}
+
+function _File_click(node)
+{
+	// only needed by IE10 and IE11 to fix https://github.com/elm/file/issues/11
+	// all other browsers have MouseEvent and do not need this conditional stuff
+	//
+	if (typeof MouseEvent === 'function')
+	{
+		node.dispatchEvent(new MouseEvent('click'));
+	}
+	else
+	{
+		var event = document.createEvent('MouseEvents');
+		event.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+		document.body.appendChild(node);
+		node.dispatchEvent(event);
+		document.body.removeChild(node);
+	}
+}
+
+
+// UPLOAD
+
+var _File_node;
+
+function _File_uploadOne(mimes)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		_File_node = document.createElement('input');
+		_File_node.type = 'file';
+		_File_node.accept = A2($elm$core$String$join, ',', mimes);
+		_File_node.addEventListener('change', function(event)
+		{
+			callback(_Scheduler_succeed(event.target.files[0]));
+		});
+		_File_click(_File_node);
+	});
+}
+
+function _File_uploadOneOrMore(mimes)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		_File_node = document.createElement('input');
+		_File_node.type = 'file';
+		_File_node.multiple = true;
+		_File_node.accept = A2($elm$core$String$join, ',', mimes);
+		_File_node.addEventListener('change', function(event)
+		{
+			var elmFiles = _List_fromArray(event.target.files);
+			callback(_Scheduler_succeed(_Utils_Tuple2(elmFiles.a, elmFiles.b)));
+		});
+		_File_click(_File_node);
+	});
+}
+
+
+// CONTENT
+
+function _File_toString(blob)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var reader = new FileReader();
+		reader.addEventListener('loadend', function() {
+			callback(_Scheduler_succeed(reader.result));
+		});
+		reader.readAsText(blob);
+		return function() { reader.abort(); };
+	});
+}
+
+function _File_toBytes(blob)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var reader = new FileReader();
+		reader.addEventListener('loadend', function() {
+			callback(_Scheduler_succeed(new DataView(reader.result)));
+		});
+		reader.readAsArrayBuffer(blob);
+		return function() { reader.abort(); };
+	});
+}
+
+function _File_toUrl(blob)
+{
+	return _Scheduler_binding(function(callback)
+	{
+		var reader = new FileReader();
+		reader.addEventListener('loadend', function() {
+			callback(_Scheduler_succeed(reader.result));
+		});
+		reader.readAsDataURL(blob);
+		return function() { reader.abort(); };
+	});
+}
+
+
+
 function _Url_percentEncode(string)
 {
 	return encodeURIComponent(string);
@@ -5677,7 +5855,7 @@ var $elm$url$Url$toString = function (url) {
 var $author$project$Main$init = F3(
 	function (_v0, url, key) {
 		return _Utils_Tuple2(
-			{executionListModel: $elm$core$Maybe$Nothing, key: key, route: $author$project$Main$Login, secrets: $elm$core$Maybe$Nothing, secretsUnsubmitted: $elm$core$Maybe$Nothing, taskListModel: $elm$core$Maybe$Nothing, url: url},
+			{key: key, route: $author$project$Main$Login, secrets: $elm$core$Maybe$Nothing, secretsUnsubmitted: $elm$core$Maybe$Nothing, url: url},
 			A2(
 				$elm$browser$Browser$Navigation$pushUrl,
 				key,
@@ -5685,9 +5863,19 @@ var $author$project$Main$init = F3(
 	});
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$Types$DecodingError = function (a) {
+	return {$: 'DecodingError', a: a};
+};
 var $author$project$Main$ExecutionList = function (a) {
 	return {$: 'ExecutionList', a: a};
 };
+var $author$project$Types$GeoJsonData = function (a) {
+	return {$: 'GeoJsonData', a: a};
+};
+var $author$project$Types$GotFiles = F2(
+	function (a, b) {
+		return {$: 'GotFiles', a: a, b: b};
+	});
 var $1602$json_schema$Json$Schema$Validation$InvalidType = function (a) {
 	return {$: 'InvalidType', a: a};
 };
@@ -5698,7 +5886,12 @@ var $1602$json_schema$Json$Schema$Validation$JsonPointer = F2(
 var $1602$json_schema$Json$Schema$Definitions$ObjectSchema = function (a) {
 	return {$: 'ObjectSchema', a: a};
 };
-var $author$project$Main$TaskList = {$: 'TaskList'};
+var $author$project$Types$SchemaError = function (a) {
+	return {$: 'SchemaError', a: a};
+};
+var $author$project$Main$TaskList = function (a) {
+	return {$: 'TaskList', a: a};
+};
 var $elm$core$Maybe$andThen = F2(
 	function (callback, maybeValue) {
 		if (maybeValue.$ === 'Just') {
@@ -5708,11 +5901,234 @@ var $elm$core$Maybe$andThen = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
+var $elm$json$Json$Decode$decodeString = _Json_runOnString;
+var $elm$json$Json$Decode$float = _Json_decodeFloat;
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $mgold$elm_geojson$GeoJson$decodeBbox = $elm$json$Json$Decode$list($elm$json$Json$Decode$float);
+var $mgold$elm_geojson$GeoJson$Feature = function (a) {
+	return {$: 'Feature', a: a};
+};
+var $mgold$elm_geojson$GeoJson$FeatureCollection = function (a) {
+	return {$: 'FeatureCollection', a: a};
+};
+var $mgold$elm_geojson$GeoJson$Geometry = function (a) {
+	return {$: 'Geometry', a: a};
+};
+var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $mgold$elm_geojson$GeoJson$FeatureObject = F3(
+	function (geometry, properties, id) {
+		return {geometry: geometry, id: id, properties: properties};
 	});
+var $mgold$elm_geojson$GeoJson$GeometryCollection = function (a) {
+	return {$: 'GeometryCollection', a: a};
+};
+var $mgold$elm_geojson$GeoJson$LineString = function (a) {
+	return {$: 'LineString', a: a};
+};
+var $mgold$elm_geojson$GeoJson$MultiLineString = function (a) {
+	return {$: 'MultiLineString', a: a};
+};
+var $mgold$elm_geojson$GeoJson$MultiPoint = function (a) {
+	return {$: 'MultiPoint', a: a};
+};
+var $mgold$elm_geojson$GeoJson$MultiPolygon = function (a) {
+	return {$: 'MultiPolygon', a: a};
+};
+var $mgold$elm_geojson$GeoJson$Point = function (a) {
+	return {$: 'Point', a: a};
+};
+var $mgold$elm_geojson$GeoJson$Polygon = function (a) {
+	return {$: 'Polygon', a: a};
+};
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $mgold$elm_geojson$GeoJson$decodePosition = function () {
+	var errorString = function (adj) {
+		return 'Array has too ' + (adj + ' numbers to make a position');
+	};
+	var listToTuple = function (ps) {
+		if (!ps.b) {
+			return $elm$json$Json$Decode$fail(
+				errorString('few'));
+		} else {
+			if (!ps.b.b) {
+				return $elm$json$Json$Decode$fail(
+					errorString('few'));
+			} else {
+				if (!ps.b.b.b) {
+					var p1 = ps.a;
+					var _v1 = ps.b;
+					var p2 = _v1.a;
+					return $elm$json$Json$Decode$succeed(
+						_Utils_Tuple3(p1, p2, 0));
+				} else {
+					if (!ps.b.b.b.b) {
+						var p1 = ps.a;
+						var _v2 = ps.b;
+						var p2 = _v2.a;
+						var _v3 = _v2.b;
+						var p3 = _v3.a;
+						return $elm$json$Json$Decode$succeed(
+							_Utils_Tuple3(p1, p2, p3));
+					} else {
+						return $elm$json$Json$Decode$fail(
+							errorString('many'));
+					}
+				}
+			}
+		}
+	};
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		listToTuple,
+		$elm$json$Json$Decode$list($elm$json$Json$Decode$float));
+}();
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$string = _Json_decodeString;
+function $mgold$elm_geojson$GeoJson$cyclic$decodeGeometry() {
+	var helper = function (tipe) {
+		switch (tipe) {
+			case 'Point':
+				return A2(
+					$elm$json$Json$Decode$map,
+					$mgold$elm_geojson$GeoJson$Point,
+					A2($elm$json$Json$Decode$field, 'coordinates', $mgold$elm_geojson$GeoJson$decodePosition));
+			case 'MultiPoint':
+				return A2(
+					$elm$json$Json$Decode$map,
+					$mgold$elm_geojson$GeoJson$MultiPoint,
+					A2(
+						$elm$json$Json$Decode$field,
+						'coordinates',
+						$elm$json$Json$Decode$list($mgold$elm_geojson$GeoJson$decodePosition)));
+			case 'LineString':
+				return A2(
+					$elm$json$Json$Decode$map,
+					$mgold$elm_geojson$GeoJson$LineString,
+					A2(
+						$elm$json$Json$Decode$field,
+						'coordinates',
+						$elm$json$Json$Decode$list($mgold$elm_geojson$GeoJson$decodePosition)));
+			case 'MultiLineString':
+				return A2(
+					$elm$json$Json$Decode$map,
+					$mgold$elm_geojson$GeoJson$MultiLineString,
+					A2(
+						$elm$json$Json$Decode$field,
+						'coordinates',
+						$elm$json$Json$Decode$list(
+							$elm$json$Json$Decode$list($mgold$elm_geojson$GeoJson$decodePosition))));
+			case 'Polygon':
+				return A2(
+					$elm$json$Json$Decode$map,
+					$mgold$elm_geojson$GeoJson$Polygon,
+					A2(
+						$elm$json$Json$Decode$field,
+						'coordinates',
+						$elm$json$Json$Decode$list(
+							$elm$json$Json$Decode$list($mgold$elm_geojson$GeoJson$decodePosition))));
+			case 'MultiPolygon':
+				return A2(
+					$elm$json$Json$Decode$map,
+					$mgold$elm_geojson$GeoJson$MultiPolygon,
+					A2(
+						$elm$json$Json$Decode$field,
+						'coordinates',
+						$elm$json$Json$Decode$list(
+							$elm$json$Json$Decode$list(
+								$elm$json$Json$Decode$list($mgold$elm_geojson$GeoJson$decodePosition)))));
+			case 'GeometryCollection':
+				return A2(
+					$elm$json$Json$Decode$map,
+					$mgold$elm_geojson$GeoJson$GeometryCollection,
+					A2(
+						$elm$json$Json$Decode$field,
+						'geometries',
+						$elm$json$Json$Decode$list(
+							$mgold$elm_geojson$GeoJson$cyclic$decodeGeometry())));
+			default:
+				return $elm$json$Json$Decode$fail('Unrecognized \'type\': ' + tipe);
+		}
+	};
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		helper,
+		A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
+}
+try {
+	var $mgold$elm_geojson$GeoJson$decodeGeometry = $mgold$elm_geojson$GeoJson$cyclic$decodeGeometry();
+	$mgold$elm_geojson$GeoJson$cyclic$decodeGeometry = function () {
+		return $mgold$elm_geojson$GeoJson$decodeGeometry;
+	};
+} catch ($) {
+	throw 'Some top-level definitions from `GeoJson` are causing infinite recursion:\n\n  ┌─────┐\n  │    decodeGeometry\n  └─────┘\n\nThese errors are very tricky, so read https://elm-lang.org/0.19.1/bad-recursion to learn how to fix it!';}
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$json$Json$Decode$map3 = _Json_map3;
+var $elm$json$Json$Decode$oneOf = _Json_oneOf;
+var $elm$json$Json$Decode$maybe = function (decoder) {
+	return $elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder),
+				$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
+			]));
+};
+var $elm$json$Json$Decode$null = _Json_decodeNull;
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $mgold$elm_geojson$GeoJson$decodeFeature = A4(
+	$elm$json$Json$Decode$map3,
+	$mgold$elm_geojson$GeoJson$FeatureObject,
+	A2(
+		$elm$json$Json$Decode$field,
+		'geometry',
+		$elm$json$Json$Decode$oneOf(
+			_List_fromArray(
+				[
+					$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
+					A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, $mgold$elm_geojson$GeoJson$decodeGeometry)
+				]))),
+	A2($elm$json$Json$Decode$field, 'properties', $elm$json$Json$Decode$value),
+	$elm$json$Json$Decode$maybe(
+		A2(
+			$elm$json$Json$Decode$field,
+			'id',
+			$elm$json$Json$Decode$oneOf(
+				_List_fromArray(
+					[
+						$elm$json$Json$Decode$string,
+						A2($elm$json$Json$Decode$map, $elm$core$String$fromInt, $elm$json$Json$Decode$int)
+					])))));
+var $mgold$elm_geojson$GeoJson$decodeGeoJson = function () {
+	var helper = function (h_tipe) {
+		switch (h_tipe) {
+			case 'Feature':
+				return A2($elm$json$Json$Decode$map, $mgold$elm_geojson$GeoJson$Feature, $mgold$elm_geojson$GeoJson$decodeFeature);
+			case 'FeatureCollection':
+				return A2(
+					$elm$json$Json$Decode$map,
+					$mgold$elm_geojson$GeoJson$FeatureCollection,
+					A2(
+						$elm$json$Json$Decode$field,
+						'features',
+						$elm$json$Json$Decode$list($mgold$elm_geojson$GeoJson$decodeFeature)));
+			default:
+				return A2($elm$json$Json$Decode$map, $mgold$elm_geojson$GeoJson$Geometry, $mgold$elm_geojson$GeoJson$decodeGeometry);
+		}
+	};
+	return A2(
+		$elm$json$Json$Decode$andThen,
+		helper,
+		A2($elm$json$Json$Decode$field, 'type', $elm$json$Json$Decode$string));
+}();
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
+	});
+var $mgold$elm_geojson$GeoJson$decoder = A3(
+	$elm$json$Json$Decode$map2,
+	$elm$core$Tuple$pair,
+	$mgold$elm_geojson$GeoJson$decodeGeoJson,
+	$elm$json$Json$Decode$maybe(
+		A2($elm$json$Json$Decode$field, 'bbox', $mgold$elm_geojson$GeoJson$decodeBbox)));
 var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
 var $elm$core$Set$Set_elm_builtin = function (a) {
@@ -5721,10 +6137,251 @@ var $elm$core$Set$Set_elm_builtin = function (a) {
 var $elm$core$Set$empty = $elm$core$Set$Set_elm_builtin($elm$core$Dict$empty);
 var $author$project$Pages$ExecutionList$emptyExecutionListModel = {executionNameSearch: $elm$core$Maybe$Nothing, executions: _List_Nil, forTask: $elm$core$Maybe$Nothing, selectedExecutions: $elm$core$Set$empty};
 var $author$project$Pages$TaskList$emptyFormValues = {executionName: $elm$core$Maybe$Nothing, fromSchema: $elm$core$Dict$empty};
-var $author$project$Pages$TaskList$emptyTaskListModel = {activeSchema: $elm$core$Maybe$Nothing, formValues: $author$project$Pages$TaskList$emptyFormValues, selectedTask: $elm$core$Maybe$Nothing, taskValidationErrors: $elm$core$Dict$empty, tasks: _List_Nil};
+var $author$project$Pages$TaskList$emptyTaskListModel = {activeSchema: $elm$core$Maybe$Nothing, formValues: $author$project$Pages$TaskList$emptyFormValues, inputState: $elm$core$Maybe$Nothing, selectedTask: $elm$core$Maybe$Nothing, taskValidationErrors: $elm$core$Dict$empty, tasks: _List_Nil};
+var $elm$json$Json$Encode$float = _Json_wrap;
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $mgold$elm_geojson$GeoJson$encodeBbox = function (bbox) {
+	return A2(
+		$elm$core$Maybe$withDefault,
+		_List_Nil,
+		A2(
+			$elm$core$Maybe$map,
+			function (b) {
+				return _List_fromArray(
+					[
+						_Utils_Tuple2(
+						'bbox',
+						A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$float, b))
+					]);
+			},
+			bbox));
+};
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
+var $mgold$elm_geojson$GeoJson$encodePosition = function (_v0) {
+	var a = _v0.a;
+	var b = _v0.b;
+	var c = _v0.c;
+	var coordinates = (!c) ? _List_fromArray(
+		[a, b]) : _List_fromArray(
+		[a, b, c]);
+	return A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$float, coordinates);
+};
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $mgold$elm_geojson$GeoJson$encodeGeometry = function (geom) {
+	switch (geom.$) {
+		case 'Point':
+			var data = geom.a;
+			return _List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('Point')),
+					_Utils_Tuple2(
+					'coordinates',
+					$mgold$elm_geojson$GeoJson$encodePosition(data))
+				]);
+		case 'MultiPoint':
+			var data = geom.a;
+			return _List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('MultiPoint')),
+					_Utils_Tuple2(
+					'coordinates',
+					A2($elm$json$Json$Encode$list, $mgold$elm_geojson$GeoJson$encodePosition, data))
+				]);
+		case 'LineString':
+			var data = geom.a;
+			return _List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('LineString')),
+					_Utils_Tuple2(
+					'coordinates',
+					A2($elm$json$Json$Encode$list, $mgold$elm_geojson$GeoJson$encodePosition, data))
+				]);
+		case 'MultiLineString':
+			var data = geom.a;
+			return _List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('MultiLineString')),
+					_Utils_Tuple2(
+					'coordinates',
+					A2(
+						$elm$json$Json$Encode$list,
+						$elm$json$Json$Encode$list($mgold$elm_geojson$GeoJson$encodePosition),
+						data))
+				]);
+		case 'Polygon':
+			var data = geom.a;
+			return _List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('Polygon')),
+					_Utils_Tuple2(
+					'coordinates',
+					A2(
+						$elm$json$Json$Encode$list,
+						$elm$json$Json$Encode$list($mgold$elm_geojson$GeoJson$encodePosition),
+						data))
+				]);
+		case 'MultiPolygon':
+			var data = geom.a;
+			return _List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('MultiPolygon')),
+					_Utils_Tuple2(
+					'coordinates',
+					A2(
+						$elm$json$Json$Encode$list,
+						$elm$json$Json$Encode$list(
+							$elm$json$Json$Encode$list($mgold$elm_geojson$GeoJson$encodePosition)),
+						data))
+				]);
+		default:
+			var data = geom.a;
+			return _List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('GeometryCollection')),
+					_Utils_Tuple2(
+					'geometries',
+					A2(
+						$elm$json$Json$Encode$list,
+						A2($elm$core$Basics$composeR, $mgold$elm_geojson$GeoJson$encodeGeometry, $elm$json$Json$Encode$object),
+						data))
+				]);
+	}
+};
+var $elm$json$Json$Encode$null = _Json_encodeNull;
+var $mgold$elm_geojson$GeoJson$encodeFeature = function (_v0) {
+	var geometry = _v0.geometry;
+	var properties = _v0.properties;
+	var id = _v0.id;
+	var encodedId = function () {
+		if (id.$ === 'Nothing') {
+			return _List_Nil;
+		} else {
+			var theId = id.a;
+			return _List_fromArray(
+				[
+					_Utils_Tuple2(
+					'id',
+					$elm$json$Json$Encode$string(theId))
+				]);
+		}
+	}();
+	return _Utils_ap(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'type',
+				$elm$json$Json$Encode$string('Feature')),
+				_Utils_Tuple2(
+				'geometry',
+				A2(
+					$elm$core$Maybe$withDefault,
+					$elm$json$Json$Encode$null,
+					A2(
+						$elm$core$Maybe$map,
+						A2($elm$core$Basics$composeR, $mgold$elm_geojson$GeoJson$encodeGeometry, $elm$json$Json$Encode$object),
+						geometry))),
+				_Utils_Tuple2('properties', properties)
+			]),
+		encodedId);
+};
+var $mgold$elm_geojson$GeoJson$encodeGeoJson = function (geojson) {
+	switch (geojson.$) {
+		case 'Feature':
+			var feature = geojson.a;
+			return $mgold$elm_geojson$GeoJson$encodeFeature(feature);
+		case 'FeatureCollection':
+			var features = geojson.a;
+			return _List_fromArray(
+				[
+					_Utils_Tuple2(
+					'type',
+					$elm$json$Json$Encode$string('FeatureCollection')),
+					_Utils_Tuple2(
+					'features',
+					A2(
+						$elm$json$Json$Encode$list,
+						A2($elm$core$Basics$composeR, $mgold$elm_geojson$GeoJson$encodeFeature, $elm$json$Json$Encode$object),
+						features))
+				]);
+		default:
+			var geometry = geojson.a;
+			return $mgold$elm_geojson$GeoJson$encodeGeometry(geometry);
+	}
+};
+var $mgold$elm_geojson$GeoJson$encode = function (_v0) {
+	var geojson = _v0.a;
+	var bbox = _v0.b;
+	return $elm$json$Json$Encode$object(
+		_Utils_ap(
+			$mgold$elm_geojson$GeoJson$encodeGeoJson(geojson),
+			$mgold$elm_geojson$GeoJson$encodeBbox(bbox)));
+};
 var $author$project$Types$GotExecutions = F2(
 	function (a, b) {
 		return {$: 'GotExecutions', a: a, b: b};
+	});
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
+		return g(
+			f(x));
 	});
 var $elm$core$String$concat = function (strings) {
 	return A2($elm$core$String$join, '', strings);
@@ -5765,16 +6422,6 @@ var $elm$core$List$intersperse = F2(
 			return A2($elm$core$List$cons, hd, spersed);
 		}
 	});
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
-	});
 var $danyx23$elm_uuid$Uuid$toString = function (_v0) {
 	var internalString = _v0.a;
 	return internalString;
@@ -5808,13 +6455,10 @@ var $author$project$Urls$apiExecutionsUrl = F2(
 	function (namesLike, taskId) {
 		return '/api' + A2($author$project$Urls$executionsUrl, namesLike, taskId);
 	});
-var $author$project$Main$GranaryExecution = F7(
+var $author$project$Types$GranaryExecution = F7(
 	function (id, taskId, invokedAt, statusReason, results, webhookId, name) {
 		return {id: id, invokedAt: invokedAt, name: name, results: results, statusReason: statusReason, taskId: taskId, webhookId: webhookId};
 	});
-var $elm$json$Json$Decode$andThen = _Json_andThen;
-var $elm$json$Json$Decode$fail = _Json_fail;
-var $elm$json$Json$Decode$string = _Json_decodeString;
 var $elm$parser$Parser$Advanced$Bad = F2(
 	function (a, b) {
 		return {$: 'Bad', a: a, b: b};
@@ -6606,15 +7250,6 @@ var $elm$regex$Regex$fromString = function (string) {
 		string);
 };
 var $elm$regex$Regex$never = _Regex_never;
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var $danyx23$elm_uuid$Uuid$Barebones$uuidRegex = A2(
 	$elm$core$Maybe$withDefault,
 	$elm$regex$Regex$never,
@@ -6640,25 +7275,14 @@ var $danyx23$elm_uuid$Uuid$decoder = A2(
 		}
 	},
 	$elm$json$Json$Decode$string);
-var $author$project$Main$StacAsset = F5(
+var $author$project$Types$StacAsset = F5(
 	function (href, title, description, roles, mediaType) {
 		return {description: description, href: href, mediaType: mediaType, roles: roles, title: title};
 	});
-var $elm$json$Json$Decode$field = _Json_decodeField;
-var $elm$json$Json$Decode$list = _Json_decodeList;
 var $elm$json$Json$Decode$map5 = _Json_map5;
-var $elm$json$Json$Decode$oneOf = _Json_oneOf;
-var $elm$json$Json$Decode$maybe = function (decoder) {
-	return $elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder),
-				$elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing)
-			]));
-};
 var $author$project$Main$decoderStacAsset = A6(
 	$elm$json$Json$Decode$map5,
-	$author$project$Main$StacAsset,
+	$author$project$Types$StacAsset,
 	A2($elm$json$Json$Decode$field, 'href', $elm$json$Json$Decode$string),
 	A2(
 		$elm$json$Json$Decode$field,
@@ -6676,7 +7300,7 @@ var $author$project$Main$decoderStacAsset = A6(
 var $elm$json$Json$Decode$map7 = _Json_map7;
 var $author$project$Main$decoderGranaryExecution = A8(
 	$elm$json$Json$Decode$map7,
-	$author$project$Main$GranaryExecution,
+	$author$project$Types$GranaryExecution,
 	A2($elm$json$Json$Decode$field, 'id', $danyx23$elm_uuid$Uuid$decoder),
 	A2($elm$json$Json$Decode$field, 'taskId', $danyx23$elm_uuid$Uuid$decoder),
 	A2($elm$json$Json$Decode$field, 'invokedAt', $elm_community$json_extra$Json$Decode$Extra$datetime),
@@ -6693,7 +7317,6 @@ var $author$project$Main$decoderGranaryExecution = A8(
 		'webhookId',
 		$elm$json$Json$Decode$maybe($danyx23$elm_uuid$Uuid$decoder)),
 	A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string));
-var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
 		return {$: 'BadStatus_', a: a, b: b};
@@ -7234,11 +7857,6 @@ var $elm$core$Dict$update = F3(
 			return A2($elm$core$Dict$remove, targetKey, dictionary);
 		}
 	});
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
-		return g(
-			f(x));
-	});
 var $elm$http$Http$expectStringResponse = F2(
 	function (toMsg, toResult) {
 		return A3(
@@ -7332,8 +7950,6 @@ var $author$project$Types$PaginatedResponse = F3(
 	function (page, limit, results) {
 		return {limit: limit, page: page, results: results};
 	});
-var $elm$json$Json$Decode$int = _Json_decodeInt;
-var $elm$json$Json$Decode$map3 = _Json_map3;
 var $author$project$Main$paginatedDecoder = function (ofDecoder) {
 	return A4(
 		$elm$json$Json$Decode$map3,
@@ -7665,7 +8281,6 @@ var $elm$core$List$isEmpty = function (xs) {
 var $1602$json_schema$Json$Schema$Definitions$failIfEmpty = function (l) {
 	return $elm$core$List$isEmpty(l) ? $elm$json$Json$Decode$fail('List is empty') : $elm$json$Json$Decode$succeed(l);
 };
-var $elm$json$Json$Decode$float = _Json_decodeFloat;
 var $elm$json$Json$Decode$keyValuePairs = _Json_decodeKeyValuePairs;
 var $elm$json$Json$Decode$lazy = function (thunk) {
 	return A2(
@@ -7823,7 +8438,6 @@ var $1602$json_schema$Json$Schema$Definitions$multipleTypesDecoder = function (l
 var $1602$json_schema$Json$Schema$Definitions$failIfValuesAreNotUnique = function (l) {
 	return $elm$json$Json$Decode$succeed(l);
 };
-var $elm$json$Json$Decode$value = _Json_decodeValue;
 var $1602$json_schema$Json$Schema$Definitions$nonEmptyUniqueArrayOfValuesDecoder = A2(
 	$elm$json$Json$Decode$andThen,
 	$1602$json_schema$Json$Schema$Definitions$failIfEmpty,
@@ -7838,7 +8452,6 @@ var $1602$json_schema$Json$Schema$Definitions$nonNegativeInt = A2(
 		return (x >= 0) ? $elm$json$Json$Decode$succeed(x) : $elm$json$Json$Decode$fail('Expected non-negative int');
 	},
 	$elm$json$Json$Decode$int);
-var $elm$json$Json$Decode$null = _Json_decodeNull;
 var $elm$json$Json$Decode$nullable = function (decoder) {
 	return $elm$json$Json$Decode$oneOf(
 		_List_fromArray(
@@ -8292,6 +8905,44 @@ var $author$project$Main$fetchTasks = function (token) {
 					$author$project$Main$paginatedDecoder($author$project$Pages$TaskList$decoderGranaryTask)),
 				$lukewestby$elm_http_builder$HttpBuilder$get('/api/tasks'))));
 };
+var $elm$file$File$Select$files = F2(
+	function (mimes, toMsg) {
+		return A2(
+			$elm$core$Task$perform,
+			function (_v0) {
+				var f = _v0.a;
+				var fs = _v0.b;
+				return A2(toMsg, f, fs);
+			},
+			_File_uploadOneOrMore(mimes));
+	});
+var $author$project$Main$getSelectedExecutions = function (model) {
+	var _v0 = model.route;
+	if (_v0.$ === 'ExecutionList') {
+		var elm = _v0.a;
+		return $elm$core$Maybe$Just(elm.selectedExecutions);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Main$getSelectedTask = function (model) {
+	var _v0 = model.route;
+	switch (_v0.$) {
+		case 'TaskList':
+			var tlm = _v0.a;
+			return A2(
+				$elm$core$Maybe$map,
+				function ($) {
+					return $.id;
+				},
+				tlm.selectedTask);
+		case 'ExecutionList':
+			var elm = _v0.a;
+			return elm.forTask;
+		default:
+			return $elm$core$Maybe$Nothing;
+	}
+};
 var $elm$core$Set$insert = F2(
 	function (key, _v0) {
 		var dict = _v0.a;
@@ -8304,21 +8955,7 @@ var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Types$CreatedExecution = function (a) {
 	return {$: 'CreatedExecution', a: a};
 };
-var $elm$json$Json$Encode$string = _Json_wrap;
 var $danyx23$elm_uuid$Uuid$encode = A2($elm$core$Basics$composeR, $danyx23$elm_uuid$Uuid$toString, $elm$json$Json$Encode$string);
-var $elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v0, obj) {
-					var k = _v0.a;
-					var v = _v0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
-};
 var $author$project$Main$encodeExecutionCreate = function (executionCreate) {
 	return $elm$json$Json$Encode$object(
 		_List_fromArray(
@@ -8679,17 +9316,30 @@ var $author$project$Main$routeParser = function () {
 			[
 				A2(
 				$elm$url$Url$Parser$map,
-				$author$project$Main$ExecutionList,
+				function (maybeId) {
+					return $author$project$Main$ExecutionList(
+						_Utils_update(
+							$author$project$Pages$ExecutionList$emptyExecutionListModel,
+							{forTask: maybeId}));
+				},
 				A2(
 					$elm$url$Url$Parser$questionMark,
 					$elm$url$Url$Parser$s('executions'),
 					A2($elm$url$Url$Parser$Query$custom, 'taskId', uuidQueryParam))),
 				A2(
 				$elm$url$Url$Parser$map,
-				$author$project$Main$TaskList,
+				$author$project$Main$TaskList($author$project$Pages$TaskList$emptyTaskListModel),
 				$elm$url$Url$Parser$s('tasks'))
 			]));
 }();
+var $author$project$Pages$TaskList$setInputState = F2(
+	function (event, model) {
+		return _Utils_update(
+			model,
+			{
+				inputState: $elm$core$Maybe$Just(event)
+			});
+	});
 var $author$project$Pages$TaskList$showType = function (t) {
 	switch (t.$) {
 		case 'SingleType':
@@ -8741,6 +9391,7 @@ var $elm$core$Dict$singleton = F2(
 	function (key, value) {
 		return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
 	});
+var $elm$file$File$toString = _File_toString;
 var $elm$core$Dict$foldl = F3(
 	function (func, acc, dict) {
 		foldl:
@@ -8771,20 +9422,24 @@ var $elm$core$Dict$union = F2(
 		return A3($elm$core$Dict$foldl, $elm$core$Dict$insert, t2, t1);
 	});
 var $author$project$Main$updateExecutionListModel = F2(
-	function (f, mod) {
-		var baseExecutionListModel = mod.executionListModel;
-		var updated = A2($elm$core$Maybe$map, f, baseExecutionListModel);
-		return _Utils_update(
-			mod,
-			{executionListModel: updated});
+	function (f, route) {
+		if (route.$ === 'ExecutionList') {
+			var mod = route.a;
+			return $elm$core$Maybe$Just(
+				f(mod));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
 	});
 var $author$project$Main$updateTaskListModel = F2(
-	function (f, mod) {
-		var baseTaskListModel = mod.taskListModel;
-		var updated = A2($elm$core$Maybe$map, f, baseTaskListModel);
-		return _Utils_update(
-			mod,
-			{taskListModel: updated});
+	function (f, route) {
+		if (route.$ === 'TaskList') {
+			var mod = route.a;
+			return $elm$core$Maybe$Just(
+				f(mod));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
 	});
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
@@ -10814,19 +11469,18 @@ var $author$project$Main$update = F2(
 										}
 									}
 								}
-								var _v3 = _v1.b;
+								var _v2 = _v1.b;
 								return $elm$core$Platform$Cmd$none;
 							}
 							return A2($elm$browser$Browser$Navigation$pushUrl, model.key, '/tasks');
 						}
-						var taskId = _v1.a.a.a;
+						var elm = _v1.a.a.a;
 						var modelToken = _v1.b;
 						return A2(
 							getCmd,
-							A2($author$project$Main$fetchExecutions, $elm$core$Maybe$Nothing, taskId),
+							A2($author$project$Main$fetchExecutions, $elm$core$Maybe$Nothing, elm.forTask),
 							modelToken);
 					}
-					var _v2 = _v1.a.a;
 					var modelToken = _v1.b;
 					return A2(getCmd, $author$project$Main$fetchTasks, modelToken);
 				}();
@@ -10853,34 +11507,42 @@ var $author$project$Main$update = F2(
 				}
 			case 'TaskSelect':
 				var task = msg.a;
-				return _Utils_Tuple2(
+				var newRoute = A2(
+					$elm$core$Maybe$withDefault,
+					$author$project$Main$Login,
 					A2(
-						$author$project$Main$updateTaskListModel,
-						function (tlm) {
-							return _Utils_update(
-								tlm,
-								{
-									activeSchema: $elm$core$Maybe$Just(task.validator),
-									formValues: $author$project$Pages$TaskList$emptyFormValues,
-									selectedTask: $elm$core$Maybe$Just(task),
-									taskValidationErrors: $elm$core$Dict$empty
-								});
-						},
-						model),
+						$elm$core$Maybe$map,
+						$author$project$Main$TaskList,
+						A2(
+							$author$project$Main$updateTaskListModel,
+							function (tlm) {
+								return _Utils_update(
+									tlm,
+									{
+										activeSchema: $elm$core$Maybe$Just(task.validator),
+										formValues: $author$project$Pages$TaskList$emptyFormValues,
+										selectedTask: $elm$core$Maybe$Just(task),
+										taskValidationErrors: $elm$core$Dict$empty
+									});
+							},
+							model.route)));
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{route: newRoute}),
 					$elm$core$Platform$Cmd$none);
 			case 'GotTasks':
 				if (msg.a.$ === 'Ok') {
 					var tasks = msg.a.a;
-					var withTasks = _Utils_update(
-						$author$project$Pages$TaskList$emptyTaskListModel,
-						{tasks: tasks.results});
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								route: $author$project$Main$TaskList,
-								secretsUnsubmitted: $elm$core$Maybe$Nothing,
-								taskListModel: $elm$core$Maybe$Just(withTasks)
+								route: $author$project$Main$TaskList(
+									_Utils_update(
+										$author$project$Pages$TaskList$emptyTaskListModel,
+										{tasks: tasks.results})),
+								secretsUnsubmitted: $elm$core$Maybe$Nothing
 							}),
 						$elm$core$Platform$Cmd$none);
 				} else {
@@ -10890,26 +11552,16 @@ var $author$project$Main$update = F2(
 				if (msg.b.$ === 'Ok') {
 					var taskId = msg.a;
 					var executionsPage = msg.b.a;
-					var withExecutions = A2(
-						$elm$core$Maybe$withDefault,
-						_Utils_update(
-							$author$project$Pages$ExecutionList$emptyExecutionListModel,
-							{executions: executionsPage.results, forTask: taskId}),
-						A2(
-							$elm$core$Maybe$map,
-							function (elm) {
-								return _Utils_update(
-									elm,
-									{executions: executionsPage.results, forTask: taskId});
-							},
-							model.executionListModel));
+					var withExecutions = function (elm) {
+						return _Utils_update(
+							elm,
+							{executions: executionsPage.results, forTask: taskId});
+					}($author$project$Pages$ExecutionList$emptyExecutionListModel);
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								executionListModel: $elm$core$Maybe$Just(withExecutions),
-								route: $author$project$Main$ExecutionList(taskId),
-								taskListModel: $elm$core$Maybe$Nothing
+								route: $author$project$Main$ExecutionList(withExecutions)
 							}),
 						$elm$core$Platform$Cmd$none);
 				} else {
@@ -10944,27 +11596,17 @@ var $author$project$Main$update = F2(
 								'',
 								A2(
 									$elm$core$Maybe$map,
-									A2(
-										$elm$core$Basics$composeL,
-										$danyx23$elm_uuid$Uuid$toString,
-										function ($) {
-											return $.id;
-										}),
-									A2(
-										$elm$core$Maybe$andThen,
-										function ($) {
-											return $.selectedTask;
-										},
-										model.taskListModel)))));
+									$danyx23$elm_uuid$Uuid$toString,
+									$author$project$Main$getSelectedTask(model)))));
 				} else {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
 			case 'ValidateWith':
 				var validateOpts = msg.a;
 				var validation = function () {
-					var _v6 = validateOpts.fieldValue;
-					if (_v6.$ === 'Ok') {
-						var jsonValue = _v6.a;
+					var _v5 = validateOpts.fieldValue;
+					if (_v5.$ === 'Ok') {
+						var jsonValue = _v5.a;
 						return A3(
 							$1602$json_schema$Json$Schema$validateValue,
 							{applyDefaults: true},
@@ -10986,80 +11628,76 @@ var $author$project$Main$update = F2(
 								]));
 					}
 				}();
-				if (validation.$ === 'Ok') {
-					var formValues = A2(
-						$elm$core$Maybe$withDefault,
-						$author$project$Pages$TaskList$emptyFormValues,
-						A2(
-							$elm$core$Maybe$map,
-							function ($) {
-								return $.formValues;
-							},
-							model.taskListModel));
-					var newFormValues = _Utils_update(
-						formValues,
-						{
-							fromSchema: A2(
-								$elm$core$Dict$union,
-								A2($elm$core$Dict$singleton, validateOpts.fieldName, validateOpts.fieldValue),
-								formValues.fromSchema)
-						});
-					var baseValidationErrors = A2(
-						$elm$core$Maybe$withDefault,
-						$elm$core$Dict$empty,
-						A2(
-							$elm$core$Maybe$map,
-							function ($) {
-								return $.taskValidationErrors;
-							},
-							model.taskListModel));
-					var updatedTlm = A2(
-						$author$project$Main$updateTaskListModel,
-						function (tlm) {
-							return _Utils_update(
+				var _v4 = _Utils_Tuple2(validation, model.route);
+				_v4$2:
+				while (true) {
+					if (_v4.a.$ === 'Ok') {
+						if (_v4.b.$ === 'TaskList') {
+							var tlm = _v4.b.a;
+							var formValues = tlm.formValues;
+							var newFormValues = _Utils_update(
+								formValues,
+								{
+									fromSchema: A2(
+										$elm$core$Dict$union,
+										A2($elm$core$Dict$singleton, validateOpts.fieldName, validateOpts.fieldValue),
+										formValues.fromSchema)
+								});
+							var baseValidationErrors = tlm.taskValidationErrors;
+							var updatedTlm = _Utils_update(
 								tlm,
 								{
 									formValues: newFormValues,
 									taskValidationErrors: A2($elm$core$Dict$remove, validateOpts.fieldName, baseValidationErrors)
 								});
-						},
-						model);
-					return _Utils_Tuple2(updatedTlm, $elm$core$Platform$Cmd$none);
-				} else {
-					var errs = validation.a;
-					var formValues = A2(
-						$elm$core$Maybe$withDefault,
-						$author$project$Pages$TaskList$emptyFormValues,
-						A2(
-							$elm$core$Maybe$map,
-							function ($) {
-								return $.formValues;
-							},
-							model.taskListModel));
-					var newFormValues = _Utils_update(
-						formValues,
-						{
-							fromSchema: A2(
-								$elm$core$Dict$union,
-								A2($elm$core$Dict$singleton, validateOpts.fieldName, validateOpts.fieldValue),
-								formValues.fromSchema)
-						});
-					var updatedTlm = A2(
-						$author$project$Main$updateTaskListModel,
-						function (tlm) {
-							return _Utils_update(
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										route: $author$project$Main$TaskList(updatedTlm)
+									}),
+								$elm$core$Platform$Cmd$none);
+						} else {
+							break _v4$2;
+						}
+					} else {
+						if (_v4.b.$ === 'TaskList') {
+							var errs = _v4.a.a;
+							var tlm = _v4.b.a;
+							var formValues = tlm.formValues;
+							var newFormValues = _Utils_update(
+								formValues,
+								{
+									fromSchema: A2(
+										$elm$core$Dict$union,
+										A2($elm$core$Dict$singleton, validateOpts.fieldName, validateOpts.fieldValue),
+										formValues.fromSchema)
+								});
+							var updatedTlm = _Utils_update(
 								tlm,
 								{
 									formValues: newFormValues,
 									taskValidationErrors: A2(
 										$elm$core$Dict$union,
-										A2($elm$core$Dict$singleton, validateOpts.fieldName, errs),
+										A2(
+											$elm$core$Dict$singleton,
+											validateOpts.fieldName,
+											$author$project$Types$SchemaError(errs)),
 										tlm.taskValidationErrors)
 								});
-						},
-						model);
-					return _Utils_Tuple2(updatedTlm, $elm$core$Platform$Cmd$none);
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										route: $author$project$Main$TaskList(updatedTlm)
+									}),
+								$elm$core$Platform$Cmd$none);
+						} else {
+							break _v4$2;
+						}
+					}
 				}
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 			case 'CreateExecution':
 				var executionCreate = msg.a;
 				return _Utils_Tuple2(
@@ -11071,22 +11709,27 @@ var $author$project$Main$update = F2(
 				var selectedExecutions = A2(
 					$elm$core$Maybe$withDefault,
 					$elm$core$Set$empty,
-					A2(
-						$elm$core$Maybe$map,
-						function ($) {
-							return $.selectedExecutions;
-						},
-						model.executionListModel));
+					$author$project$Main$getSelectedExecutions(model));
 				var newSelected = A2($elm$core$Set$member, stringExecutionId, selectedExecutions) ? A2($elm$core$Set$remove, stringExecutionId, selectedExecutions) : A2($elm$core$Set$insert, stringExecutionId, selectedExecutions);
 				var updatedElm = A2(
-					$author$project$Main$updateExecutionListModel,
-					function (elm) {
-						return _Utils_update(
-							elm,
-							{selectedExecutions: newSelected});
-					},
-					model);
-				return _Utils_Tuple2(updatedElm, $elm$core$Platform$Cmd$none);
+					$elm$core$Maybe$withDefault,
+					$author$project$Main$Login,
+					A2(
+						$elm$core$Maybe$map,
+						$author$project$Main$ExecutionList,
+						A2(
+							$author$project$Main$updateExecutionListModel,
+							function (elm) {
+								return _Utils_update(
+									elm,
+									{selectedExecutions: newSelected});
+							},
+							model.route)));
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{route: updatedElm}),
+					$elm$core$Platform$Cmd$none);
 			case 'SearchExecutionName':
 				var s = msg.a;
 				var updatedElm = A2(
@@ -11098,9 +11741,15 @@ var $author$project$Main$update = F2(
 								executionNameSearch: $elm$core$Maybe$Just(s)
 							});
 					},
-					model);
+					model.route);
+				var newRoute = A2(
+					$elm$core$Maybe$withDefault,
+					$author$project$Main$Login,
+					A2($elm$core$Maybe$map, $author$project$Main$ExecutionList, updatedElm));
 				return _Utils_Tuple2(
-					updatedElm,
+					_Utils_update(
+						model,
+						{route: newRoute}),
 					A2(
 						$elm$core$Maybe$withDefault,
 						$elm$core$Platform$Cmd$none,
@@ -11114,7 +11763,7 @@ var $author$project$Main$update = F2(
 									function ($) {
 										return $.forTask;
 									},
-									model.executionListModel)),
+									updatedElm)),
 							model.secrets)));
 			case 'AddTokenParam':
 				var token = msg.a;
@@ -11127,11 +11776,11 @@ var $author$project$Main$update = F2(
 				var isEmpty = $elm$core$String$isEmpty(
 					A2($elm$core$Maybe$withDefault, '', baseUrl.query));
 				var newQp = function () {
-					var _v7 = _Utils_Tuple2(hasToken, isEmpty);
-					if (_v7.a) {
+					var _v6 = _Utils_Tuple2(hasToken, isEmpty);
+					if (_v6.a) {
 						return A2($elm$core$Maybe$withDefault, '', baseUrl.query);
 					} else {
-						if (!_v7.b) {
+						if (!_v6.b) {
 							return _Utils_ap(
 								A2($elm$core$Maybe$withDefault, '', baseUrl.query) + '&',
 								tokenQp);
@@ -11155,33 +11804,174 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{taskListModel: $elm$core$Maybe$Nothing}),
+						{route: $author$project$Main$Login}),
 					A2($elm$browser$Browser$Navigation$pushUrl, model.key, '/tasks'));
-			default:
+			case 'NameExecution':
 				var s = msg.a;
-				var formValues = A2(
-					$elm$core$Maybe$withDefault,
-					$author$project$Pages$TaskList$emptyFormValues,
-					A2(
-						$elm$core$Maybe$map,
-						function ($) {
-							return $.formValues;
-						},
-						model.taskListModel));
+				var formValues = function () {
+					var _v7 = model.route;
+					if (_v7.$ === 'TaskList') {
+						var tlm = _v7.a;
+						return tlm.formValues;
+					} else {
+						return $author$project$Pages$TaskList$emptyFormValues;
+					}
+				}();
 				var newFormValues = _Utils_update(
 					formValues,
 					{
 						executionName: $elm$core$Maybe$Just(s)
 					});
 				var updatedTlm = A2(
-					$author$project$Main$updateTaskListModel,
-					function (tlm) {
-						return _Utils_update(
+					$elm$core$Maybe$withDefault,
+					$author$project$Main$Login,
+					A2(
+						$elm$core$Maybe$map,
+						$author$project$Main$TaskList,
+						A2(
+							$author$project$Main$updateTaskListModel,
+							function (tlm) {
+								return _Utils_update(
+									tlm,
+									{formValues: newFormValues});
+							},
+							model.route)));
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{route: updatedTlm}),
+					$elm$core$Platform$Cmd$none);
+			case 'GotFiles':
+				var head = msg.a;
+				return _Utils_Tuple2(
+					model,
+					A2(
+						$elm$core$Task$perform,
+						$author$project$Types$GeoJsonData,
+						$elm$file$File$toString(head)));
+			case 'GeoJsonData':
+				var data = msg.a;
+				var _v8 = _Utils_Tuple2(
+					A2($elm$json$Json$Decode$decodeString, $mgold$elm_geojson$GeoJson$decoder, data),
+					model.route);
+				if (_v8.a.$ === 'Ok') {
+					if (_v8.b.$ === 'TaskList') {
+						var taskGrid = _v8.a.a;
+						var tlm = _v8.b.a;
+						var formValues = tlm.formValues;
+						var addition = A2(
+							$elm$core$Dict$singleton,
+							'TASK_GRID',
+							$elm$core$Result$Ok(
+								$mgold$elm_geojson$GeoJson$encode(taskGrid)));
+						var newFormValues = _Utils_update(
+							formValues,
+							{
+								fromSchema: A2($elm$core$Dict$union, addition, formValues.fromSchema)
+							});
+						var updated = _Utils_update(
 							tlm,
 							{formValues: newFormValues});
-					},
-					model);
-				return _Utils_Tuple2(updatedTlm, $elm$core$Platform$Cmd$none);
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									route: $author$project$Main$TaskList(updated)
+								}),
+							$elm$core$Platform$Cmd$none);
+					} else {
+						var taskGrid = _v8.a.a;
+						var formValues = _Utils_update(
+							$author$project$Pages$TaskList$emptyFormValues,
+							{
+								fromSchema: A2(
+									$elm$core$Dict$singleton,
+									'TASK_GRID',
+									$elm$core$Result$Ok(
+										$mgold$elm_geojson$GeoJson$encode(taskGrid)))
+							});
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									route: $author$project$Main$TaskList(
+										_Utils_update(
+											$author$project$Pages$TaskList$emptyTaskListModel,
+											{formValues: formValues}))
+								}),
+							$elm$core$Platform$Cmd$none);
+					}
+				} else {
+					if (_v8.b.$ === 'TaskList') {
+						var err = _v8.a.a;
+						var tlm = _v8.b.a;
+						var validationErrors = tlm.taskValidationErrors;
+						var addition = A2(
+							$elm$core$Dict$singleton,
+							'TASK_GRID',
+							$author$project$Types$DecodingError(err));
+						var updated = _Utils_update(
+							tlm,
+							{
+								taskValidationErrors: A2($elm$core$Dict$union, addition, validationErrors)
+							});
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									route: $author$project$Main$TaskList(updated)
+								}),
+							$elm$core$Platform$Cmd$none);
+					} else {
+						var err = _v8.a.a;
+						var validationErrors = A2(
+							$elm$core$Dict$singleton,
+							'TASK_GRID',
+							$author$project$Types$DecodingError(err));
+						var updated = _Utils_update(
+							$author$project$Pages$TaskList$emptyTaskListModel,
+							{taskValidationErrors: validationErrors});
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									route: $author$project$Main$TaskList(updated)
+								}),
+							$elm$core$Platform$Cmd$none);
+					}
+				}
+			case 'GeoJsonInputMouseInteraction':
+				var event = msg.a;
+				var tlm = function () {
+					var _v10 = model.route;
+					if (_v10.$ === 'TaskList') {
+						var taskListModel = _v10.a;
+						return taskListModel;
+					} else {
+						return $author$project$Pages$TaskList$emptyTaskListModel;
+					}
+				}();
+				var cmd = function () {
+					if (event.$ === 'Pick') {
+						return A2(
+							$elm$file$File$Select$files,
+							_List_fromArray(
+								['*.geojson', '*.json']),
+							$author$project$Types$GotFiles);
+					} else {
+						return $elm$core$Platform$Cmd$none;
+					}
+				}();
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							route: $author$project$Main$TaskList(
+								A2($author$project$Pages$TaskList$setInputState, event, tlm))
+						}),
+					cmd);
+			default:
+				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
 var $mdgriffith$elm_ui$Internal$Model$AlignX = function (a) {
@@ -13637,15 +14427,6 @@ var $mdgriffith$elm_ui$Internal$Model$staticRoot = function (opts) {
 				_List_Nil);
 	}
 };
-var $elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				$elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
 var $mdgriffith$elm_ui$Internal$Model$fontName = function (font) {
 	switch (font.$) {
 		case 'Serif':
@@ -18481,27 +19262,17 @@ var $Orasund$elm_ui_framework$Framework$Button$simple = _Utils_ap(
 					])),
 				A2($mdgriffith$elm_ui$Element$paddingXY, 16, 12)
 			])));
-var $author$project$Styled$styledSecondaryText = F2(
-	function (attrs, s) {
-		return A2(
-			$mdgriffith$elm_ui$Element$el,
-			A2(
-				$elm$core$List$cons,
-				$mdgriffith$elm_ui$Element$Font$color($author$project$Styled$secondary),
-				attrs),
-			$mdgriffith$elm_ui$Element$text(s));
-	});
-var $author$project$Styled$submitButton = F4(
-	function (predicate, value, hint, msg) {
+var $author$project$Styled$submitButton = F3(
+	function (predicate, value, msg) {
 		var allowSubmit = predicate(value);
+		var bgColor = allowSubmit ? $author$project$Styled$accent : $Orasund$elm_ui_framework$Framework$Color$lightGrey;
 		return A2(
 			$mdgriffith$elm_ui$Element$column,
 			_List_fromArray(
 				[
 					$mdgriffith$elm_ui$Element$spacing(5)
 				]),
-			A2(
-				$elm$core$List$cons,
+			$elm$core$List$singleton(
 				A2(
 					$mdgriffith$elm_ui$Element$el,
 					_List_Nil,
@@ -18511,18 +19282,21 @@ var $author$project$Styled$submitButton = F4(
 							$Orasund$elm_ui_framework$Framework$Button$simple,
 							_List_fromArray(
 								[
-									$mdgriffith$elm_ui$Element$Background$color($author$project$Styled$accent),
+									$mdgriffith$elm_ui$Element$Background$color(bgColor),
 									$mdgriffith$elm_ui$Element$centerX,
-									$mdgriffith$elm_ui$Element$Border$color($author$project$Styled$primary)
+									$mdgriffith$elm_ui$Element$Border$color($author$project$Styled$primary),
+									$mdgriffith$elm_ui$Element$htmlAttribute(
+									$elm$html$Html$Attributes$disabled(!allowSubmit)),
+									$mdgriffith$elm_ui$Element$htmlAttribute(
+									A2(
+										$elm$html$Html$Attributes$style,
+										'cursor',
+										allowSubmit ? 'pointer' : 'not-allowed'))
 								])),
 						{
 							label: A2($author$project$Styled$styledPrimaryText, _List_Nil, 'Submit'),
 							onPress: allowSubmit ? $elm$core$Maybe$Just(msg) : $elm$core$Maybe$Nothing
-						})),
-				allowSubmit ? _List_Nil : _List_fromArray(
-					[
-						A2($author$project$Styled$styledSecondaryText, _List_Nil, hint)
-					])));
+						}))));
 	});
 var $author$project$Main$loginPage = function (model) {
 	return A2(
@@ -18564,11 +19338,10 @@ var $author$project$Main$loginPage = function (model) {
 					]),
 				_List_fromArray(
 					[
-						A4(
+						A3(
 						$author$project$Styled$submitButton,
 						A2($elm$core$Basics$composeL, $elm$core$Basics$not, $elm$core$String$isEmpty),
 						A2($elm$core$Maybe$withDefault, '', model.secretsUnsubmitted),
-						'Please enter a token',
 						$author$project$Types$TokenSubmit)
 					]))
 			]));
@@ -18728,10 +19501,18 @@ var $author$project$Pages$TaskList$allowTaskSubmit = F2(
 var $author$project$Types$NameExecution = function (a) {
 	return {$: 'NameExecution', a: a};
 };
+var $author$project$Types$Enter = {$: 'Enter'};
+var $author$project$Types$GeoJsonInputMouseInteraction = function (a) {
+	return {$: 'GeoJsonInputMouseInteraction', a: a};
+};
+var $author$project$Types$Leave = {$: 'Leave'};
+var $author$project$Types$Over = {$: 'Over'};
+var $author$project$Types$Pick = {$: 'Pick'};
 var $author$project$Types$ValidateWith = function (a) {
 	return {$: 'ValidateWith', a: a};
 };
 var $elm$core$String$fromList = _String_fromList;
+var $mdgriffith$elm_ui$Element$html = $mdgriffith$elm_ui$Internal$Model$unstyled;
 var $author$project$Pages$TaskList$fontRed = $mdgriffith$elm_ui$Element$Font$color(
 	A3($mdgriffith$elm_ui$Element$rgb255, 255, 0, 0));
 var $author$project$Pages$TaskList$getErrField = function (err) {
@@ -18793,6 +19574,23 @@ var $author$project$Pages$TaskList$makeErr = function (err) {
 				]);
 	}
 };
+var $author$project$Pages$TaskList$makeHelpfulErrorMessage = function (err) {
+	if (err.$ === 'SchemaError') {
+		var errs = err.a;
+		return A2($elm$core$List$concatMap, $author$project$Pages$TaskList$makeErr, errs);
+	} else {
+		return _List_fromArray(
+			[
+				A2(
+				$mdgriffith$elm_ui$Element$row,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$text('Structure of JSON in this field was unexpected')
+					]))
+			]);
+	}
+};
 var $elm$core$String$foldr = _String_foldr;
 var $elm$core$String$toList = function (string) {
 	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
@@ -18849,7 +19647,6 @@ var $elm$json$Json$Encode$dict = F3(
 				_Json_emptyObject(_Utils_Tuple0),
 				dictionary));
 	});
-var $elm$json$Json$Encode$float = _Json_wrap;
 var $elm$core$Array$fromListHelp = F3(
 	function (list, nodeList, nodeListSize) {
 		fromListHelp:
@@ -18886,7 +19683,6 @@ var $elm$core$Array$fromList = function (list) {
 	}
 };
 var $elm$json$Json$Encode$int = _Json_wrap;
-var $elm$json$Json$Encode$null = _Json_encodeNull;
 var $author$project$Pages$TaskList$toResult = F2(
 	function (s, m) {
 		if (m.$ === 'Just') {
@@ -19009,64 +19805,203 @@ var $author$project$Pages$TaskList$toValue = F2(
 	function (schema, s) {
 		return A2($author$project$Pages$TaskList$encodeValue, schema.type_, s);
 	});
-var $author$project$Pages$TaskList$schemaToForm = F3(
-	function (formValues, errors, schema) {
-		var toInput = function (_v5) {
-			var k = _v5.a;
-			var v = _v5.b;
-			return ($elm$core$String$toLower(k) !== 'task_grid') ? A5(
-				$author$project$Styled$textInput,
+var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$file$File$decoder = _File_decoder;
+var $elm$json$Json$Decode$oneOrMoreHelp = F2(
+	function (toValue, xs) {
+		if (!xs.b) {
+			return $elm$json$Json$Decode$fail('a ARRAY with at least ONE element');
+		} else {
+			var y = xs.a;
+			var ys = xs.b;
+			return $elm$json$Json$Decode$succeed(
+				A2(toValue, y, ys));
+		}
+	});
+var $elm$json$Json$Decode$oneOrMore = F2(
+	function (toValue, decoder) {
+		return A2(
+			$elm$json$Json$Decode$andThen,
+			$elm$json$Json$Decode$oneOrMoreHelp(toValue),
+			$elm$json$Json$Decode$list(decoder));
+	});
+var $author$project$FileInput$dropDecoder = function (f) {
+	return A2(
+		$elm$json$Json$Decode$at,
+		_List_fromArray(
+			['dataTransfer', 'files']),
+		A2($elm$json$Json$Decode$oneOrMore, f, $elm$file$File$decoder));
+};
+var $author$project$FileInput$hijack = function (msg) {
+	return _Utils_Tuple2(msg, true);
+};
+var $author$project$FileInput$hijackOn = F2(
+	function (event, decoder) {
+		return A2(
+			$elm$html$Html$Events$preventDefaultOn,
+			event,
+			A2($elm$json$Json$Decode$map, $author$project$FileInput$hijack, decoder));
+	});
+var $author$project$FileInput$view = function (handler) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'border-radius', '20px'),
+				A2($elm$html$Html$Attributes$style, 'padding', '5px'),
+				A2($elm$html$Html$Attributes$style, 'display', 'flex'),
+				A2($elm$html$Html$Attributes$style, 'flex-direction', 'column'),
+				A2($elm$html$Html$Attributes$style, 'justify-content', 'center'),
+				A2($elm$html$Html$Attributes$style, 'align-items', 'center'),
+				A2(
+				$author$project$FileInput$hijackOn,
+				'dragenter',
+				$elm$json$Json$Decode$succeed(handler.onEnter)),
+				A2(
+				$author$project$FileInput$hijackOn,
+				'dragover',
+				$elm$json$Json$Decode$succeed(handler.onOver)),
+				A2(
+				$author$project$FileInput$hijackOn,
+				'dragleave',
+				$elm$json$Json$Decode$succeed(handler.onLeave)),
+				A2(
+				$author$project$FileInput$hijackOn,
+				'drop',
+				$author$project$FileInput$dropDecoder(handler.onDrop))
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$button,
 				_List_fromArray(
 					[
-						$mdgriffith$elm_ui$Element$width(
-						A2($mdgriffith$elm_ui$Element$minimum, 300, $mdgriffith$elm_ui$Element$fill))
+						$elm$html$Html$Events$onClick(handler.onPick)
 					]),
-				function (s) {
-					return $author$project$Types$ValidateWith(
-						{
-							fieldName: k,
-							fieldValue: A2($author$project$Pages$TaskList$toValue, v, s),
-							schema: v
-						});
-				},
-				function () {
-					var _v4 = A2($elm$core$Dict$get, k, formValues);
-					if (_v4.$ === 'Just') {
-						if (_v4.a.$ === 'Ok') {
-							var jsonValue = _v4.a.a;
-							return $elm$core$Maybe$Just(
-								$elm$core$String$fromList(
-									A2(
-										$elm$core$List$filter,
-										$elm$core$Basics$neq(
-											_Utils_chr('\"')),
-										$elm$core$String$toList(
-											A2($elm$json$Json$Encode$encode, 0, jsonValue)))));
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Select or drag and drop a task grid geojson')
+					]))
+			]));
+};
+var $author$project$Pages$TaskList$schemaToForm = F4(
+	function (inputEvent, formValues, errors, schema) {
+		var toInput = function (_v11) {
+			var k = _v11.a;
+			var v = _v11.b;
+			if ($elm$core$String$toLower(k) !== 'task_grid') {
+				return A5(
+					$author$project$Styled$textInput,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$width(
+							A2($mdgriffith$elm_ui$Element$minimum, 300, $mdgriffith$elm_ui$Element$fill))
+						]),
+					function (s) {
+						return $author$project$Types$ValidateWith(
+							{
+								fieldName: k,
+								fieldValue: A2($author$project$Pages$TaskList$toValue, v, s),
+								schema: v
+							});
+					},
+					function () {
+						var _v4 = A2($elm$core$Dict$get, k, formValues);
+						if (_v4.$ === 'Just') {
+							if (_v4.a.$ === 'Ok') {
+								var jsonValue = _v4.a.a;
+								return $elm$core$Maybe$Just(
+									$elm$core$String$fromList(
+										A2(
+											$elm$core$List$filter,
+											$elm$core$Basics$neq(
+												_Utils_chr('\"')),
+											$elm$core$String$toList(
+												A2($elm$json$Json$Encode$encode, 0, jsonValue)))));
+							} else {
+								var s = _v4.a.a;
+								return $elm$core$Maybe$Just(s);
+							}
 						} else {
-							var s = _v4.a.a;
-							return $elm$core$Maybe$Just(s);
+							return $elm$core$Maybe$Nothing;
+						}
+					}(),
+					k + (': ' + $author$project$Pages$TaskList$showType(v.type_)),
+					k);
+			} else {
+				var extraStyle = function () {
+					if (inputEvent.$ === 'Just') {
+						switch (inputEvent.a.$) {
+							case 'Over':
+								var _v7 = inputEvent.a;
+								return _List_fromArray(
+									[$author$project$Styled$secondaryShadow]);
+							case 'Enter':
+								var _v8 = inputEvent.a;
+								return _List_Nil;
+							case 'Leave':
+								var _v9 = inputEvent.a;
+								return _List_Nil;
+							default:
+								var _v10 = inputEvent.a;
+								return _List_Nil;
 						}
 					} else {
-						return $elm$core$Maybe$Nothing;
+						return _List_Nil;
 					}
-				}(),
-				k + (': ' + $author$project$Pages$TaskList$showType(v.type_)),
-				k) : A2(
-				$mdgriffith$elm_ui$Element$row,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$mdgriffith$elm_ui$Element$text('file input goes here')
-					]));
+				}();
+				return A2(
+					$elm$core$Maybe$withDefault,
+					A2(
+						$mdgriffith$elm_ui$Element$row,
+						A2(
+							$elm$core$List$cons,
+							$mdgriffith$elm_ui$Element$width(
+								A2($mdgriffith$elm_ui$Element$minimum, 300, $mdgriffith$elm_ui$Element$fill)),
+							extraStyle),
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$html(
+								$author$project$FileInput$view(
+									{
+										onDrop: $author$project$Types$GotFiles,
+										onEnter: $author$project$Types$GeoJsonInputMouseInteraction($author$project$Types$Enter),
+										onLeave: $author$project$Types$GeoJsonInputMouseInteraction($author$project$Types$Leave),
+										onOver: $author$project$Types$GeoJsonInputMouseInteraction($author$project$Types$Over),
+										onPick: $author$project$Types$GeoJsonInputMouseInteraction($author$project$Types$Pick)
+									}))
+							])),
+					A2(
+						$elm$core$Maybe$andThen,
+						function (result) {
+							if (result.$ === 'Ok') {
+								var data = result.a;
+								return A2(
+									$elm$core$Basics$always,
+									$elm$core$Maybe$Just(
+										A2(
+											$mdgriffith$elm_ui$Element$row,
+											_List_Nil,
+											_List_fromArray(
+												[
+													$mdgriffith$elm_ui$Element$text('Successful geojson upload!')
+												]))),
+									data);
+							} else {
+								return $elm$core$Maybe$Nothing;
+							}
+						},
+						A2($elm$core$Dict$get, 'TASK_GRID', formValues)));
+			}
 		};
 		var errs = function (_v3) {
 			var k = _v3.a;
 			return A2(
-				$elm$core$List$concatMap,
-				$author$project$Pages$TaskList$makeErr,
+				$elm$core$Maybe$withDefault,
+				_List_Nil,
 				A2(
-					$elm$core$Maybe$withDefault,
-					_List_Nil,
+					$elm$core$Maybe$map,
+					$author$project$Pages$TaskList$makeHelpfulErrorMessage,
 					A2($elm$core$Dict$get, k, errors)));
 		};
 		var inputRow = function (_v2) {
@@ -19119,8 +20054,8 @@ var $author$project$Pages$TaskList$schemaToForm = F3(
 			_List_Nil,
 			A2($elm$core$Maybe$map, makeInput, schema.properties));
 	});
-var $author$project$Pages$TaskList$executionInput = F3(
-	function (formValues, errors, task) {
+var $author$project$Pages$TaskList$executionInput = F4(
+	function (inputEvent, formValues, errors, task) {
 		var _v0 = task.validator;
 		if (_v0.$ === 'BooleanSchema') {
 			return _List_fromArray(
@@ -19145,12 +20080,22 @@ var $author$project$Pages$TaskList$executionInput = F3(
 					formValues.executionName,
 					'Execution name',
 					'New execution name'),
-				A3($author$project$Pages$TaskList$schemaToForm, formValues.fromSchema, errors, subSchema));
+				A4($author$project$Pages$TaskList$schemaToForm, inputEvent, formValues.fromSchema, errors, subSchema));
 		}
 	});
 var $author$project$Types$TaskSelect = function (a) {
 	return {$: 'TaskSelect', a: a};
 };
+var $author$project$Styled$styledSecondaryText = F2(
+	function (attrs, s) {
+		return A2(
+			$mdgriffith$elm_ui$Element$el,
+			A2(
+				$elm$core$List$cons,
+				$mdgriffith$elm_ui$Element$Font$color($author$project$Styled$secondary),
+				attrs),
+			$mdgriffith$elm_ui$Element$text(s));
+	});
 var $author$project$Pages$TaskList$tasksLink = F2(
 	function (selectedId, task) {
 		return _Utils_eq(
@@ -19294,7 +20239,7 @@ var $author$project$Pages$TaskList$taskList = function (model) {
 						$elm$core$Maybe$map,
 						function (selected) {
 							return _Utils_ap(
-								A3($author$project$Pages$TaskList$executionInput, model.formValues, model.taskValidationErrors, selected),
+								A4($author$project$Pages$TaskList$executionInput, model.inputState, model.formValues, model.taskValidationErrors, selected),
 								_List_fromArray(
 									[
 										A2(
@@ -19302,11 +20247,10 @@ var $author$project$Pages$TaskList$taskList = function (model) {
 										_List_Nil,
 										_List_fromArray(
 											[
-												A4(
+												A3(
 												$author$project$Styled$submitButton,
 												$author$project$Pages$TaskList$allowTaskSubmit(model.activeSchema),
 												model.formValues,
-												'Some inputs are invalid',
 												$author$project$Types$CreateExecution(
 													A3($author$project$Pages$TaskList$toExecutionCreate, selected.name, selected.id, model.formValues)))
 											]))
@@ -19316,56 +20260,42 @@ var $author$project$Pages$TaskList$taskList = function (model) {
 			]));
 };
 var $author$project$Main$view = function (model) {
-	var _v0 = _Utils_Tuple3(
-		model.route,
-		model.secrets,
-		_Utils_Tuple2(model.taskListModel, model.executionListModel));
+	var _v0 = _Utils_Tuple2(model.route, model.secrets);
 	_v0$2:
 	while (true) {
 		if (_v0.b.$ === 'Just') {
 			switch (_v0.a.$) {
 				case 'TaskList':
-					if (_v0.c.a.$ === 'Just') {
-						var _v1 = _v0.a;
-						var _v2 = _v0.c;
-						var tlm = _v2.a.a;
-						var taskListBody = $author$project$Pages$TaskList$taskList(tlm);
-						return {
-							body: _List_fromArray(
-								[
-									A2(
-									$mdgriffith$elm_ui$Element$layout,
-									_List_Nil,
-									$author$project$Main$logoTop(
-										_List_fromArray(
-											[taskListBody])))
-								]),
-							title: 'Available Tasks'
-						};
-					} else {
-						break _v0$2;
-					}
+					var tlm = _v0.a.a;
+					var taskListBody = $author$project$Pages$TaskList$taskList(tlm);
+					return {
+						body: _List_fromArray(
+							[
+								A2(
+								$mdgriffith$elm_ui$Element$layout,
+								_List_Nil,
+								$author$project$Main$logoTop(
+									_List_fromArray(
+										[taskListBody])))
+							]),
+						title: 'Available Tasks'
+					};
 				case 'ExecutionList':
-					if (_v0.c.b.$ === 'Just') {
-						var _v3 = _v0.c;
-						var elm = _v3.b.a;
-						return {
-							body: _List_fromArray(
-								[
-									A2(
-									$mdgriffith$elm_ui$Element$layout,
-									_List_Nil,
-									$author$project$Main$logoTop(
-										_List_fromArray(
-											[
-												$author$project$Pages$ExecutionList$executionList(elm)
-											])))
-								]),
-							title: 'Execution list'
-						};
-					} else {
-						break _v0$2;
-					}
+					var elm = _v0.a.a;
+					return {
+						body: _List_fromArray(
+							[
+								A2(
+								$mdgriffith$elm_ui$Element$layout,
+								_List_Nil,
+								$author$project$Main$logoTop(
+									_List_fromArray(
+										[
+											$author$project$Pages$ExecutionList$executionList(elm)
+										])))
+							]),
+						title: 'Execution list'
+					};
 				default:
 					break _v0$2;
 			}

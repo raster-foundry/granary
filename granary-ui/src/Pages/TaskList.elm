@@ -4,6 +4,7 @@ module Pages.TaskList exposing
     , decoderGranaryTask
     , emptyFormValues
     , emptyTaskListModel
+    , setInputState
     , showType
     , taskList
     )
@@ -27,6 +28,7 @@ import Element
         )
 import Element.Font as Font
 import Element.Input as Input
+import FileInput as FileInput
 import Framework.Button as Button
 import Json.Decode as JD
 import Json.Encode as JE
@@ -39,7 +41,7 @@ import Json.Schema.Definitions as Schema
         )
 import Json.Schema.Validation as Validation
 import Styled exposing (primary, secondaryShadow, styledPrimaryText, styledSecondaryText, submitButton, textInput)
-import Types exposing (ExecutionCreate, GranaryTask, Msg(..))
+import Types exposing (ExecutionCreate, ExecutionCreateError(..), GranaryTask, InputEvent(..), Msg(..))
 import Urls exposing (executionsUrl)
 import Uuid as Uuid
 
@@ -72,8 +74,9 @@ type alias TaskListModel =
     { tasks : List GranaryTask
     , selectedTask : Maybe GranaryTask
     , formValues : FormValues
-    , taskValidationErrors : Dict String (List Validation.Error)
+    , taskValidationErrors : Dict String ExecutionCreateError
     , activeSchema : Maybe Schema.Schema
+    , inputState : Maybe InputEvent
     }
 
 
@@ -84,7 +87,13 @@ emptyTaskListModel =
     , formValues = emptyFormValues
     , taskValidationErrors = Dict.empty
     , activeSchema = Nothing
+    , inputState = Nothing
     }
+
+
+setInputState : InputEvent -> TaskListModel -> TaskListModel
+setInputState event model =
+    { model | inputState = Just event }
 
 
 toExecutionCreate : String -> Uuid.Uuid -> FormValues -> ExecutionCreate
@@ -334,6 +343,16 @@ tasksLink selectedId task =
         row [] []
 
 
+makeHelpfulErrorMessage : ExecutionCreateError -> List (Element Msg)
+makeHelpfulErrorMessage err =
+    case err of
+        SchemaError errs ->
+            List.concatMap makeErr errs
+
+        DecodingError _ ->
+            [ row [] [ text "Structure of JSON in this field was unexpected" ] ]
+
+
 makeErr : Validation.Error -> List (Element Msg)
 makeErr err =
     case err.details of
@@ -356,11 +375,11 @@ makeErr err =
             ]
 
 
-schemaToForm : Dict String (Result String JD.Value) -> Dict String (List Validation.Error) -> Schema.SubSchema -> List (Element Msg)
-schemaToForm formValues errors schema =
+schemaToForm : Maybe InputEvent -> Dict String (Result String JD.Value) -> Dict String ExecutionCreateError -> Schema.SubSchema -> List (Element Msg)
+schemaToForm inputEvent formValues errors schema =
     let
         errs ( k, _ ) =
-            Dict.get k errors |> Maybe.withDefault [] |> List.concatMap makeErr
+            Dict.get k errors |> Maybe.map makeHelpfulErrorMessage |> Maybe.withDefault []
 
         toInput ( k, v ) =
             if String.toLower k /= "task_grid" then
@@ -391,7 +410,48 @@ schemaToForm formValues errors schema =
                     k
 
             else
-                row [] [ text "file input goes here" ]
+                let
+                    extraStyle =
+                        case inputEvent of
+                            Just Over ->
+                                [ secondaryShadow ]
+
+                            Just Enter ->
+                                []
+
+                            Just Leave ->
+                                []
+
+                            Just Pick ->
+                                []
+
+                            Nothing ->
+                                []
+                in
+                Dict.get "TASK_GRID" formValues
+                    |> Maybe.andThen
+                        (\result ->
+                            case result of
+                                Result.Ok data ->
+                                    always (row [] [ text "Successful geojson upload!" ] |> Just) data
+
+                                Result.Err _ ->
+                                    Nothing
+                        )
+                    |> Maybe.withDefault
+                        (row
+                            (width (Element.minimum 300 fill) :: extraStyle)
+                            [ Element.html
+                                (FileInput.view
+                                    { onEnter = GeoJsonInputMouseInteraction Enter
+                                    , onLeave = GeoJsonInputMouseInteraction Leave
+                                    , onPick = GeoJsonInputMouseInteraction Pick
+                                    , onDrop = GotFiles
+                                    , onOver = GeoJsonInputMouseInteraction Over
+                                    }
+                                )
+                            ]
+                        )
 
         inputRow ( k, propSchema ) =
             case propSchema of
@@ -412,8 +472,8 @@ schemaToForm formValues errors schema =
         |> Maybe.withDefault []
 
 
-executionInput : FormValues -> Dict String (List Validation.Error) -> GranaryTask -> List (Element Msg)
-executionInput formValues errors task =
+executionInput : Maybe InputEvent -> FormValues -> Dict String ExecutionCreateError -> GranaryTask -> List (Element Msg)
+executionInput inputEvent formValues errors task =
     case task.validator of
         BooleanSchema _ ->
             [ Element.el [] (text "oh no -- this task's schema decoded as a \"BooleanSchema\"") ]
@@ -425,6 +485,7 @@ executionInput formValues errors task =
                 "Execution name"
                 "New execution name"
                 :: schemaToForm
+                    inputEvent
                     formValues.fromSchema
                     errors
                     subSchema
@@ -456,11 +517,10 @@ taskList model =
                 (model.selectedTask
                     |> Maybe.map
                         (\selected ->
-                            executionInput model.formValues model.taskValidationErrors selected
+                            executionInput model.inputState model.formValues model.taskValidationErrors selected
                                 ++ [ row []
                                         [ submitButton (allowTaskSubmit model.activeSchema)
                                             model.formValues
-                                            "Some inputs are invalid"
                                             (toExecutionCreate selected.name selected.id model.formValues |> CreateExecution)
                                         ]
                                    ]

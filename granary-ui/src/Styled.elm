@@ -15,6 +15,8 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Framework.Button as Button
+import Framework.Color
+import Html.Attributes exposing (disabled, style)
 
 
 primary : Element.Color
@@ -52,19 +54,35 @@ styledSecondaryText attrs s =
     el (Font.color secondary :: attrs) (text s)
 
 
-submitButton : (a -> Bool) -> a -> String -> msg -> Element.Element msg
-submitButton predicate value hint msg =
+submitButton : (a -> Bool) -> a -> msg -> Element.Element msg
+submitButton predicate value msg =
     let
         allowSubmit =
             predicate value
+
+        bgColor =
+            if allowSubmit then
+                accent
+
+            else
+                Framework.Color.lightGrey
     in
     Element.el
         []
         (Input.button
             (Button.simple
-                ++ [ Background.color accent
+                ++ [ Background.color bgColor
                    , Element.centerX
                    , Border.color primary
+                   , not allowSubmit |> disabled |> Element.htmlAttribute
+                   , (if allowSubmit then
+                        "pointer"
+
+                      else
+                        "not-allowed"
+                     )
+                        |> style "cursor"
+                        |> Element.htmlAttribute
                    ]
             )
             { onPress =
@@ -76,13 +94,7 @@ submitButton predicate value hint msg =
             , label = styledPrimaryText [] "Submit"
             }
         )
-        :: (if allowSubmit then
-                []
-
-            else
-                [ styledSecondaryText [] hint
-                ]
-           )
+        |> List.singleton
         |> column [ spacing 5 ]
 
 
