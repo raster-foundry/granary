@@ -7,7 +7,6 @@ Brief description of what this PR does, and why it is needed.
 - [ ] New tables and queries have appropriate indices added
 - [ ] Any new migrations have been audited to make sure they won't kill the application while being applied
 - [ ] Any new API endpoints have tests
-- [ ] Any frontend changes are hidden behind a feature flag
 
 ### Demo
 
