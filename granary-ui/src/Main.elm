@@ -473,7 +473,7 @@ update msg model =
             ( model, Nav.pushUrl model.key (Url.toString { baseUrl | query = Just newQp }) )
 
         GoHome ->
-            ( { model | route = Login }, Nav.pushUrl model.key "/tasks" )
+            ( { model | route = TaskList emptyTaskListModel }, Nav.pushUrl model.key "/tasks" )
 
         NameExecution s ->
             let
@@ -508,11 +508,17 @@ update msg model =
                         addition =
                             Dict.singleton "TASK_GRID" (Result.Ok (GeoJson.encode taskGrid))
 
+                        newTaskValidationErrors =
+                            Dict.remove "TASK_GRID" tlm.taskValidationErrors
+
                         newFormValues =
                             { formValues | fromSchema = Dict.union addition formValues.fromSchema }
 
                         updated =
-                            { tlm | formValues = newFormValues }
+                            { tlm
+                                | formValues = newFormValues
+                                , taskValidationErrors = newTaskValidationErrors
+                            }
                     in
                     ( { model | route = TaskList updated }, Cmd.none )
 

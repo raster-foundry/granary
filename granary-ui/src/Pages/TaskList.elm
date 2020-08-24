@@ -350,7 +350,7 @@ makeHelpfulErrorMessage err =
             List.concatMap makeErr errs
 
         DecodingError _ ->
-            [ row [] [ text "Structure of JSON in this field was unexpected" ] ]
+            [ row [ width (Element.minimum 300 fill) ] [ text "Unexpected JSON structure" ] ]
 
 
 makeErr : Validation.Error -> List (Element Msg)
@@ -509,16 +509,17 @@ taskList model =
         , column
             [ fillPortion 3 |> width
             , height fill
+            , width fill
             , spacing 10
             , padding 10
             ]
             (Maybe.withDefault
-                [ styledPrimaryText [] "👈 Choose a task on the left" ]
+                [ styledPrimaryText [ width fill ] "👈 Choose a task on the left" ]
                 (model.selectedTask
                     |> Maybe.map
                         (\selected ->
                             executionInput model.inputState model.formValues model.taskValidationErrors selected
-                                ++ [ row []
+                                ++ [ row [ width (Element.maximum 300 fill) ]
                                         [ submitButton (allowTaskSubmit model.activeSchema)
                                             model.formValues
                                             (toExecutionCreate selected.name selected.id model.formValues |> CreateExecution)

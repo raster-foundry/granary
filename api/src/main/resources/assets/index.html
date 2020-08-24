@@ -11804,7 +11804,9 @@ var $author$project$Main$update = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{route: $author$project$Main$Login}),
+						{
+							route: $author$project$Main$TaskList($author$project$Pages$TaskList$emptyTaskListModel)
+						}),
 					A2($elm$browser$Browser$Navigation$pushUrl, model.key, '/tasks'));
 			case 'NameExecution':
 				var s = msg.a;
@@ -11858,6 +11860,7 @@ var $author$project$Main$update = F2(
 					if (_v8.b.$ === 'TaskList') {
 						var taskGrid = _v8.a.a;
 						var tlm = _v8.b.a;
+						var newTaskValidationErrors = A2($elm$core$Dict$remove, 'TASK_GRID', tlm.taskValidationErrors);
 						var formValues = tlm.formValues;
 						var addition = A2(
 							$elm$core$Dict$singleton,
@@ -11871,7 +11874,7 @@ var $author$project$Main$update = F2(
 							});
 						var updated = _Utils_update(
 							tlm,
-							{formValues: newFormValues});
+							{formValues: newFormValues, taskValidationErrors: newTaskValidationErrors});
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -19581,10 +19584,14 @@ var $author$project$Pages$TaskList$makeHelpfulErrorMessage = function (err) {
 			[
 				A2(
 				$mdgriffith$elm_ui$Element$row,
-				_List_Nil,
 				_List_fromArray(
 					[
-						$mdgriffith$elm_ui$Element$text('Structure of JSON in this field was unexpected')
+						$mdgriffith$elm_ui$Element$width(
+						A2($mdgriffith$elm_ui$Element$minimum, 300, $mdgriffith$elm_ui$Element$fill))
+					]),
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$text('Unexpected JSON structure')
 					]))
 			]);
 	}
@@ -20224,6 +20231,7 @@ var $author$project$Pages$TaskList$taskList = function (model) {
 						$mdgriffith$elm_ui$Element$width(
 						$mdgriffith$elm_ui$Element$fillPortion(3)),
 						$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
 						$mdgriffith$elm_ui$Element$spacing(10),
 						$mdgriffith$elm_ui$Element$padding(10)
 					]),
@@ -20231,7 +20239,13 @@ var $author$project$Pages$TaskList$taskList = function (model) {
 					$elm$core$Maybe$withDefault,
 					_List_fromArray(
 						[
-							A2($author$project$Styled$styledPrimaryText, _List_Nil, '👈 Choose a task on the left')
+							A2(
+							$author$project$Styled$styledPrimaryText,
+							_List_fromArray(
+								[
+									$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
+								]),
+							'👈 Choose a task on the left')
 						]),
 					A2(
 						$elm$core$Maybe$map,
@@ -20242,7 +20256,11 @@ var $author$project$Pages$TaskList$taskList = function (model) {
 									[
 										A2(
 										$mdgriffith$elm_ui$Element$row,
-										_List_Nil,
+										_List_fromArray(
+											[
+												$mdgriffith$elm_ui$Element$width(
+												A2($mdgriffith$elm_ui$Element$maximum, 300, $mdgriffith$elm_ui$Element$fill))
+											]),
 										_List_fromArray(
 											[
 												A3(
