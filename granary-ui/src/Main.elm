@@ -46,8 +46,6 @@ import Uuid as Uuid
 
 type alias Model =
     { url : Url.Url
-    , taskListModel : Maybe TaskListModel
-    , executionListModel : Maybe ExecutionListModel
     , key : Nav.Key
     , route : Route
     , secrets : Maybe GranaryToken
@@ -99,8 +97,8 @@ paginatedDecoder ofDecoder =
 
 type Route
     = Login
-    | TaskList
-    | ExecutionList (Maybe Uuid.Uuid)
+    | TaskList TaskListModel
+    | ExecutionList ExecutionListModel
 
 
 routeParser : Parser.Parser (Route -> a) a
@@ -110,9 +108,9 @@ routeParser =
             List.head strings |> Maybe.andThen Uuid.fromString
     in
     Parser.oneOf
-        [ Parser.map ExecutionList
+        [ Parser.map (always (ExecutionList emptyExecutionListModel))
             (Parser.s "executions" <?> Query.custom "taskId" uuidQueryParam)
-        , Parser.map TaskList (Parser.s "tasks")
+        , Parser.map (TaskList emptyTaskListModel) (Parser.s "tasks")
         ]
 
 
@@ -123,8 +121,6 @@ init _ url key =
       , route = Login
       , secrets = Nothing
       , secretsUnsubmitted = Nothing
-      , taskListModel = Nothing
-      , executionListModel = Nothing
       }
     , Nav.pushUrl key (Url.toString url)
     )
@@ -167,28 +163,47 @@ maybePostExecution tokenM executionCreate =
         |> Maybe.withDefault Cmd.none
 
 
-updateExecutionListModel : (ExecutionListModel -> ExecutionListModel) -> Model -> Model
-updateExecutionListModel f mod =
-    let
-        baseExecutionListModel =
-            mod.executionListModel
+updateExecutionListModel : (ExecutionListModel -> ExecutionListModel) -> Route -> Maybe ExecutionListModel
+updateExecutionListModel f route =
+    case route of
+        ExecutionList mod ->
+            f mod |> Just
 
-        updated =
-            Maybe.map f baseExecutionListModel
-    in
-    { mod | executionListModel = updated }
+        _ ->
+            Nothing
 
 
-updateTaskListModel : (TaskListModel -> TaskListModel) -> Model -> Model
-updateTaskListModel f mod =
-    let
-        baseTaskListModel =
-            mod.taskListModel
+updateTaskListModel : (TaskListModel -> TaskListModel) -> Route -> Maybe TaskListModel
+updateTaskListModel f route =
+    case route of
+        TaskList mod ->
+            f mod |> Just
 
-        updated =
-            Maybe.map f baseTaskListModel
-    in
-    { mod | taskListModel = updated }
+        _ ->
+            Nothing
+
+
+getSelectedTask : Model -> Maybe Uuid.Uuid
+getSelectedTask model =
+    case model.route of
+        TaskList tlm ->
+            tlm.selectedTask |> Maybe.map .id
+
+        ExecutionList elm ->
+            elm.forTask
+
+        _ ->
+            Nothing
+
+
+getSelectedExecutions : Model -> Maybe (Set.Set String)
+getSelectedExecutions model =
+    case model.route of
+        ExecutionList elm ->
+            elm.selectedExecutions |> Just
+
+        _ ->
+            Nothing
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -205,11 +220,11 @@ update msg model =
 
                 cmd =
                     case ( routeResult, model.secrets ) of
-                        ( Just TaskList, modelToken ) ->
+                        ( Just (TaskList _), modelToken ) ->
                             getCmd fetchTasks modelToken
 
-                        ( Just (ExecutionList taskId), modelToken ) ->
-                            getCmd (fetchExecutions Nothing taskId) modelToken
+                        ( Just (ExecutionList elm), modelToken ) ->
+                            getCmd (fetchExecutions Nothing elm.forTask) modelToken
 
                         -- we have a token available, but this is not a url we know how to handle
                         -- possibly premature for actually storing the token in local storage
@@ -230,28 +245,29 @@ update msg model =
                     ( model, Nav.load href )
 
         TaskSelect task ->
-            ( updateTaskListModel
-                (\tlm ->
-                    { tlm
-                        | selectedTask = Just task
-                        , taskValidationErrors = Dict.empty
-                        , formValues = emptyFormValues
-                        , activeSchema = Just task.validator
-                    }
-                )
-                model
+            let
+                newRoute =
+                    updateTaskListModel
+                        (\tlm ->
+                            { tlm
+                                | selectedTask = Just task
+                                , taskValidationErrors = Dict.empty
+                                , formValues = emptyFormValues
+                                , activeSchema = Just task.validator
+                            }
+                        )
+                        model.route
+                        |> Maybe.map TaskList
+                        |> Maybe.withDefault Login
+            in
+            ( { model | route = newRoute }
             , Cmd.none
             )
 
         GotTasks (Ok tasks) ->
-            let
-                withTasks =
-                    { emptyTaskListModel | tasks = tasks.results }
-            in
             ( { model
-                | route = TaskList
+                | route = TaskList { emptyTaskListModel | tasks = tasks.results }
                 , secretsUnsubmitted = Nothing
-                , taskListModel = Just withTasks
               }
             , Cmd.none
             )
@@ -262,24 +278,16 @@ update msg model =
         GotExecutions taskId (Ok executionsPage) ->
             let
                 withExecutions =
-                    model.executionListModel
-                        |> Maybe.map
-                            (\elm ->
+                    emptyExecutionListModel
+                        |> (\elm ->
                                 { elm
                                     | executions = executionsPage.results
                                     , forTask = taskId
                                 }
-                            )
-                        |> Maybe.withDefault
-                            { emptyExecutionListModel
-                                | executions = executionsPage.results
-                                , forTask = taskId
-                            }
+                           )
             in
             ( { model
-                | route = ExecutionList taskId
-                , executionListModel = Just withExecutions
-                , taskListModel = Nothing
+                | route = ExecutionList withExecutions
               }
             , Cmd.none
             )
@@ -299,9 +307,8 @@ update msg model =
             ( model
             , Nav.pushUrl model.key
                 ("/executions?taskId="
-                    ++ (model.taskListModel
-                            |> Maybe.andThen .selectedTask
-                            |> Maybe.map (Uuid.toString << .id)
+                    ++ (getSelectedTask model
+                            |> Maybe.map Uuid.toString
                             |> Maybe.withDefault ""
                        )
                 )
@@ -327,13 +334,11 @@ update msg model =
                             ]
                                 |> Result.Err
             in
-            case validation of
-                Result.Ok _ ->
+            case ( validation, model.route ) of
+                ( Result.Ok _, TaskList tlm ) ->
                     let
                         formValues =
-                            model.taskListModel
-                                |> Maybe.map .formValues
-                                |> Maybe.withDefault emptyFormValues
+                            tlm.formValues
 
                         newFormValues =
                             { formValues
@@ -343,30 +348,22 @@ update msg model =
                             }
 
                         baseValidationErrors =
-                            model.taskListModel
-                                |> Maybe.map .taskValidationErrors
-                                |> Maybe.withDefault Dict.empty
+                            tlm.taskValidationErrors
 
                         updatedTlm =
-                            updateTaskListModel
-                                (\tlm ->
-                                    { tlm
-                                        | taskValidationErrors = Dict.remove validateOpts.fieldName baseValidationErrors
-                                        , formValues = newFormValues
-                                    }
-                                )
-                                model
+                            { tlm
+                                | taskValidationErrors = Dict.remove validateOpts.fieldName baseValidationErrors
+                                , formValues = newFormValues
+                            }
                     in
-                    ( updatedTlm
+                    ( { model | route = TaskList updatedTlm }
                     , Cmd.none
                     )
 
-                Result.Err errs ->
+                ( Result.Err errs, TaskList tlm ) ->
                     let
                         formValues =
-                            model.taskListModel
-                                |> Maybe.map .formValues
-                                |> Maybe.withDefault emptyFormValues
+                            tlm.formValues
 
                         newFormValues =
                             { formValues
@@ -376,24 +373,23 @@ update msg model =
                             }
 
                         updatedTlm =
-                            updateTaskListModel
-                                (\tlm ->
-                                    { tlm
-                                        | taskValidationErrors =
-                                            Dict.union
-                                                (Dict.singleton
-                                                    validateOpts.fieldName
-                                                    errs
-                                                )
-                                                tlm.taskValidationErrors
-                                        , formValues = newFormValues
-                                    }
-                                )
-                                model
+                            { tlm
+                                | taskValidationErrors =
+                                    Dict.union
+                                        (Dict.singleton
+                                            validateOpts.fieldName
+                                            errs
+                                        )
+                                        tlm.taskValidationErrors
+                                , formValues = newFormValues
+                            }
                     in
-                    ( updatedTlm
+                    ( { model | route = TaskList updatedTlm }
                     , Cmd.none
                     )
+
+                _ ->
+                    ( model, Cmd.none )
 
         CreateExecution executionCreate ->
             ( model, maybePostExecution model.secrets executionCreate )
@@ -404,8 +400,7 @@ update msg model =
                     Uuid.toString executionId
 
                 selectedExecutions =
-                    model.executionListModel
-                        |> Maybe.map .selectedExecutions
+                    getSelectedExecutions model
                         |> Maybe.withDefault Set.empty
 
                 newSelected =
@@ -416,22 +411,27 @@ update msg model =
                         Set.insert stringExecutionId selectedExecutions
 
                 updatedElm =
-                    updateExecutionListModel (\elm -> { elm | selectedExecutions = newSelected }) model
+                    updateExecutionListModel (\elm -> { elm | selectedExecutions = newSelected }) model.route
+                        |> Maybe.map ExecutionList
+                        |> Maybe.withDefault Login
             in
-            ( updatedElm
+            ( { model | route = updatedElm }
             , Cmd.none
             )
 
         SearchExecutionName s ->
             let
                 updatedElm =
-                    updateExecutionListModel (\elm -> { elm | executionNameSearch = Just s }) model
+                    updateExecutionListModel (\elm -> { elm | executionNameSearch = Just s }) model.route
+
+                newRoute =
+                    updatedElm |> Maybe.map ExecutionList |> Maybe.withDefault Login
             in
-            ( updatedElm
+            ( { model | route = newRoute }
             , model.secrets
                 |> Maybe.map
                     (fetchExecutions (Just s)
-                        (model.executionListModel
+                        (updatedElm
                             |> Maybe.andThen .forTask
                         )
                     )
@@ -469,22 +469,27 @@ update msg model =
             ( model, Nav.pushUrl model.key (Url.toString { baseUrl | query = Just newQp }) )
 
         GoHome ->
-            ( { model | taskListModel = Nothing }, Nav.pushUrl model.key "/tasks" )
+            ( { model | route = Login }, Nav.pushUrl model.key "/tasks" )
 
         NameExecution s ->
             let
                 formValues =
-                    model.taskListModel
-                        |> Maybe.map .formValues
-                        |> Maybe.withDefault emptyFormValues
+                    case model.route of
+                        TaskList tlm ->
+                            tlm.formValues
+
+                        _ ->
+                            emptyFormValues
 
                 newFormValues =
                     { formValues | executionName = Just s }
 
                 updatedTlm =
-                    updateTaskListModel (\tlm -> { tlm | formValues = newFormValues }) model
+                    updateTaskListModel (\tlm -> { tlm | formValues = newFormValues }) model.route
+                        |> Maybe.map TaskList
+                        |> Maybe.withDefault Login
             in
-            ( updatedTlm, Cmd.none )
+            ( { model | route = updatedTlm }, Cmd.none )
 
 
 
@@ -549,8 +554,8 @@ loginPage model =
 
 view : Model -> Browser.Document Msg
 view model =
-    case ( model.route, model.secrets, ( model.taskListModel, model.executionListModel ) ) of
-        ( TaskList, Just _, ( Just tlm, _ ) ) ->
+    case ( model.route, model.secrets ) of
+        ( TaskList tlm, Just _ ) ->
             let
                 taskListBody =
                     taskList tlm
@@ -559,7 +564,7 @@ view model =
             , body = [ Element.layout [] (logoTop [ taskListBody ]) ]
             }
 
-        ( ExecutionList _, Just _, ( _, Just elm ) ) ->
+        ( ExecutionList elm, Just _ ) ->
             { title = "Execution list"
             , body =
                 [ Element.layout [] <| logoTop [ executionList elm ]
