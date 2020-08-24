@@ -11940,7 +11940,7 @@ var $author$project$Main$update = F2(
 							$elm$core$Platform$Cmd$none);
 					}
 				}
-			case 'GeoJsonInputMouseInteraction':
+			default:
 				var event = msg.a;
 				var tlm = function () {
 					var _v10 = model.route;
@@ -11956,7 +11956,7 @@ var $author$project$Main$update = F2(
 						return A2(
 							$elm$file$File$Select$files,
 							_List_fromArray(
-								['*.geojson', '*.json']),
+								['application/geo+json', 'application/json']),
 							$author$project$Types$GotFiles);
 					} else {
 						return $elm$core$Platform$Cmd$none;
@@ -11970,8 +11970,6 @@ var $author$project$Main$update = F2(
 								A2($author$project$Pages$TaskList$setInputState, event, tlm))
 						}),
 					cmd);
-			default:
-				return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 		}
 	});
 var $mdgriffith$elm_ui$Internal$Model$AlignX = function (a) {

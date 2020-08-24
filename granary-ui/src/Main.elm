@@ -565,7 +565,9 @@ update msg model =
                 cmd =
                     case event of
                         Pick ->
-                            Select.files [ "*.geojson", "*.json" ] GotFiles
+                            Select.files
+                                [ "application/geo+json", "application/json" ]
+                                GotFiles
 
                         _ ->
                             Cmd.none
