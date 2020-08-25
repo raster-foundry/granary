@@ -4,7 +4,6 @@ import Element exposing (Element, column, fill, padding, row, spacing, text, wid
 import Element.Font as Font
 import Element.Input as Input
 import Framework.Card as Card
-import Html.Attributes as HA
 import Maybe.Extra exposing (orElse)
 import Set exposing (Set)
 import Styled exposing (styledPrimaryText, textInput)
@@ -77,17 +76,21 @@ executionAssets showAssets execution =
 
 executionAssetsList : GranaryExecution -> List StacAsset -> List (Element Msg)
 executionAssetsList execution =
+    let
+        assetName asset =
+            asset.title
+                |> orElse asset.description
+                |> Maybe.withDefault
+                    (asset.roles |> List.intersperse ", " |> String.concat)
+    in
     List.map
         (\asset ->
-            Element.link [ Element.htmlAttribute <| HA.download execution.name ]
+            Element.downloadAs []
                 { url = asset.href
+                , filename = execution.name
                 , label =
                     styledPrimaryText [ Font.underline ]
-                        (asset.title
-                            |> orElse asset.description
-                            |> Maybe.withDefault
-                                (asset.roles |> List.intersperse ", " |> String.concat)
-                        )
+                        (assetName asset)
                 }
         )
 

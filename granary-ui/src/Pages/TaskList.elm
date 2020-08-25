@@ -30,7 +30,6 @@ import Element.Font as Font
 import Element.Input as Input
 import FileInput as FileInput
 import Framework.Button as Button
-import Html as Html
 import Html.Attributes as HA
 import Json.Decode as JD
 import Json.Encode as JE
@@ -480,10 +479,10 @@ executionInput inputEvent formValues errors task =
 
 taskList : TaskListModel -> Element Msg
 taskList model =
-    column [ Element.centerX ]
-        [ row [ Element.centerX, width fill ] [ Element.html (Html.h2 [] [ Html.text "Tasks" ]) ]
+    column [ width fill ]
+        [ row [ width fill ] [ styledPrimaryText [ Font.bold, Font.size 24, Element.centerX ] "Tasks" ]
         , row [ width fill ]
-            [ column
+            (column
                 [ fillPortion 1 |> width
                 , spacing 10
                 , padding 10
@@ -492,27 +491,27 @@ taskList model =
                 (model.tasks
                     |> List.map taskCard
                 )
-            , column
-                [ fillPortion 3 |> width
-                , height fill
-                , width fill
-                , spacing 10
-                , padding 10
-                ]
-                (Maybe.withDefault
-                    []
-                    (model.selectedTask
+                :: (model.selectedTask
                         |> Maybe.map
                             (\selected ->
-                                executionInput model.inputState model.formValues model.taskValidationErrors selected
-                                    ++ [ row [ width (Element.maximum 300 fill) ]
-                                            [ submitButton (allowTaskSubmit model.activeSchema)
-                                                model.formValues
-                                                (toExecutionCreate selected.name selected.id model.formValues |> CreateExecution)
-                                            ]
-                                       ]
+                                [ column
+                                    [ fillPortion 3 |> width
+                                    , height fill
+                                    , width fill
+                                    , spacing 10
+                                    , padding 10
+                                    ]
+                                    (executionInput model.inputState model.formValues model.taskValidationErrors selected
+                                        ++ [ row [ width (Element.maximum 300 fill) ]
+                                                [ submitButton (allowTaskSubmit model.activeSchema)
+                                                    model.formValues
+                                                    (toExecutionCreate selected.name selected.id model.formValues |> CreateExecution)
+                                                ]
+                                           ]
+                                    )
+                                ]
                             )
-                    )
-                )
-            ]
+                        |> Maybe.withDefault []
+                   )
+            )
         ]

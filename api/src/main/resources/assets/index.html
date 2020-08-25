@@ -17417,17 +17417,16 @@ var $mdgriffith$elm_ui$Element$Input$button = F2(
 var $elm$html$Html$Attributes$download = function (fileName) {
 	return A2($elm$html$Html$Attributes$stringProperty, 'download', fileName);
 };
-var $mdgriffith$elm_ui$Element$htmlAttribute = $mdgriffith$elm_ui$Internal$Model$Attr;
 var $elm$html$Html$Attributes$href = function (url) {
 	return A2(
 		$elm$html$Html$Attributes$stringProperty,
 		'href',
 		_VirtualDom_noJavaScriptUri(url));
 };
-var $elm$html$Html$Attributes$rel = _VirtualDom_attribute('rel');
-var $mdgriffith$elm_ui$Element$link = F2(
+var $mdgriffith$elm_ui$Element$downloadAs = F2(
 	function (attrs, _v0) {
 		var url = _v0.url;
+		var filename = _v0.filename;
 		var label = _v0.label;
 		return A4(
 			$mdgriffith$elm_ui$Internal$Model$element,
@@ -17440,7 +17439,7 @@ var $mdgriffith$elm_ui$Element$link = F2(
 				A2(
 					$elm$core$List$cons,
 					$mdgriffith$elm_ui$Internal$Model$Attr(
-						$elm$html$Html$Attributes$rel('noopener noreferrer')),
+						$elm$html$Html$Attributes$download(filename)),
 					A2(
 						$elm$core$List$cons,
 						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$shrink),
@@ -17449,8 +17448,11 @@ var $mdgriffith$elm_ui$Element$link = F2(
 							$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$shrink),
 							A2(
 								$elm$core$List$cons,
-								$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.contentCenterX + (' ' + ($mdgriffith$elm_ui$Internal$Style$classes.contentCenterY + (' ' + $mdgriffith$elm_ui$Internal$Style$classes.link)))),
-								attrs))))),
+								$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.contentCenterX),
+								A2(
+									$elm$core$List$cons,
+									$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.contentCenterY),
+									attrs)))))),
 			$mdgriffith$elm_ui$Internal$Model$Unkeyed(
 				_List_fromArray(
 					[label])));
@@ -17533,25 +17535,25 @@ var $author$project$Styled$styledPrimaryText = F2(
 	});
 var $mdgriffith$elm_ui$Element$Font$underline = $mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.underline);
 var $author$project$Pages$ExecutionList$executionAssetsList = function (execution) {
+	var assetName = function (asset) {
+		return A2(
+			$elm$core$Maybe$withDefault,
+			$elm$core$String$concat(
+				A2($elm$core$List$intersperse, ', ', asset.roles)),
+			A2($elm_community$maybe_extra$Maybe$Extra$orElse, asset.description, asset.title));
+	};
 	return $elm$core$List$map(
 		function (asset) {
 			return A2(
-				$mdgriffith$elm_ui$Element$link,
-				_List_fromArray(
-					[
-						$mdgriffith$elm_ui$Element$htmlAttribute(
-						$elm$html$Html$Attributes$download(execution.name))
-					]),
+				$mdgriffith$elm_ui$Element$downloadAs,
+				_List_Nil,
 				{
+					filename: execution.name,
 					label: A2(
 						$author$project$Styled$styledPrimaryText,
 						_List_fromArray(
 							[$mdgriffith$elm_ui$Element$Font$underline]),
-						A2(
-							$elm$core$Maybe$withDefault,
-							$elm$core$String$concat(
-								A2($elm$core$List$intersperse, ', ', asset.roles)),
-							A2($elm_community$maybe_extra$Maybe$Extra$orElse, asset.description, asset.title))),
+						assetName(asset)),
 					url: asset.href
 				});
 		});
@@ -18291,6 +18293,7 @@ var $mdgriffith$elm_ui$Element$paddingEach = function (_v0) {
 			bottom,
 			left));
 };
+var $mdgriffith$elm_ui$Element$htmlAttribute = $mdgriffith$elm_ui$Internal$Model$Attr;
 var $mdgriffith$elm_ui$Element$Input$isFill = function (len) {
 	isFill:
 	while (true) {
@@ -20065,12 +20068,48 @@ var $author$project$Pages$TaskList$executionInput = F4(
 				A4($author$project$Pages$TaskList$schemaToForm, inputEvent, formValues.fromSchema, errors, subSchema));
 		}
 	});
-var $elm$html$Html$h2 = _VirtualDom_node('h2');
+var $mdgriffith$elm_ui$Element$Font$size = function (i) {
+	return A2(
+		$mdgriffith$elm_ui$Internal$Model$StyleClass,
+		$mdgriffith$elm_ui$Internal$Flag$fontSize,
+		$mdgriffith$elm_ui$Internal$Model$FontSize(i));
+};
 var $author$project$Types$NewExecutionForTask = function (a) {
 	return {$: 'NewExecutionForTask', a: a};
 };
 var $mdgriffith$elm_ui$Internal$Model$Left = {$: 'Left'};
 var $mdgriffith$elm_ui$Element$alignLeft = $mdgriffith$elm_ui$Internal$Model$AlignX($mdgriffith$elm_ui$Internal$Model$Left);
+var $elm$html$Html$Attributes$rel = _VirtualDom_attribute('rel');
+var $mdgriffith$elm_ui$Element$link = F2(
+	function (attrs, _v0) {
+		var url = _v0.url;
+		var label = _v0.label;
+		return A4(
+			$mdgriffith$elm_ui$Internal$Model$element,
+			$mdgriffith$elm_ui$Internal$Model$asEl,
+			$mdgriffith$elm_ui$Internal$Model$NodeName('a'),
+			A2(
+				$elm$core$List$cons,
+				$mdgriffith$elm_ui$Internal$Model$Attr(
+					$elm$html$Html$Attributes$href(url)),
+				A2(
+					$elm$core$List$cons,
+					$mdgriffith$elm_ui$Internal$Model$Attr(
+						$elm$html$Html$Attributes$rel('noopener noreferrer')),
+					A2(
+						$elm$core$List$cons,
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$shrink),
+						A2(
+							$elm$core$List$cons,
+							$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$shrink),
+							A2(
+								$elm$core$List$cons,
+								$mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.contentCenterX + (' ' + ($mdgriffith$elm_ui$Internal$Style$classes.contentCenterY + (' ' + $mdgriffith$elm_ui$Internal$Style$classes.link)))),
+								attrs))))),
+			$mdgriffith$elm_ui$Internal$Model$Unkeyed(
+				_List_fromArray(
+					[label])));
+	});
 var $author$project$Styled$styledSecondaryText = F2(
 	function (attrs, s) {
 		return A2(
@@ -20170,26 +20209,28 @@ var $author$project$Pages$TaskList$taskList = function (model) {
 	return A2(
 		$mdgriffith$elm_ui$Element$column,
 		_List_fromArray(
-			[$mdgriffith$elm_ui$Element$centerX]),
+			[
+				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
+			]),
 		_List_fromArray(
 			[
 				A2(
 				$mdgriffith$elm_ui$Element$row,
 				_List_fromArray(
 					[
-						$mdgriffith$elm_ui$Element$centerX,
 						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
 					]),
 				_List_fromArray(
 					[
-						$mdgriffith$elm_ui$Element$html(
 						A2(
-							$elm$html$Html$h2,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Tasks')
-								])))
+						$author$project$Styled$styledPrimaryText,
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$Font$bold,
+								$mdgriffith$elm_ui$Element$Font$size(24),
+								$mdgriffith$elm_ui$Element$centerX
+							]),
+						'Tasks')
 					])),
 				A2(
 				$mdgriffith$elm_ui$Element$row,
@@ -20197,9 +20238,9 @@ var $author$project$Pages$TaskList$taskList = function (model) {
 					[
 						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
 					]),
-				_List_fromArray(
-					[
-						A2(
+				A2(
+					$elm$core$List$cons,
+					A2(
 						$mdgriffith$elm_ui$Element$column,
 						_List_fromArray(
 							[
@@ -20210,47 +20251,49 @@ var $author$project$Pages$TaskList$taskList = function (model) {
 								$mdgriffith$elm_ui$Element$alignTop
 							]),
 						A2($elm$core$List$map, $author$project$Pages$TaskList$taskCard, model.tasks)),
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
 						A2(
-						$mdgriffith$elm_ui$Element$column,
-						_List_fromArray(
-							[
-								$mdgriffith$elm_ui$Element$width(
-								$mdgriffith$elm_ui$Element$fillPortion(3)),
-								$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
-								$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
-								$mdgriffith$elm_ui$Element$spacing(10),
-								$mdgriffith$elm_ui$Element$padding(10)
-							]),
-						A2(
-							$elm$core$Maybe$withDefault,
-							_List_Nil,
-							A2(
-								$elm$core$Maybe$map,
-								function (selected) {
-									return _Utils_ap(
-										A4($author$project$Pages$TaskList$executionInput, model.inputState, model.formValues, model.taskValidationErrors, selected),
+							$elm$core$Maybe$map,
+							function (selected) {
+								return _List_fromArray(
+									[
+										A2(
+										$mdgriffith$elm_ui$Element$column,
 										_List_fromArray(
 											[
-												A2(
-												$mdgriffith$elm_ui$Element$row,
-												_List_fromArray(
-													[
-														$mdgriffith$elm_ui$Element$width(
-														A2($mdgriffith$elm_ui$Element$maximum, 300, $mdgriffith$elm_ui$Element$fill))
-													]),
-												_List_fromArray(
-													[
-														A3(
-														$author$project$Styled$submitButton,
-														$author$project$Pages$TaskList$allowTaskSubmit(model.activeSchema),
-														model.formValues,
-														$author$project$Types$CreateExecution(
-															A3($author$project$Pages$TaskList$toExecutionCreate, selected.name, selected.id, model.formValues)))
-													]))
-											]));
-								},
-								model.selectedTask)))
-					]))
+												$mdgriffith$elm_ui$Element$width(
+												$mdgriffith$elm_ui$Element$fillPortion(3)),
+												$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+												$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+												$mdgriffith$elm_ui$Element$spacing(10),
+												$mdgriffith$elm_ui$Element$padding(10)
+											]),
+										_Utils_ap(
+											A4($author$project$Pages$TaskList$executionInput, model.inputState, model.formValues, model.taskValidationErrors, selected),
+											_List_fromArray(
+												[
+													A2(
+													$mdgriffith$elm_ui$Element$row,
+													_List_fromArray(
+														[
+															$mdgriffith$elm_ui$Element$width(
+															A2($mdgriffith$elm_ui$Element$maximum, 300, $mdgriffith$elm_ui$Element$fill))
+														]),
+													_List_fromArray(
+														[
+															A3(
+															$author$project$Styled$submitButton,
+															$author$project$Pages$TaskList$allowTaskSubmit(model.activeSchema),
+															model.formValues,
+															$author$project$Types$CreateExecution(
+																A3($author$project$Pages$TaskList$toExecutionCreate, selected.name, selected.id, model.formValues)))
+														]))
+												])))
+									]);
+							},
+							model.selectedTask))))
 			]));
 };
 var $author$project$Main$view = function (model) {
