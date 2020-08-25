@@ -419,7 +419,14 @@ schemaToForm inputEvent formValues errors schema =
                         (\result ->
                             case result of
                                 Result.Ok data ->
-                                    always (row [] [ text "Successful geojson upload!" ] |> Just) data
+                                    always
+                                        (row []
+                                            [ styledPrimaryText []
+                                                "Successful geojson upload!"
+                                            ]
+                                            |> Just
+                                        )
+                                        data
 
                                 Result.Err _ ->
                                     Nothing
