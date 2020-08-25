@@ -113,6 +113,7 @@ textInput attrs f maybeText placeholder label =
     Input.text
         (Element.focused
             [ secondaryShadow ]
+            :: spacing 3
             :: attrs
         )
         { onChange = f

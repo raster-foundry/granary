@@ -17552,7 +17552,7 @@ var $author$project$Pages$ExecutionList$executionAssetsList = function (executio
 							$elm$core$String$concat(
 								A2($elm$core$List$intersperse, ', ', asset.roles)),
 							A2($elm_community$maybe_extra$Maybe$Extra$orElse, asset.description, asset.title))),
-					url: 'https://raw.githubusercontent.com/azavea/sentinel-2-stac-utils/master/data/short-product-info-l1c.csv'
+					url: asset.href
 				});
 		});
 };
@@ -18862,7 +18862,10 @@ var $author$project$Styled$textInput = F5(
 				$mdgriffith$elm_ui$Element$focused(
 					_List_fromArray(
 						[$author$project$Styled$secondaryShadow])),
-				attrs),
+				A2(
+					$elm$core$List$cons,
+					$mdgriffith$elm_ui$Element$spacing(3),
+					attrs)),
 			{
 				label: $mdgriffith$elm_ui$Element$Input$labelHidden(label),
 				onChange: f,
@@ -19553,7 +19556,10 @@ var $author$project$Pages$TaskList$makeErr = function (err) {
 				function (s) {
 					return A2(
 						$mdgriffith$elm_ui$Element$row,
-						_List_Nil,
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$spacing(3)
+							]),
 						_List_fromArray(
 							[
 								$mdgriffith$elm_ui$Element$text('Missing field: '),
@@ -19570,7 +19576,10 @@ var $author$project$Pages$TaskList$makeErr = function (err) {
 				[
 					A2(
 					$mdgriffith$elm_ui$Element$row,
-					_List_Nil,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$spacing(3)
+						]),
 					_List_fromArray(
 						[
 							$mdgriffith$elm_ui$Element$text('Invalid json')
@@ -19580,15 +19589,31 @@ var $author$project$Pages$TaskList$makeErr = function (err) {
 			var t = _v0.a;
 			return _List_fromArray(
 				[
-					$mdgriffith$elm_ui$Element$text(t)
+					A2(
+					$mdgriffith$elm_ui$Element$row,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$spacing(3)
+						]),
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$text(t)
+						]))
 				]);
 		case 'RequiredProperty':
 			return _List_Nil;
 		default:
 			return _List_fromArray(
 				[
-					$mdgriffith$elm_ui$Element$text(
-					'I can\'t tell what else is wrong with ' + $author$project$Pages$TaskList$getErrField(err))
+					A2(
+					$mdgriffith$elm_ui$Element$row,
+					_List_fromArray(
+						[
+							$mdgriffith$elm_ui$Element$spacing(3)
+						]),
+					$elm$core$List$singleton(
+						$mdgriffith$elm_ui$Element$text(
+							'I can\'t tell what else is wrong with ' + $author$project$Pages$TaskList$getErrField(err))))
 				]);
 	}
 };
@@ -19604,7 +19629,8 @@ var $author$project$Pages$TaskList$makeHelpfulErrorMessage = function (err) {
 				_List_fromArray(
 					[
 						$mdgriffith$elm_ui$Element$width(
-						A2($mdgriffith$elm_ui$Element$minimum, 300, $mdgriffith$elm_ui$Element$fill))
+						A2($mdgriffith$elm_ui$Element$minimum, 300, $mdgriffith$elm_ui$Element$fill)),
+						$mdgriffith$elm_ui$Element$spacing(3)
 					]),
 				_List_fromArray(
 					[
@@ -20035,24 +20061,14 @@ var $author$project$Pages$TaskList$schemaToForm = F4(
 					$mdgriffith$elm_ui$Element$column,
 					_List_fromArray(
 						[
-							$mdgriffith$elm_ui$Element$spacing(10)
+							$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
 						]),
-					_List_fromArray(
-						[
-							A2(
-							$mdgriffith$elm_ui$Element$row,
-							_List_Nil,
-							_List_fromArray(
-								[
-									toInput(
-									_Utils_Tuple2(k, subSchema))
-								])),
-							A2(
-							$mdgriffith$elm_ui$Element$row,
-							_List_Nil,
-							errs(
-								_Utils_Tuple2(k, subSchema)))
-						]));
+					A2(
+						$elm$core$List$cons,
+						toInput(
+							_Utils_Tuple2(k, subSchema)),
+						errs(
+							_Utils_Tuple2(k, subSchema))));
 			} else {
 				return A2(
 					$mdgriffith$elm_ui$Element$row,
@@ -20210,79 +20226,89 @@ var $author$project$Pages$TaskList$toExecutionCreate = F3(
 	});
 var $author$project$Pages$TaskList$taskList = function (model) {
 	return A2(
-		$mdgriffith$elm_ui$Element$row,
+		$mdgriffith$elm_ui$Element$column,
 		_List_fromArray(
 			[$mdgriffith$elm_ui$Element$centerX]),
 		_List_fromArray(
 			[
-				$mdgriffith$elm_ui$Element$html(
 				A2(
-					$elm$html$Html$h2,
-					_List_Nil,
-					_List_fromArray(
-						[
-							$elm$html$Html$text('Tasks')
-						]))),
-				A2(
-				$mdgriffith$elm_ui$Element$column,
+				$mdgriffith$elm_ui$Element$row,
 				_List_fromArray(
 					[
-						$mdgriffith$elm_ui$Element$width(
-						$mdgriffith$elm_ui$Element$fillPortion(1)),
-						$mdgriffith$elm_ui$Element$spacing(10),
-						$mdgriffith$elm_ui$Element$padding(10),
-						$mdgriffith$elm_ui$Element$alignTop
+						$mdgriffith$elm_ui$Element$centerX,
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
 					]),
-				A2($elm$core$List$map, $author$project$Pages$TaskList$taskCard, model.tasks)),
-				A2(
-				$mdgriffith$elm_ui$Element$column,
 				_List_fromArray(
 					[
-						$mdgriffith$elm_ui$Element$width(
-						$mdgriffith$elm_ui$Element$fillPortion(3)),
-						$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
-						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
-						$mdgriffith$elm_ui$Element$spacing(10),
-						$mdgriffith$elm_ui$Element$padding(10)
-					]),
-				A2(
-					$elm$core$Maybe$withDefault,
-					_List_fromArray(
-						[
-							A2(
-							$author$project$Styled$styledPrimaryText,
+						$mdgriffith$elm_ui$Element$html(
+						A2(
+							$elm$html$Html$h2,
+							_List_Nil,
 							_List_fromArray(
 								[
-									$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-								]),
-							'👈 Choose a task on the left')
-						]),
-					A2(
-						$elm$core$Maybe$map,
-						function (selected) {
-							return _Utils_ap(
-								A4($author$project$Pages$TaskList$executionInput, model.inputState, model.formValues, model.taskValidationErrors, selected),
-								_List_fromArray(
-									[
-										A2(
-										$mdgriffith$elm_ui$Element$row,
+									$elm$html$Html$text('Tasks')
+								])))
+					])),
+				A2(
+				$mdgriffith$elm_ui$Element$row,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$mdgriffith$elm_ui$Element$column,
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$width(
+								$mdgriffith$elm_ui$Element$fillPortion(1)),
+								$mdgriffith$elm_ui$Element$spacing(10),
+								$mdgriffith$elm_ui$Element$padding(10),
+								$mdgriffith$elm_ui$Element$alignTop
+							]),
+						A2($elm$core$List$map, $author$project$Pages$TaskList$taskCard, model.tasks)),
+						A2(
+						$mdgriffith$elm_ui$Element$column,
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$width(
+								$mdgriffith$elm_ui$Element$fillPortion(3)),
+								$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill),
+								$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+								$mdgriffith$elm_ui$Element$spacing(10),
+								$mdgriffith$elm_ui$Element$padding(10)
+							]),
+						A2(
+							$elm$core$Maybe$withDefault,
+							_List_Nil,
+							A2(
+								$elm$core$Maybe$map,
+								function (selected) {
+									return _Utils_ap(
+										A4($author$project$Pages$TaskList$executionInput, model.inputState, model.formValues, model.taskValidationErrors, selected),
 										_List_fromArray(
 											[
-												$mdgriffith$elm_ui$Element$width(
-												A2($mdgriffith$elm_ui$Element$maximum, 300, $mdgriffith$elm_ui$Element$fill))
-											]),
-										_List_fromArray(
-											[
-												A3(
-												$author$project$Styled$submitButton,
-												$author$project$Pages$TaskList$allowTaskSubmit(model.activeSchema),
-												model.formValues,
-												$author$project$Types$CreateExecution(
-													A3($author$project$Pages$TaskList$toExecutionCreate, selected.name, selected.id, model.formValues)))
-											]))
-									]));
-						},
-						model.selectedTask)))
+												A2(
+												$mdgriffith$elm_ui$Element$row,
+												_List_fromArray(
+													[
+														$mdgriffith$elm_ui$Element$width(
+														A2($mdgriffith$elm_ui$Element$maximum, 300, $mdgriffith$elm_ui$Element$fill))
+													]),
+												_List_fromArray(
+													[
+														A3(
+														$author$project$Styled$submitButton,
+														$author$project$Pages$TaskList$allowTaskSubmit(model.activeSchema),
+														model.formValues,
+														$author$project$Types$CreateExecution(
+															A3($author$project$Pages$TaskList$toExecutionCreate, selected.name, selected.id, model.formValues)))
+													]))
+											]));
+								},
+								model.selectedTask)))
+					]))
 			]));
 };
 var $author$project$Main$view = function (model) {

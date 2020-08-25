@@ -443,10 +443,10 @@ schemaToForm inputEvent formValues errors schema =
         inputRow ( k, propSchema ) =
             case propSchema of
                 ObjectSchema subSchema ->
-                    column [ spacing 10 ]
-                        [ row [] [ toInput ( k, subSchema ) ]
-                        , row [] (errs ( k, subSchema ))
-                        ]
+                    column [ width fill ]
+                        (toInput ( k, subSchema )
+                            :: errs ( k, subSchema )
+                        )
 
                 BooleanSchema _ ->
                     row [ spacing 5 ] [ toInput ( k, Schema.blankSubSchema ) ]
@@ -480,38 +480,39 @@ executionInput inputEvent formValues errors task =
 
 taskList : TaskListModel -> Element Msg
 taskList model =
-    row [ Element.centerX ]
-        [ -- tasks needs to be above the columns
-          Element.html (Html.h2 [] [ Html.text "Tasks" ])
-        , column
-            [ fillPortion 1 |> width
-            , spacing 10
-            , padding 10
-            , Element.alignTop
-            ]
-            (model.tasks
-                |> List.map taskCard
-            )
-        , column
-            [ fillPortion 3 |> width
-            , height fill
-            , width fill
-            , spacing 10
-            , padding 10
-            ]
-            (Maybe.withDefault
-                [ styledPrimaryText [ width fill ] "👈 Choose a task on the left" ]
-                (model.selectedTask
-                    |> Maybe.map
-                        (\selected ->
-                            executionInput model.inputState model.formValues model.taskValidationErrors selected
-                                ++ [ row [ width (Element.maximum 300 fill) ]
-                                        [ submitButton (allowTaskSubmit model.activeSchema)
-                                            model.formValues
-                                            (toExecutionCreate selected.name selected.id model.formValues |> CreateExecution)
-                                        ]
-                                   ]
-                        )
+    column [ Element.centerX ]
+        [ row [ Element.centerX, width fill ] [ Element.html (Html.h2 [] [ Html.text "Tasks" ]) ]
+        , row [ width fill ]
+            [ column
+                [ fillPortion 1 |> width
+                , spacing 10
+                , padding 10
+                , Element.alignTop
+                ]
+                (model.tasks
+                    |> List.map taskCard
                 )
-            )
+            , column
+                [ fillPortion 3 |> width
+                , height fill
+                , width fill
+                , spacing 10
+                , padding 10
+                ]
+                (Maybe.withDefault
+                    []
+                    (model.selectedTask
+                        |> Maybe.map
+                            (\selected ->
+                                executionInput model.inputState model.formValues model.taskValidationErrors selected
+                                    ++ [ row [ width (Element.maximum 300 fill) ]
+                                            [ submitButton (allowTaskSubmit model.activeSchema)
+                                                model.formValues
+                                                (toExecutionCreate selected.name selected.id model.formValues |> CreateExecution)
+                                            ]
+                                       ]
+                            )
+                    )
+                )
+            ]
         ]
