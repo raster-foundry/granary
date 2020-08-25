@@ -600,21 +600,11 @@ logo attrs maxSize =
 
 logoTop : List (Element Msg) -> Element Msg
 logoTop rest =
-    column [ width fill, Element.centerX ] <|
-        [ row [ Element.centerX, Element.maximum 400 fill |> width ] <|
-            [ column [ width (fillPortion 9), height fill ]
-                [ logo
-                    [ width fill ]
-                    100
-                ]
-            , column [ width (fillPortion 1), height fill ]
-                [ row [ Element.centerY ]
-                    [ homeLink
-                    ]
-                ]
-            ]
-        ]
-            ++ rest
+    column [ Element.maximum 1024 fill |> width, Element.centerX ] <|
+        logo
+            [ width fill ]
+            100
+            :: rest
 
 
 
@@ -623,7 +613,7 @@ logoTop rest =
 
 homeLink : Element Msg
 homeLink =
-    Input.button []
+    Input.button [ Element.alignRight, padding 12 ]
         { onPress = Just GoHome
         , label = text "🏠"
         }
@@ -651,13 +641,24 @@ view model =
                     taskList tlm
             in
             { title = "Available Tasks"
-            , body = [ Element.layout [ Element.minimum 1024 fill |> width ] (logoTop [ taskListBody ]) ]
+            , body =
+                [ Element.layout
+                    [ Element.inFront homeLink
+                    , Element.minimum 1024 fill |> width
+                    ]
+                    (logoTop [ taskListBody ])
+                ]
             }
 
         ( ExecutionList elm, Just _ ) ->
             { title = "Execution list"
             , body =
-                [ Element.layout [ Element.minimum 1024 fill |> width ] <| logoTop [ executionList elm ]
+                [ Element.layout
+                    [ Element.inFront homeLink
+                    , Element.minimum 1024 fill |> width
+                    ]
+                  <|
+                    logoTop [ executionList elm ]
                 ]
             }
 

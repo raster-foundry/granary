@@ -18922,6 +18922,20 @@ var $author$project$Pages$ExecutionList$executionList = function (model) {
 			$author$project$Pages$ExecutionList$nameSearchInput(model.executionNameSearch),
 			A2($elm$core$List$map, card, model.executions)));
 };
+var $author$project$Types$GoHome = {$: 'GoHome'};
+var $mdgriffith$elm_ui$Internal$Model$Right = {$: 'Right'};
+var $mdgriffith$elm_ui$Element$alignRight = $mdgriffith$elm_ui$Internal$Model$AlignX($mdgriffith$elm_ui$Internal$Model$Right);
+var $author$project$Main$homeLink = A2(
+	$mdgriffith$elm_ui$Element$Input$button,
+	_List_fromArray(
+		[
+			$mdgriffith$elm_ui$Element$alignRight,
+			$mdgriffith$elm_ui$Element$padding(12)
+		]),
+	{
+		label: $mdgriffith$elm_ui$Element$text('🏠'),
+		onPress: $elm$core$Maybe$Just($author$project$Types$GoHome)
+	});
 var $mdgriffith$elm_ui$Internal$Model$OnlyDynamic = F2(
 	function (a, b) {
 		return {$: 'OnlyDynamic', a: a, b: b};
@@ -19367,72 +19381,24 @@ var $author$project$Main$loginPage = function (model) {
 					]))
 			]));
 };
-var $author$project$Types$GoHome = {$: 'GoHome'};
-var $author$project$Main$homeLink = A2(
-	$mdgriffith$elm_ui$Element$Input$button,
-	_List_Nil,
-	{
-		label: $mdgriffith$elm_ui$Element$text('🏠'),
-		onPress: $elm$core$Maybe$Just($author$project$Types$GoHome)
-	});
 var $author$project$Main$logoTop = function (rest) {
 	return A2(
 		$mdgriffith$elm_ui$Element$column,
 		_List_fromArray(
 			[
-				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+				$mdgriffith$elm_ui$Element$width(
+				A2($mdgriffith$elm_ui$Element$maximum, 1024, $mdgriffith$elm_ui$Element$fill)),
 				$mdgriffith$elm_ui$Element$centerX
 			]),
-		_Utils_ap(
-			_List_fromArray(
-				[
-					A2(
-					$mdgriffith$elm_ui$Element$row,
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$centerX,
-							$mdgriffith$elm_ui$Element$width(
-							A2($mdgriffith$elm_ui$Element$maximum, 400, $mdgriffith$elm_ui$Element$fill))
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$mdgriffith$elm_ui$Element$column,
-							_List_fromArray(
-								[
-									$mdgriffith$elm_ui$Element$width(
-									$mdgriffith$elm_ui$Element$fillPortion(9)),
-									$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill)
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$author$project$Main$logo,
-									_List_fromArray(
-										[
-											$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-										]),
-									100)
-								])),
-							A2(
-							$mdgriffith$elm_ui$Element$column,
-							_List_fromArray(
-								[
-									$mdgriffith$elm_ui$Element$width(
-									$mdgriffith$elm_ui$Element$fillPortion(1)),
-									$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$fill)
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$mdgriffith$elm_ui$Element$row,
-									_List_fromArray(
-										[$mdgriffith$elm_ui$Element$centerY]),
-									_List_fromArray(
-										[$author$project$Main$homeLink]))
-								]))
-						]))
-				]),
+		A2(
+			$elm$core$List$cons,
+			A2(
+				$author$project$Main$logo,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
+					]),
+				100),
 			rest));
 };
 var $author$project$Types$CreateExecution = function (a) {
@@ -20105,8 +20071,6 @@ var $author$project$Types$NewExecutionForTask = function (a) {
 };
 var $mdgriffith$elm_ui$Internal$Model$Left = {$: 'Left'};
 var $mdgriffith$elm_ui$Element$alignLeft = $mdgriffith$elm_ui$Internal$Model$AlignX($mdgriffith$elm_ui$Internal$Model$Left);
-var $mdgriffith$elm_ui$Internal$Model$Right = {$: 'Right'};
-var $mdgriffith$elm_ui$Element$alignRight = $mdgriffith$elm_ui$Internal$Model$AlignX($mdgriffith$elm_ui$Internal$Model$Right);
 var $author$project$Styled$styledSecondaryText = F2(
 	function (attrs, s) {
 		return A2(
@@ -20305,6 +20269,7 @@ var $author$project$Main$view = function (model) {
 								$mdgriffith$elm_ui$Element$layout,
 								_List_fromArray(
 									[
+										$mdgriffith$elm_ui$Element$inFront($author$project$Main$homeLink),
 										$mdgriffith$elm_ui$Element$width(
 										A2($mdgriffith$elm_ui$Element$minimum, 1024, $mdgriffith$elm_ui$Element$fill))
 									]),
@@ -20323,6 +20288,7 @@ var $author$project$Main$view = function (model) {
 								$mdgriffith$elm_ui$Element$layout,
 								_List_fromArray(
 									[
+										$mdgriffith$elm_ui$Element$inFront($author$project$Main$homeLink),
 										$mdgriffith$elm_ui$Element$width(
 										A2($mdgriffith$elm_ui$Element$minimum, 1024, $mdgriffith$elm_ui$Element$fill))
 									]),
