@@ -443,7 +443,7 @@ schemaToForm inputEvent formValues errors schema =
         inputRow ( k, propSchema ) =
             case propSchema of
                 ObjectSchema subSchema ->
-                    column [ width fill ]
+                    column [ width fill, spacing 5 ]
                         (toInput ( k, subSchema )
                             :: errs ( k, subSchema )
                         )

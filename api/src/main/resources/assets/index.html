@@ -19556,10 +19556,7 @@ var $author$project$Pages$TaskList$makeErr = function (err) {
 				function (s) {
 					return A2(
 						$mdgriffith$elm_ui$Element$row,
-						_List_fromArray(
-							[
-								$mdgriffith$elm_ui$Element$spacing(3)
-							]),
+						_List_Nil,
 						_List_fromArray(
 							[
 								$mdgriffith$elm_ui$Element$text('Missing field: '),
@@ -19576,10 +19573,7 @@ var $author$project$Pages$TaskList$makeErr = function (err) {
 				[
 					A2(
 					$mdgriffith$elm_ui$Element$row,
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$spacing(3)
-						]),
+					_List_Nil,
 					_List_fromArray(
 						[
 							$mdgriffith$elm_ui$Element$text('Invalid json')
@@ -19589,31 +19583,15 @@ var $author$project$Pages$TaskList$makeErr = function (err) {
 			var t = _v0.a;
 			return _List_fromArray(
 				[
-					A2(
-					$mdgriffith$elm_ui$Element$row,
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$spacing(3)
-						]),
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$text(t)
-						]))
+					$mdgriffith$elm_ui$Element$text(t)
 				]);
 		case 'RequiredProperty':
 			return _List_Nil;
 		default:
 			return _List_fromArray(
 				[
-					A2(
-					$mdgriffith$elm_ui$Element$row,
-					_List_fromArray(
-						[
-							$mdgriffith$elm_ui$Element$spacing(3)
-						]),
-					$elm$core$List$singleton(
-						$mdgriffith$elm_ui$Element$text(
-							'I can\'t tell what else is wrong with ' + $author$project$Pages$TaskList$getErrField(err))))
+					$mdgriffith$elm_ui$Element$text(
+					'I can\'t tell what else is wrong with ' + $author$project$Pages$TaskList$getErrField(err))
 				]);
 	}
 };
@@ -19629,8 +19607,7 @@ var $author$project$Pages$TaskList$makeHelpfulErrorMessage = function (err) {
 				_List_fromArray(
 					[
 						$mdgriffith$elm_ui$Element$width(
-						A2($mdgriffith$elm_ui$Element$minimum, 300, $mdgriffith$elm_ui$Element$fill)),
-						$mdgriffith$elm_ui$Element$spacing(3)
+						A2($mdgriffith$elm_ui$Element$minimum, 300, $mdgriffith$elm_ui$Element$fill))
 					]),
 				_List_fromArray(
 					[
@@ -20061,7 +20038,8 @@ var $author$project$Pages$TaskList$schemaToForm = F4(
 					$mdgriffith$elm_ui$Element$column,
 					_List_fromArray(
 						[
-							$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
+							$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+							$mdgriffith$elm_ui$Element$spacing(5)
 						]),
 					A2(
 						$elm$core$List$cons,
