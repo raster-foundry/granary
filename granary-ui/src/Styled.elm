@@ -91,7 +91,17 @@ submitButton predicate value msg =
 
                 else
                     Nothing
-            , label = styledPrimaryText [] "Submit"
+            , label =
+                Element.el
+                    [ if allowSubmit then
+                        Font.color primary
+
+                      else
+                        Font.color <| rgb255 168 168 168
+                    ]
+                <|
+                    text
+                        "Submit"
             }
         )
         |> List.singleton

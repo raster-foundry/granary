@@ -11505,7 +11505,7 @@ var $author$project$Main$update = F2(
 						model,
 						$elm$browser$Browser$Navigation$load(href));
 				}
-			case 'TaskSelect':
+			case 'NewExecutionForTask':
 				var task = msg.a;
 				var newRoute = A2(
 					$elm$core$Maybe$withDefault,
@@ -17267,6 +17267,12 @@ var $mdgriffith$elm_ui$Element$column = F2(
 						attrs))),
 			$mdgriffith$elm_ui$Internal$Model$Unkeyed(children));
 	});
+var $mdgriffith$elm_ui$Internal$Model$Class = F2(
+	function (a, b) {
+		return {$: 'Class', a: a, b: b};
+	});
+var $mdgriffith$elm_ui$Internal$Flag$fontWeight = $mdgriffith$elm_ui$Internal$Flag$flag(13);
+var $mdgriffith$elm_ui$Element$Font$bold = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$fontWeight, $mdgriffith$elm_ui$Internal$Style$classes.bold);
 var $author$project$Types$ToggleShowAssets = function (a) {
 	return {$: 'ToggleShowAssets', a: a};
 };
@@ -17348,10 +17354,6 @@ var $mdgriffith$elm_ui$Element$Input$onKey = F2(
 var $mdgriffith$elm_ui$Element$Input$onEnter = function (msg) {
 	return A2($mdgriffith$elm_ui$Element$Input$onKey, $mdgriffith$elm_ui$Element$Input$enter, msg);
 };
-var $mdgriffith$elm_ui$Internal$Model$Class = F2(
-	function (a, b) {
-		return {$: 'Class', a: a, b: b};
-	});
 var $mdgriffith$elm_ui$Internal$Flag$cursor = $mdgriffith$elm_ui$Internal$Flag$flag(21);
 var $mdgriffith$elm_ui$Element$pointer = A2($mdgriffith$elm_ui$Internal$Model$Class, $mdgriffith$elm_ui$Internal$Flag$cursor, $mdgriffith$elm_ui$Internal$Style$classes.cursorPointer);
 var $elm$html$Html$Attributes$tabindex = function (n) {
@@ -17412,6 +17414,10 @@ var $mdgriffith$elm_ui$Element$Input$button = F2(
 				_List_fromArray(
 					[label])));
 	});
+var $elm$html$Html$Attributes$download = function (fileName) {
+	return A2($elm$html$Html$Attributes$stringProperty, 'download', fileName);
+};
+var $mdgriffith$elm_ui$Element$htmlAttribute = $mdgriffith$elm_ui$Internal$Model$Attr;
 var $elm$html$Html$Attributes$href = function (url) {
 	return A2(
 		$elm$html$Html$Attributes$stringProperty,
@@ -17526,24 +17532,30 @@ var $author$project$Styled$styledPrimaryText = F2(
 			$mdgriffith$elm_ui$Element$text(s));
 	});
 var $mdgriffith$elm_ui$Element$Font$underline = $mdgriffith$elm_ui$Internal$Model$htmlClass($mdgriffith$elm_ui$Internal$Style$classes.underline);
-var $author$project$Pages$ExecutionList$executionAssetsList = $elm$core$List$map(
-	function (asset) {
-		return A2(
-			$mdgriffith$elm_ui$Element$link,
-			_List_Nil,
-			{
-				label: A2(
-					$author$project$Styled$styledPrimaryText,
-					_List_fromArray(
-						[$mdgriffith$elm_ui$Element$Font$underline]),
-					A2(
-						$elm$core$Maybe$withDefault,
-						$elm$core$String$concat(
-							A2($elm$core$List$intersperse, ', ', asset.roles)),
-						A2($elm_community$maybe_extra$Maybe$Extra$orElse, asset.description, asset.title))),
-				url: asset.href
-			});
-	});
+var $author$project$Pages$ExecutionList$executionAssetsList = function (execution) {
+	return $elm$core$List$map(
+		function (asset) {
+			return A2(
+				$mdgriffith$elm_ui$Element$link,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$htmlAttribute(
+						$elm$html$Html$Attributes$download(execution.name))
+					]),
+				{
+					label: A2(
+						$author$project$Styled$styledPrimaryText,
+						_List_fromArray(
+							[$mdgriffith$elm_ui$Element$Font$underline]),
+						A2(
+							$elm$core$Maybe$withDefault,
+							$elm$core$String$concat(
+								A2($elm$core$List$intersperse, ', ', asset.roles)),
+							A2($elm_community$maybe_extra$Maybe$Extra$orElse, asset.description, asset.title))),
+					url: 'https://raw.githubusercontent.com/azavea/sentinel-2-stac-utils/master/data/short-product-info-l1c.csv'
+				});
+		});
+};
 var $mdgriffith$elm_ui$Internal$Model$AsRow = {$: 'AsRow'};
 var $mdgriffith$elm_ui$Internal$Model$asRow = $mdgriffith$elm_ui$Internal$Model$AsRow;
 var $mdgriffith$elm_ui$Element$row = F2(
@@ -17564,13 +17576,35 @@ var $mdgriffith$elm_ui$Element$row = F2(
 						attrs))),
 			$mdgriffith$elm_ui$Internal$Model$Unkeyed(children));
 	});
+var $mdgriffith$elm_ui$Internal$Model$SpacingStyle = F3(
+	function (a, b, c) {
+		return {$: 'SpacingStyle', a: a, b: b, c: c};
+	});
+var $mdgriffith$elm_ui$Internal$Flag$spacing = $mdgriffith$elm_ui$Internal$Flag$flag(3);
+var $mdgriffith$elm_ui$Internal$Model$spacingName = F2(
+	function (x, y) {
+		return 'spacing-' + ($elm$core$String$fromInt(x) + ('-' + $elm$core$String$fromInt(y)));
+	});
+var $mdgriffith$elm_ui$Element$spacing = function (x) {
+	return A2(
+		$mdgriffith$elm_ui$Internal$Model$StyleClass,
+		$mdgriffith$elm_ui$Internal$Flag$spacing,
+		A3(
+			$mdgriffith$elm_ui$Internal$Model$SpacingStyle,
+			A2($mdgriffith$elm_ui$Internal$Model$spacingName, x, x),
+			x,
+			x));
+};
 var $author$project$Pages$ExecutionList$executionAssets = F2(
 	function (showAssets, execution) {
 		return $elm$core$List$isEmpty(execution.results) ? _List_Nil : A2(
 			$elm$core$List$cons,
 			A2(
 				$mdgriffith$elm_ui$Element$row,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$spacing(3)
+					]),
 				_List_fromArray(
 					[
 						A2(
@@ -17583,7 +17617,7 @@ var $author$project$Pages$ExecutionList$executionAssets = F2(
 						}),
 						A2($author$project$Styled$styledPrimaryText, _List_Nil, ' Show assets')
 					])),
-			showAssets ? $author$project$Pages$ExecutionList$executionAssetsList(execution.results) : _List_Nil);
+			showAssets ? A2($author$project$Pages$ExecutionList$executionAssetsList, execution, execution.results) : _List_Nil);
 	});
 var $mdgriffith$elm_ui$Internal$Model$Fill = function (a) {
 	return {$: 'Fill', a: a};
@@ -17761,35 +17795,16 @@ var $Orasund$elm_ui_framework$Framework$Card$simple = _Utils_ap(
 				$mdgriffith$elm_ui$Element$padding(20),
 				$mdgriffith$elm_ui$Element$height($mdgriffith$elm_ui$Element$shrink)
 			])));
-var $mdgriffith$elm_ui$Internal$Model$SpacingStyle = F3(
-	function (a, b, c) {
-		return {$: 'SpacingStyle', a: a, b: b, c: c};
-	});
-var $mdgriffith$elm_ui$Internal$Flag$spacing = $mdgriffith$elm_ui$Internal$Flag$flag(3);
-var $mdgriffith$elm_ui$Internal$Model$spacingName = F2(
-	function (x, y) {
-		return 'spacing-' + ($elm$core$String$fromInt(x) + ('-' + $elm$core$String$fromInt(y)));
-	});
-var $mdgriffith$elm_ui$Element$spacing = function (x) {
-	return A2(
-		$mdgriffith$elm_ui$Internal$Model$StyleClass,
-		$mdgriffith$elm_ui$Internal$Flag$spacing,
-		A3(
-			$mdgriffith$elm_ui$Internal$Model$SpacingStyle,
-			A2($mdgriffith$elm_ui$Internal$Model$spacingName, x, x),
-			x,
-			x));
-};
 var $author$project$Pages$ExecutionList$toEmoji = function (execution) {
 	var _v0 = _Utils_Tuple2(execution.statusReason, execution.results);
 	if (_v0.a.$ === 'Just') {
-		return '❌';
+		return '❌ Failed';
 	} else {
 		if (_v0.b.b) {
 			var _v1 = _v0.b;
-			return '✅';
+			return '✅ Succeeded';
 		} else {
-			return '🏃\u200D♀️';
+			return '🏃\u200D♀️ Running';
 		}
 	}
 };
@@ -17824,7 +17839,11 @@ var $author$project$Pages$ExecutionList$executionCard = F2(
 								_List_Nil,
 								_List_fromArray(
 									[
-										A2($author$project$Styled$styledPrimaryText, _List_Nil, execution.name)
+										A2(
+										$author$project$Styled$styledPrimaryText,
+										_List_fromArray(
+											[$mdgriffith$elm_ui$Element$Font$bold]),
+										execution.name)
 									])),
 								A2(
 								$mdgriffith$elm_ui$Element$row,
@@ -18272,7 +18291,6 @@ var $mdgriffith$elm_ui$Element$paddingEach = function (_v0) {
 			bottom,
 			left));
 };
-var $mdgriffith$elm_ui$Element$htmlAttribute = $mdgriffith$elm_ui$Internal$Model$Attr;
 var $mdgriffith$elm_ui$Element$Input$isFill = function (len) {
 	isFill:
 	while (true) {
@@ -18872,7 +18890,7 @@ var $author$project$Pages$ExecutionList$nameSearchInput = function (currValue) {
 					]),
 				$author$project$Types$SearchExecutionName,
 				currValue,
-				'Name like',
+				'Search',
 				'Search')));
 };
 var $author$project$Pages$ExecutionList$executionList = function (model) {
@@ -19295,7 +19313,14 @@ var $author$project$Styled$submitButton = F3(
 										allowSubmit ? 'pointer' : 'not-allowed'))
 								])),
 						{
-							label: A2($author$project$Styled$styledPrimaryText, _List_Nil, 'Submit'),
+							label: A2(
+								$mdgriffith$elm_ui$Element$el,
+								_List_fromArray(
+									[
+										allowSubmit ? $mdgriffith$elm_ui$Element$Font$color($author$project$Styled$primary) : $mdgriffith$elm_ui$Element$Font$color(
+										A3($mdgriffith$elm_ui$Element$rgb255, 168, 168, 168))
+									]),
+								$mdgriffith$elm_ui$Element$text('Submit')),
 							onPress: allowSubmit ? $elm$core$Maybe$Just(msg) : $elm$core$Maybe$Nothing
 						}))));
 	});
@@ -19304,7 +19329,7 @@ var $author$project$Main$loginPage = function (model) {
 		$mdgriffith$elm_ui$Element$column,
 		_List_fromArray(
 			[
-				$mdgriffith$elm_ui$Element$spacing(3),
+				$mdgriffith$elm_ui$Element$spacing(24),
 				$mdgriffith$elm_ui$Element$centerX,
 				$mdgriffith$elm_ui$Element$centerY,
 				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$shrink)
@@ -19325,20 +19350,12 @@ var $author$project$Main$loginPage = function (model) {
 				$mdgriffith$elm_ui$Element$row,
 				_List_fromArray(
 					[
-						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+						$mdgriffith$elm_ui$Element$spacing(8)
 					]),
 				_List_fromArray(
 					[
-						A5($author$project$Styled$textInput, _List_Nil, $author$project$Types$TokenInput, model.secretsUnsubmitted, 'Enter a token', 'Token input')
-					])),
-				A2(
-				$mdgriffith$elm_ui$Element$row,
-				_List_fromArray(
-					[
-						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-					]),
-				_List_fromArray(
-					[
+						A5($author$project$Styled$textInput, _List_Nil, $author$project$Types$TokenInput, model.secretsUnsubmitted, 'Enter a token', 'Token input'),
 						A3(
 						$author$project$Styled$submitButton,
 						A2($elm$core$Basics$composeL, $elm$core$Basics$not, $elm$core$String$isEmpty),
@@ -20088,9 +20105,14 @@ var $author$project$Pages$TaskList$executionInput = F4(
 				A4($author$project$Pages$TaskList$schemaToForm, inputEvent, formValues.fromSchema, errors, subSchema));
 		}
 	});
-var $author$project$Types$TaskSelect = function (a) {
-	return {$: 'TaskSelect', a: a};
+var $elm$html$Html$h2 = _VirtualDom_node('h2');
+var $author$project$Types$NewExecutionForTask = function (a) {
+	return {$: 'NewExecutionForTask', a: a};
 };
+var $mdgriffith$elm_ui$Internal$Model$Left = {$: 'Left'};
+var $mdgriffith$elm_ui$Element$alignLeft = $mdgriffith$elm_ui$Internal$Model$AlignX($mdgriffith$elm_ui$Internal$Model$Left);
+var $mdgriffith$elm_ui$Internal$Model$Right = {$: 'Right'};
+var $mdgriffith$elm_ui$Element$alignRight = $mdgriffith$elm_ui$Internal$Model$AlignX($mdgriffith$elm_ui$Internal$Model$Right);
 var $author$project$Styled$styledSecondaryText = F2(
 	function (attrs, s) {
 		return A2(
@@ -20101,76 +20123,65 @@ var $author$project$Styled$styledSecondaryText = F2(
 				attrs),
 			$mdgriffith$elm_ui$Element$text(s));
 	});
-var $author$project$Pages$TaskList$tasksLink = F2(
-	function (selectedId, task) {
-		return _Utils_eq(
-			selectedId,
-			$elm$core$Maybe$Just(task.id)) ? A2(
-			$mdgriffith$elm_ui$Element$row,
-			_List_fromArray(
-				[
-					$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$mdgriffith$elm_ui$Element$row,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$mdgriffith$elm_ui$Element$link,
-							_List_Nil,
-							{
-								label: A2(
-									$author$project$Styled$styledSecondaryText,
-									_List_fromArray(
-										[$mdgriffith$elm_ui$Element$Font$underline]),
-									'Executions'),
-								url: A2(
-									$author$project$Urls$executionsUrl,
-									$elm$core$Maybe$Nothing,
-									$elm$core$Maybe$Just(task.id))
-							})
-						]))
-				])) : A2($mdgriffith$elm_ui$Element$row, _List_Nil, _List_Nil);
-	});
-var $author$project$Pages$TaskList$taskCard = F2(
-	function (selectedId, task) {
-		return A2(
-			$mdgriffith$elm_ui$Element$column,
+var $author$project$Pages$TaskList$tasksLink = function (task) {
+	return A2(
+		$mdgriffith$elm_ui$Element$link,
+		_List_Nil,
+		{
+			label: A2(
+				$author$project$Styled$styledSecondaryText,
+				_List_fromArray(
+					[$mdgriffith$elm_ui$Element$Font$underline]),
+				'Executions'),
+			url: A2(
+				$author$project$Urls$executionsUrl,
+				$elm$core$Maybe$Nothing,
+				$elm$core$Maybe$Just(task.id))
+		});
+};
+var $author$project$Pages$TaskList$taskCard = function (task) {
+	return A2(
+		$mdgriffith$elm_ui$Element$column,
+		A2(
+			$elm$core$List$cons,
+			$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
 			A2(
 				$elm$core$List$cons,
-				$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+				$mdgriffith$elm_ui$Element$spacing(5),
+				A2($elm$core$List$cons, $mdgriffith$elm_ui$Element$centerY, $Orasund$elm_ui_framework$Framework$Button$simple))),
+		_List_fromArray(
+			[
 				A2(
-					$elm$core$List$cons,
-					$mdgriffith$elm_ui$Element$spacing(5),
-					A2($elm$core$List$cons, $mdgriffith$elm_ui$Element$centerY, $Orasund$elm_ui_framework$Framework$Button$simple))),
-			_List_fromArray(
-				[
-					A2(
-					$mdgriffith$elm_ui$Element$row,
-					A2(
-						$elm$core$List$cons,
-						$mdgriffith$elm_ui$Element$Font$color($author$project$Styled$primary),
-						_Utils_eq(
-							$elm$core$Maybe$Just(task.id),
-							selectedId) ? _List_fromArray(
-							[$author$project$Styled$secondaryShadow]) : _List_Nil),
-					_List_fromArray(
-						[
-							A2(
-							$mdgriffith$elm_ui$Element$Input$button,
-							_List_Nil,
-							{
-								label: $mdgriffith$elm_ui$Element$text(task.name),
-								onPress: $elm$core$Maybe$Just(
-									$author$project$Types$TaskSelect(task))
-							})
-						])),
-					A2($author$project$Pages$TaskList$tasksLink, selectedId, task)
-				]));
-	});
+				$mdgriffith$elm_ui$Element$row,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill),
+						$mdgriffith$elm_ui$Element$spacing(3)
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$author$project$Styled$styledPrimaryText,
+						_List_fromArray(
+							[$mdgriffith$elm_ui$Element$alignLeft]),
+						task.name),
+						A2(
+						$mdgriffith$elm_ui$Element$Input$button,
+						_List_fromArray(
+							[
+								$mdgriffith$elm_ui$Element$alignRight,
+								$mdgriffith$elm_ui$Element$htmlAttribute(
+								A2($elm$html$Html$Attributes$style, 'margin', '0 12px'))
+							]),
+						{
+							label: $mdgriffith$elm_ui$Element$text('➕'),
+							onPress: $elm$core$Maybe$Just(
+								$author$project$Types$NewExecutionForTask(task))
+						}),
+						$author$project$Pages$TaskList$tasksLink(task)
+					]))
+			]));
+};
 var $author$project$Pages$TaskList$ExecutionCreate = F3(
 	function (name, taskId, _arguments) {
 		return {_arguments: _arguments, name: name, taskId: taskId};
@@ -20204,6 +20215,14 @@ var $author$project$Pages$TaskList$taskList = function (model) {
 			[$mdgriffith$elm_ui$Element$centerX]),
 		_List_fromArray(
 			[
+				$mdgriffith$elm_ui$Element$html(
+				A2(
+					$elm$html$Html$h2,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text('Tasks')
+						]))),
 				A2(
 				$mdgriffith$elm_ui$Element$column,
 				_List_fromArray(
@@ -20214,16 +20233,7 @@ var $author$project$Pages$TaskList$taskList = function (model) {
 						$mdgriffith$elm_ui$Element$padding(10),
 						$mdgriffith$elm_ui$Element$alignTop
 					]),
-				A2(
-					$elm$core$List$map,
-					$author$project$Pages$TaskList$taskCard(
-						A2(
-							$elm$core$Maybe$map,
-							function ($) {
-								return $.id;
-							},
-							model.selectedTask)),
-					model.tasks)),
+				A2($elm$core$List$map, $author$project$Pages$TaskList$taskCard, model.tasks)),
 				A2(
 				$mdgriffith$elm_ui$Element$column,
 				_List_fromArray(
@@ -20289,7 +20299,11 @@ var $author$project$Main$view = function (model) {
 							[
 								A2(
 								$mdgriffith$elm_ui$Element$layout,
-								_List_Nil,
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$width(
+										A2($mdgriffith$elm_ui$Element$minimum, 1024, $mdgriffith$elm_ui$Element$fill))
+									]),
 								$author$project$Main$logoTop(
 									_List_fromArray(
 										[taskListBody])))
@@ -20303,7 +20317,11 @@ var $author$project$Main$view = function (model) {
 							[
 								A2(
 								$mdgriffith$elm_ui$Element$layout,
-								_List_Nil,
+								_List_fromArray(
+									[
+										$mdgriffith$elm_ui$Element$width(
+										A2($mdgriffith$elm_ui$Element$minimum, 1024, $mdgriffith$elm_ui$Element$fill))
+									]),
 								$author$project$Main$logoTop(
 									_List_fromArray(
 										[
@@ -20324,7 +20342,11 @@ var $author$project$Main$view = function (model) {
 			[
 				A2(
 				$mdgriffith$elm_ui$Element$layout,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$mdgriffith$elm_ui$Element$width(
+						A2($mdgriffith$elm_ui$Element$minimum, 1024, $mdgriffith$elm_ui$Element$fill))
+					]),
 				$author$project$Main$loginPage(model))
 			]),
 		title: 'Granary Model Dashboard'

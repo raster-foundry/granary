@@ -30,6 +30,8 @@ import Element.Font as Font
 import Element.Input as Input
 import FileInput as FileInput
 import Framework.Button as Button
+import Html as Html
+import Html.Attributes as HA
 import Json.Decode as JD
 import Json.Encode as JE
 import Json.Schema as Schema
@@ -40,7 +42,7 @@ import Json.Schema.Definitions as Schema
         , Type(..)
         )
 import Json.Schema.Validation as Validation
-import Styled exposing (primary, secondaryShadow, styledPrimaryText, styledSecondaryText, submitButton, textInput)
+import Styled exposing (secondaryShadow, styledPrimaryText, styledSecondaryText, submitButton, textInput)
 import Types exposing (ExecutionCreate, ExecutionCreateError(..), GranaryTask, InputEvent(..), Msg(..))
 import Urls exposing (executionsUrl)
 import Uuid as Uuid
@@ -305,42 +307,27 @@ getErrField err =
                 |> String.concat
 
 
-taskCard : Maybe Uuid.Uuid -> GranaryTask -> Element Msg
-taskCard selectedId task =
+taskCard : GranaryTask -> Element Msg
+taskCard task =
     column (width fill :: spacing 5 :: Element.centerY :: Button.simple)
-        [ row
-            (Font.color primary
-                :: (if Just task.id == selectedId then
-                        [ secondaryShadow ]
-
-                    else
-                        []
-                   )
-            )
-            [ Input.button
-                []
-                { label = text task.name
-                , onPress = TaskSelect task |> Just
+        [ row [ width fill, spacing 3 ]
+            [ styledPrimaryText [ Element.alignLeft ] task.name
+            , Input.button
+                [ Element.alignRight, Element.htmlAttribute <| HA.style "margin" "0 12px" ]
+                { label = text "➕"
+                , onPress = NewExecutionForTask task |> Just
                 }
+            , tasksLink task
             ]
-        , tasksLink selectedId task
         ]
 
 
-tasksLink : Maybe Uuid.Uuid -> GranaryTask -> Element Msg
-tasksLink selectedId task =
-    if selectedId == Just task.id then
-        row [ width fill ]
-            [ row []
-                [ Element.link []
-                    { url = executionsUrl Nothing (Just task.id)
-                    , label = styledSecondaryText [ Font.underline ] "Executions"
-                    }
-                ]
-            ]
-
-    else
-        row [] []
+tasksLink : GranaryTask -> Element Msg
+tasksLink task =
+    Element.link []
+        { url = executionsUrl Nothing (Just task.id)
+        , label = styledSecondaryText [ Font.underline ] "Executions"
+        }
 
 
 makeHelpfulErrorMessage : ExecutionCreateError -> List (Element Msg)
@@ -494,17 +481,16 @@ executionInput inputEvent formValues errors task =
 taskList : TaskListModel -> Element Msg
 taskList model =
     row [ Element.centerX ]
-        [ column
+        [ -- tasks needs to be above the columns
+          Element.html (Html.h2 [] [ Html.text "Tasks" ])
+        , column
             [ fillPortion 1 |> width
             , spacing 10
             , padding 10
             , Element.alignTop
             ]
             (model.tasks
-                |> List.map
-                    (taskCard
-                        (Maybe.map .id model.selectedTask)
-                    )
+                |> List.map taskCard
             )
         , column
             [ fillPortion 3 |> width

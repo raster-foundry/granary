@@ -93,7 +93,7 @@ type Msg
     | TokenInput String
     | TokenSubmit
     | CreatedExecution (Result Http.Error GranaryExecution)
-    | TaskSelect GranaryTask
+    | NewExecutionForTask GranaryTask
     | ValidateWith
         { schema : Schema.SubSchema
         , fieldName : String

@@ -4,6 +4,7 @@ import Element exposing (Element, column, fill, padding, row, spacing, text, wid
 import Element.Font as Font
 import Element.Input as Input
 import Framework.Card as Card
+import Html.Attributes as HA
 import Maybe.Extra exposing (orElse)
 import Set exposing (Set)
 import Styled exposing (styledPrimaryText, textInput)
@@ -40,13 +41,13 @@ toEmoji : GranaryExecution -> String
 toEmoji execution =
     case ( execution.statusReason, execution.results ) of
         ( Just _, _ ) ->
-            "❌"
+            "❌ Failed"
 
         ( _, _ :: _ ) ->
-            "✅"
+            "✅ Succeeded"
 
         _ ->
-            "🏃\u{200D}♀️"
+            "🏃\u{200D}♀️ Running"
 
 
 
@@ -59,7 +60,7 @@ executionAssets showAssets execution =
         []
 
     else
-        row []
+        row [ spacing 3 ]
             [ Input.button []
                 { onPress = ToggleShowAssets execution.id |> Just
                 , label = text "➕"
@@ -67,18 +68,18 @@ executionAssets showAssets execution =
             , styledPrimaryText [] " Show assets"
             ]
             :: (if showAssets then
-                    executionAssetsList execution.results
+                    executionAssetsList execution execution.results
 
                 else
                     []
                )
 
 
-executionAssetsList : List StacAsset -> List (Element Msg)
-executionAssetsList =
+executionAssetsList : GranaryExecution -> List StacAsset -> List (Element Msg)
+executionAssetsList execution =
     List.map
         (\asset ->
-            Element.link []
+            Element.link [ Element.htmlAttribute <| HA.download execution.name ]
                 { url = asset.href
                 , label =
                     styledPrimaryText [ Font.underline ]
@@ -97,7 +98,7 @@ nameSearchInput currValue =
         [ width fill ]
         SearchExecutionName
         currValue
-        "Name like"
+        "Search"
         "Search"
         |> List.singleton
         |> row [ width fill ]
@@ -114,7 +115,7 @@ executionCard showAssets execution =
             :: spacing 5
             :: Card.simple
         )
-        ([ row [] [ styledPrimaryText [] execution.name ]
+        ([ row [] [ styledPrimaryText [ Font.bold ] execution.name ]
          , row [] [ styledPrimaryText [] ("Status: " ++ toEmoji execution) ]
          ]
             ++ executionAssets showAssets execution

@@ -248,7 +248,7 @@ update msg model =
                 Browser.External href ->
                     ( model, Nav.load href )
 
-        TaskSelect task ->
+        NewExecutionForTask task ->
             let
                 newRoute =
                     updateTaskListModel
@@ -617,6 +617,10 @@ logoTop rest =
             ++ rest
 
 
+
+-- to top left or top right
+
+
 homeLink : Element Msg
 homeLink =
     Input.button []
@@ -627,13 +631,11 @@ homeLink =
 
 loginPage : Model -> Element Msg
 loginPage model =
-    column [ spacing 3, Element.centerX, Element.centerY, width Element.shrink ]
+    column [ spacing 24, Element.centerX, Element.centerY, width Element.shrink ]
         [ row [ width fill ] [ logo [] 200 ]
-        , row [ width fill ]
+        , row [ width fill, spacing 8 ]
             [ textInput [] TokenInput model.secretsUnsubmitted "Enter a token" "Token input"
-            ]
-        , row [ width fill ]
-            [ submitButton (not << String.isEmpty)
+            , submitButton (not << String.isEmpty)
                 (Maybe.withDefault "" model.secretsUnsubmitted)
                 TokenSubmit
             ]
@@ -649,20 +651,20 @@ view model =
                     taskList tlm
             in
             { title = "Available Tasks"
-            , body = [ Element.layout [] (logoTop [ taskListBody ]) ]
+            , body = [ Element.layout [ Element.minimum 1024 fill |> width ] (logoTop [ taskListBody ]) ]
             }
 
         ( ExecutionList elm, Just _ ) ->
             { title = "Execution list"
             , body =
-                [ Element.layout [] <| logoTop [ executionList elm ]
+                [ Element.layout [ Element.minimum 1024 fill |> width ] <| logoTop [ executionList elm ]
                 ]
             }
 
         _ ->
             { title = "Granary Model Dashboard"
             , body =
-                [ Element.layout [] <| loginPage model
+                [ Element.layout [ Element.minimum 1024 fill |> width ] <| loginPage model
                 ]
             }
 
