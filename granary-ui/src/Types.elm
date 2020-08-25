@@ -75,7 +75,7 @@ type alias ExecutionCreate =
 
 type ExecutionCreateError
     = SchemaError (List Validation.Error)
-    | DecodingError JD.Error
+    | DecodingError String Int JD.Error
 
 
 type InputEvent
@@ -106,5 +106,5 @@ type Msg
     | AddTokenParam GranaryToken
     | GoHome
     | GotFiles File (List File)
-    | GeoJsonData String
+    | GeoJsonData String Int String
     | GeoJsonInputMouseInteraction InputEvent

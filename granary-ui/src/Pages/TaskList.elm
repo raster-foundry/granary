@@ -41,6 +41,7 @@ import Json.Schema.Definitions as Schema
         , Type(..)
         )
 import Json.Schema.Validation as Validation
+import Round as Round
 import Styled exposing (secondaryShadow, styledPrimaryText, styledSecondaryText, submitButton, textInput)
 import Types exposing (ExecutionCreate, ExecutionCreateError(..), GranaryTask, InputEvent(..), Msg(..))
 import Urls exposing (executionsUrl)
@@ -78,6 +79,8 @@ type alias TaskListModel =
     , taskValidationErrors : Dict String ExecutionCreateError
     , activeSchema : Maybe Schema.Schema
     , inputState : Maybe InputEvent
+    , fileSize : Maybe Int
+    , fileName : Maybe String
     }
 
 
@@ -89,6 +92,8 @@ emptyTaskListModel =
     , taskValidationErrors = Dict.empty
     , activeSchema = Nothing
     , inputState = Nothing
+    , fileSize = Nothing
+    , fileName = Nothing
     }
 
 
@@ -137,6 +142,31 @@ isOk res =
 
         Result.Err _ ->
             False
+
+
+showFileSize : Int -> String
+showFileSize bytes =
+    let
+        mb =
+            bytes // (1024 * 1024)
+
+        bytesAfterMb =
+            bytes |> modBy (1024 * 1024)
+
+        kb =
+            bytesAfterMb // 1024
+
+        fractionalMb =
+            toFloat kb / 1024
+    in
+    if mb > 0 then
+        (toFloat mb + fractionalMb |> Round.round 3) ++ " mb"
+
+    else if kb > 0 then
+        String.fromInt kb ++ " kb"
+
+    else
+        String.fromInt bytes ++ " bytes"
 
 
 toValue : Schema.SubSchema -> String -> Result String JD.Value
@@ -335,8 +365,15 @@ makeHelpfulErrorMessage err =
         SchemaError errs ->
             List.concatMap makeErr errs
 
-        DecodingError _ ->
-            [ row [ width (Element.minimum 300 fill) ] [ text "Unexpected JSON structure" ] ]
+        DecodingError fileName fileSize _ ->
+            [ row [ width (Element.minimum 300 fill) ]
+                [ fileName
+                    ++ " does not appear to be geojson. Size: "
+                    ++ showFileSize fileSize
+                    ++ "."
+                    |> styledSecondaryText []
+                ]
+            ]
 
 
 makeErr : Validation.Error -> List (Element Msg)
@@ -361,8 +398,8 @@ makeErr err =
             ]
 
 
-schemaToForm : Maybe InputEvent -> Dict String (Result String JD.Value) -> Dict String ExecutionCreateError -> Schema.SubSchema -> List (Element Msg)
-schemaToForm inputEvent formValues errors schema =
+schemaToForm : Maybe Int -> Maybe String -> Maybe InputEvent -> Dict String (Result String JD.Value) -> Dict String ExecutionCreateError -> Schema.SubSchema -> List (Element Msg)
+schemaToForm fileSize fileName inputEvent formValues errors schema =
     let
         errs ( k, _ ) =
             Dict.get k errors |> Maybe.map makeHelpfulErrorMessage |> Maybe.withDefault []
@@ -421,8 +458,14 @@ schemaToForm inputEvent formValues errors schema =
                                 Result.Ok data ->
                                     always
                                         (row []
-                                            [ styledPrimaryText []
-                                                "Successful geojson upload!"
+                                            [ Maybe.map2
+                                                (\size name ->
+                                                    "File: " ++ name ++ ". Size: " ++ showFileSize size
+                                                )
+                                                fileSize
+                                                fileName
+                                                |> Maybe.withDefault "Successful geojson upload!"
+                                                |> styledPrimaryText []
                                             ]
                                             |> Just
                                         )
@@ -465,8 +508,8 @@ schemaToForm inputEvent formValues errors schema =
         |> Maybe.withDefault []
 
 
-executionInput : Maybe InputEvent -> FormValues -> Dict String ExecutionCreateError -> GranaryTask -> List (Element Msg)
-executionInput inputEvent formValues errors task =
+executionInput : Maybe Int -> Maybe String -> Maybe InputEvent -> FormValues -> Dict String ExecutionCreateError -> GranaryTask -> List (Element Msg)
+executionInput fileSize fileName inputEvent formValues errors task =
     case task.validator of
         BooleanSchema _ ->
             [ Element.el [] (text "oh no -- this task's schema decoded as a \"BooleanSchema\"") ]
@@ -478,6 +521,8 @@ executionInput inputEvent formValues errors task =
                 "Execution name"
                 "New execution name"
                 :: schemaToForm
+                    fileSize
+                    fileName
                     inputEvent
                     formValues.fromSchema
                     errors
@@ -508,7 +553,13 @@ taskList model =
                                     , spacing 10
                                     , padding 10
                                     ]
-                                    (executionInput model.inputState model.formValues model.taskValidationErrors selected
+                                    (executionInput
+                                        model.fileSize
+                                        model.fileName
+                                        model.inputState
+                                        model.formValues
+                                        model.taskValidationErrors
+                                        selected
                                         ++ [ row [ width (Element.maximum 300 fill) ]
                                                 [ submitButton (allowTaskSubmit model.activeSchema)
                                                     model.formValues

@@ -5863,15 +5863,17 @@ var $author$project$Main$init = F3(
 	});
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$Types$DecodingError = function (a) {
-	return {$: 'DecodingError', a: a};
-};
+var $author$project$Types$DecodingError = F3(
+	function (a, b, c) {
+		return {$: 'DecodingError', a: a, b: b, c: c};
+	});
 var $author$project$Main$ExecutionList = function (a) {
 	return {$: 'ExecutionList', a: a};
 };
-var $author$project$Types$GeoJsonData = function (a) {
-	return {$: 'GeoJsonData', a: a};
-};
+var $author$project$Types$GeoJsonData = F3(
+	function (a, b, c) {
+		return {$: 'GeoJsonData', a: a, b: b, c: c};
+	});
 var $author$project$Types$GotFiles = F2(
 	function (a, b) {
 		return {$: 'GotFiles', a: a, b: b};
@@ -6137,7 +6139,7 @@ var $elm$core$Set$Set_elm_builtin = function (a) {
 var $elm$core$Set$empty = $elm$core$Set$Set_elm_builtin($elm$core$Dict$empty);
 var $author$project$Pages$ExecutionList$emptyExecutionListModel = {executionNameSearch: $elm$core$Maybe$Nothing, executions: _List_Nil, forTask: $elm$core$Maybe$Nothing, selectedExecutions: $elm$core$Set$empty};
 var $author$project$Pages$TaskList$emptyFormValues = {executionName: $elm$core$Maybe$Nothing, fromSchema: $elm$core$Dict$empty};
-var $author$project$Pages$TaskList$emptyTaskListModel = {activeSchema: $elm$core$Maybe$Nothing, formValues: $author$project$Pages$TaskList$emptyFormValues, inputState: $elm$core$Maybe$Nothing, selectedTask: $elm$core$Maybe$Nothing, taskValidationErrors: $elm$core$Dict$empty, tasks: _List_Nil};
+var $author$project$Pages$TaskList$emptyTaskListModel = {activeSchema: $elm$core$Maybe$Nothing, fileName: $elm$core$Maybe$Nothing, fileSize: $elm$core$Maybe$Nothing, formValues: $author$project$Pages$TaskList$emptyFormValues, inputState: $elm$core$Maybe$Nothing, selectedTask: $elm$core$Maybe$Nothing, taskValidationErrors: $elm$core$Dict$empty, tasks: _List_Nil};
 var $elm$json$Json$Encode$float = _Json_wrap;
 var $elm$json$Json$Encode$list = F2(
 	function (func, entries) {
@@ -9026,6 +9028,7 @@ var $elm$core$Set$member = F2(
 		var dict = _v0.a;
 		return A2($elm$core$Dict$member, key, dict);
 	});
+var $elm$file$File$name = _File_name;
 var $elm$url$Url$Parser$State = F5(
 	function (visited, unvisited, params, frag, value) {
 		return {frag: frag, params: params, unvisited: unvisited, value: value, visited: visited};
@@ -9391,6 +9394,7 @@ var $elm$core$Dict$singleton = F2(
 	function (key, value) {
 		return A5($elm$core$Dict$RBNode_elm_builtin, $elm$core$Dict$Black, key, value, $elm$core$Dict$RBEmpty_elm_builtin, $elm$core$Dict$RBEmpty_elm_builtin);
 	});
+var $elm$file$File$size = _File_size;
 var $elm$file$File$toString = _File_toString;
 var $elm$core$Dict$foldl = F3(
 	function (func, acc, dict) {
@@ -11845,14 +11849,37 @@ var $author$project$Main$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 'GotFiles':
 				var head = msg.a;
+				var fileSize = $elm$file$File$size(head);
+				var fileName = $elm$file$File$name(head);
+				var updatedTlm = A2(
+					$elm$core$Maybe$withDefault,
+					$author$project$Main$Login,
+					A2(
+						$elm$core$Maybe$map,
+						$author$project$Main$TaskList,
+						A2(
+							$author$project$Main$updateTaskListModel,
+							function (tlm) {
+								return _Utils_update(
+									tlm,
+									{
+										fileName: $elm$core$Maybe$Just(fileName),
+										fileSize: $elm$core$Maybe$Just(fileSize)
+									});
+							},
+							model.route)));
 				return _Utils_Tuple2(
-					model,
+					_Utils_update(
+						model,
+						{route: updatedTlm}),
 					A2(
 						$elm$core$Task$perform,
-						$author$project$Types$GeoJsonData,
+						A2($author$project$Types$GeoJsonData, fileName, fileSize),
 						$elm$file$File$toString(head)));
 			case 'GeoJsonData':
-				var data = msg.a;
+				var fileName = msg.a;
+				var fileSize = msg.b;
+				var data = msg.c;
 				var _v8 = _Utils_Tuple2(
 					A2($elm$json$Json$Decode$decodeString, $mgold$elm_geojson$GeoJson$decoder, data),
 					model.route);
@@ -11912,7 +11939,7 @@ var $author$project$Main$update = F2(
 						var addition = A2(
 							$elm$core$Dict$singleton,
 							'TASK_GRID',
-							$author$project$Types$DecodingError(err));
+							A3($author$project$Types$DecodingError, fileName, fileSize, err));
 						var updated = _Utils_update(
 							tlm,
 							{
@@ -11930,7 +11957,7 @@ var $author$project$Main$update = F2(
 						var validationErrors = A2(
 							$elm$core$Dict$singleton,
 							'TASK_GRID',
-							$author$project$Types$DecodingError(err));
+							A3($author$project$Types$DecodingError, fileName, fileSize, err));
 						var updated = _Utils_update(
 							$author$project$Pages$TaskList$emptyTaskListModel,
 							{taskValidationErrors: validationErrors});
@@ -19564,11 +19591,258 @@ var $author$project$Pages$TaskList$makeErr = function (err) {
 				]);
 	}
 };
+var $elm$core$Basics$abs = function (n) {
+	return (n < 0) ? (-n) : n;
+};
+var $elm$core$String$foldr = _String_foldr;
+var $elm$core$String$toList = function (string) {
+	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
+};
+var $myrho$elm_round$Round$addSign = F2(
+	function (signed, str) {
+		var isNotZero = A2(
+			$elm$core$List$any,
+			function (c) {
+				return (!_Utils_eq(
+					c,
+					_Utils_chr('0'))) && (!_Utils_eq(
+					c,
+					_Utils_chr('.')));
+			},
+			$elm$core$String$toList(str));
+		return _Utils_ap(
+			(signed && isNotZero) ? '-' : '',
+			str);
+	});
+var $elm$core$String$cons = _String_cons;
+var $elm$core$Char$fromCode = _Char_fromCode;
+var $myrho$elm_round$Round$increaseNum = function (_v0) {
+	var head = _v0.a;
+	var tail = _v0.b;
+	if (_Utils_eq(
+		head,
+		_Utils_chr('9'))) {
+		var _v1 = $elm$core$String$uncons(tail);
+		if (_v1.$ === 'Nothing') {
+			return '01';
+		} else {
+			var headtail = _v1.a;
+			return A2(
+				$elm$core$String$cons,
+				_Utils_chr('0'),
+				$myrho$elm_round$Round$increaseNum(headtail));
+		}
+	} else {
+		var c = $elm$core$Char$toCode(head);
+		return ((c >= 48) && (c < 57)) ? A2(
+			$elm$core$String$cons,
+			$elm$core$Char$fromCode(c + 1),
+			tail) : '0';
+	}
+};
+var $elm$core$Basics$isInfinite = _Basics_isInfinite;
+var $elm$core$Basics$isNaN = _Basics_isNaN;
+var $elm$core$String$fromChar = function (_char) {
+	return A2($elm$core$String$cons, _char, '');
+};
+var $elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
+var $elm$core$String$repeatHelp = F3(
+	function (n, chunk, result) {
+		return (n <= 0) ? result : A3(
+			$elm$core$String$repeatHelp,
+			n >> 1,
+			_Utils_ap(chunk, chunk),
+			(!(n & 1)) ? result : _Utils_ap(result, chunk));
+	});
+var $elm$core$String$repeat = F2(
+	function (n, chunk) {
+		return A3($elm$core$String$repeatHelp, n, chunk, '');
+	});
+var $elm$core$String$padRight = F3(
+	function (n, _char, string) {
+		return _Utils_ap(
+			string,
+			A2(
+				$elm$core$String$repeat,
+				n - $elm$core$String$length(string),
+				$elm$core$String$fromChar(_char)));
+	});
+var $elm$core$String$reverse = _String_reverse;
+var $myrho$elm_round$Round$splitComma = function (str) {
+	var _v0 = A2($elm$core$String$split, '.', str);
+	if (_v0.b) {
+		if (_v0.b.b) {
+			var before = _v0.a;
+			var _v1 = _v0.b;
+			var after = _v1.a;
+			return _Utils_Tuple2(before, after);
+		} else {
+			var before = _v0.a;
+			return _Utils_Tuple2(before, '0');
+		}
+	} else {
+		return _Utils_Tuple2('0', '0');
+	}
+};
+var $myrho$elm_round$Round$toDecimal = function (fl) {
+	var _v0 = A2(
+		$elm$core$String$split,
+		'e',
+		$elm$core$String$fromFloat(
+			$elm$core$Basics$abs(fl)));
+	if (_v0.b) {
+		if (_v0.b.b) {
+			var num = _v0.a;
+			var _v1 = _v0.b;
+			var exp = _v1.a;
+			var e = A2(
+				$elm$core$Maybe$withDefault,
+				0,
+				$elm$core$String$toInt(
+					A2($elm$core$String$startsWith, '+', exp) ? A2($elm$core$String$dropLeft, 1, exp) : exp));
+			var _v2 = $myrho$elm_round$Round$splitComma(num);
+			var before = _v2.a;
+			var after = _v2.b;
+			var total = _Utils_ap(before, after);
+			var zeroed = (e < 0) ? A2(
+				$elm$core$Maybe$withDefault,
+				'0',
+				A2(
+					$elm$core$Maybe$map,
+					function (_v3) {
+						var a = _v3.a;
+						var b = _v3.b;
+						return a + ('.' + b);
+					},
+					A2(
+						$elm$core$Maybe$map,
+						$elm$core$Tuple$mapFirst($elm$core$String$fromChar),
+						$elm$core$String$uncons(
+							_Utils_ap(
+								A2(
+									$elm$core$String$repeat,
+									$elm$core$Basics$abs(e),
+									'0'),
+								total))))) : A3(
+				$elm$core$String$padRight,
+				e + 1,
+				_Utils_chr('0'),
+				total);
+			return _Utils_ap(
+				(fl < 0) ? '-' : '',
+				zeroed);
+		} else {
+			var num = _v0.a;
+			return _Utils_ap(
+				(fl < 0) ? '-' : '',
+				num);
+		}
+	} else {
+		return '';
+	}
+};
+var $myrho$elm_round$Round$roundFun = F3(
+	function (functor, s, fl) {
+		if ($elm$core$Basics$isInfinite(fl) || $elm$core$Basics$isNaN(fl)) {
+			return $elm$core$String$fromFloat(fl);
+		} else {
+			var signed = fl < 0;
+			var _v0 = $myrho$elm_round$Round$splitComma(
+				$myrho$elm_round$Round$toDecimal(
+					$elm$core$Basics$abs(fl)));
+			var before = _v0.a;
+			var after = _v0.b;
+			var r = $elm$core$String$length(before) + s;
+			var normalized = _Utils_ap(
+				A2($elm$core$String$repeat, (-r) + 1, '0'),
+				A3(
+					$elm$core$String$padRight,
+					r,
+					_Utils_chr('0'),
+					_Utils_ap(before, after)));
+			var totalLen = $elm$core$String$length(normalized);
+			var roundDigitIndex = A2($elm$core$Basics$max, 1, r);
+			var increase = A2(
+				functor,
+				signed,
+				A3($elm$core$String$slice, roundDigitIndex, totalLen, normalized));
+			var remains = A3($elm$core$String$slice, 0, roundDigitIndex, normalized);
+			var num = increase ? $elm$core$String$reverse(
+				A2(
+					$elm$core$Maybe$withDefault,
+					'1',
+					A2(
+						$elm$core$Maybe$map,
+						$myrho$elm_round$Round$increaseNum,
+						$elm$core$String$uncons(
+							$elm$core$String$reverse(remains))))) : remains;
+			var numLen = $elm$core$String$length(num);
+			var numZeroed = (num === '0') ? num : ((s <= 0) ? _Utils_ap(
+				num,
+				A2(
+					$elm$core$String$repeat,
+					$elm$core$Basics$abs(s),
+					'0')) : ((_Utils_cmp(
+				s,
+				$elm$core$String$length(after)) < 0) ? (A3($elm$core$String$slice, 0, numLen - s, num) + ('.' + A3($elm$core$String$slice, numLen - s, numLen, num))) : _Utils_ap(
+				before + '.',
+				A3(
+					$elm$core$String$padRight,
+					s,
+					_Utils_chr('0'),
+					after))));
+			return A2($myrho$elm_round$Round$addSign, signed, numZeroed);
+		}
+	});
+var $myrho$elm_round$Round$round = $myrho$elm_round$Round$roundFun(
+	F2(
+		function (signed, str) {
+			var _v0 = $elm$core$String$uncons(str);
+			if (_v0.$ === 'Nothing') {
+				return false;
+			} else {
+				if ('5' === _v0.a.a.valueOf()) {
+					if (_v0.a.b === '') {
+						var _v1 = _v0.a;
+						return !signed;
+					} else {
+						var _v2 = _v0.a;
+						return true;
+					}
+				} else {
+					var _v3 = _v0.a;
+					var _int = _v3.a;
+					return function (i) {
+						return ((i > 53) && signed) || ((i >= 53) && (!signed));
+					}(
+						$elm$core$Char$toCode(_int));
+				}
+			}
+		}));
+var $author$project$Pages$TaskList$showFileSize = function (bytes) {
+	var mb = (bytes / (1024 * 1024)) | 0;
+	var bytesAfterMb = A2($elm$core$Basics$modBy, 1024 * 1024, bytes);
+	var kb = (bytesAfterMb / 1024) | 0;
+	var fractionalMb = kb / 1024;
+	return (mb > 0) ? (A2($myrho$elm_round$Round$round, 3, mb + fractionalMb) + ' mb') : ((kb > 0) ? ($elm$core$String$fromInt(kb) + ' kb') : ($elm$core$String$fromInt(bytes) + ' bytes'));
+};
+var $author$project$Styled$styledSecondaryText = F2(
+	function (attrs, s) {
+		return A2(
+			$mdgriffith$elm_ui$Element$el,
+			A2(
+				$elm$core$List$cons,
+				$mdgriffith$elm_ui$Element$Font$color($author$project$Styled$secondary),
+				attrs),
+			$mdgriffith$elm_ui$Element$text(s));
+	});
 var $author$project$Pages$TaskList$makeHelpfulErrorMessage = function (err) {
 	if (err.$ === 'SchemaError') {
 		var errs = err.a;
 		return A2($elm$core$List$concatMap, $author$project$Pages$TaskList$makeErr, errs);
 	} else {
+		var fileName = err.a;
+		var fileSize = err.b;
 		return _List_fromArray(
 			[
 				A2(
@@ -19580,15 +19854,29 @@ var $author$project$Pages$TaskList$makeHelpfulErrorMessage = function (err) {
 					]),
 				_List_fromArray(
 					[
-						$mdgriffith$elm_ui$Element$text('Unexpected JSON structure')
+						A2(
+						$author$project$Styled$styledSecondaryText,
+						_List_Nil,
+						fileName + (' does not appear to be geojson. Size: ' + ($author$project$Pages$TaskList$showFileSize(fileSize) + '.')))
 					]))
 			]);
 	}
 };
-var $elm$core$String$foldr = _String_foldr;
-var $elm$core$String$toList = function (string) {
-	return A3($elm$core$String$foldr, $elm$core$List$cons, _List_Nil, string);
-};
+var $elm$core$Maybe$map2 = F3(
+	function (func, ma, mb) {
+		if (ma.$ === 'Nothing') {
+			return $elm$core$Maybe$Nothing;
+		} else {
+			var a = ma.a;
+			if (mb.$ === 'Nothing') {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var b = mb.a;
+				return $elm$core$Maybe$Just(
+					A2(func, a, b));
+			}
+		}
+	});
 var $elm$core$Elm$JsArray$foldl = _JsArray_foldl;
 var $elm$core$Array$foldl = F3(
 	function (func, baseCase, _v0) {
@@ -19878,8 +20166,8 @@ var $author$project$FileInput$view = function (handler) {
 					]))
 			]));
 };
-var $author$project$Pages$TaskList$schemaToForm = F4(
-	function (inputEvent, formValues, errors, schema) {
+var $author$project$Pages$TaskList$schemaToForm = F6(
+	function (fileSize, fileName, inputEvent, formValues, errors, schema) {
 		var toInput = function (_v11) {
 			var k = _v11.a;
 			var v = _v11.b;
@@ -19978,7 +20266,20 @@ var $author$project$Pages$TaskList$schemaToForm = F4(
 											_List_Nil,
 											_List_fromArray(
 												[
-													A2($author$project$Styled$styledPrimaryText, _List_Nil, 'Successful geojson upload!')
+													A2(
+													$author$project$Styled$styledPrimaryText,
+													_List_Nil,
+													A2(
+														$elm$core$Maybe$withDefault,
+														'Successful geojson upload!',
+														A3(
+															$elm$core$Maybe$map2,
+															F2(
+																function (size, name) {
+																	return 'File: ' + (name + ('. Size: ' + $author$project$Pages$TaskList$showFileSize(size)));
+																}),
+															fileSize,
+															fileName)))
 												]))),
 									data);
 							} else {
@@ -20039,8 +20340,8 @@ var $author$project$Pages$TaskList$schemaToForm = F4(
 			_List_Nil,
 			A2($elm$core$Maybe$map, makeInput, schema.properties));
 	});
-var $author$project$Pages$TaskList$executionInput = F4(
-	function (inputEvent, formValues, errors, task) {
+var $author$project$Pages$TaskList$executionInput = F6(
+	function (fileSize, fileName, inputEvent, formValues, errors, task) {
 		var _v0 = task.validator;
 		if (_v0.$ === 'BooleanSchema') {
 			return _List_fromArray(
@@ -20065,7 +20366,7 @@ var $author$project$Pages$TaskList$executionInput = F4(
 					formValues.executionName,
 					'Execution name',
 					'New execution name'),
-				A4($author$project$Pages$TaskList$schemaToForm, inputEvent, formValues.fromSchema, errors, subSchema));
+				A6($author$project$Pages$TaskList$schemaToForm, fileSize, fileName, inputEvent, formValues.fromSchema, errors, subSchema));
 		}
 	});
 var $mdgriffith$elm_ui$Element$Font$size = function (i) {
@@ -20109,16 +20410,6 @@ var $mdgriffith$elm_ui$Element$link = F2(
 			$mdgriffith$elm_ui$Internal$Model$Unkeyed(
 				_List_fromArray(
 					[label])));
-	});
-var $author$project$Styled$styledSecondaryText = F2(
-	function (attrs, s) {
-		return A2(
-			$mdgriffith$elm_ui$Element$el,
-			A2(
-				$elm$core$List$cons,
-				$mdgriffith$elm_ui$Element$Font$color($author$project$Styled$secondary),
-				attrs),
-			$mdgriffith$elm_ui$Element$text(s));
 	});
 var $author$project$Pages$TaskList$tasksLink = function (task) {
 	return A2(
@@ -20271,7 +20562,7 @@ var $author$project$Pages$TaskList$taskList = function (model) {
 												$mdgriffith$elm_ui$Element$padding(10)
 											]),
 										_Utils_ap(
-											A4($author$project$Pages$TaskList$executionInput, model.inputState, model.formValues, model.taskValidationErrors, selected),
+											A6($author$project$Pages$TaskList$executionInput, model.fileSize, model.fileName, model.inputState, model.formValues, model.taskValidationErrors, selected),
 											_List_fromArray(
 												[
 													A2(

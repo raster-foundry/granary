@@ -496,9 +496,25 @@ update msg model =
             ( { model | route = updatedTlm }, Cmd.none )
 
         GotFiles head _ ->
-            ( model, Task.perform GeoJsonData (File.toString head) )
+            let
+                fileSize =
+                    File.size head
 
-        GeoJsonData data ->
+                fileName =
+                    File.name head
+
+                updatedTlm =
+                    updateTaskListModel
+                        (\tlm ->
+                            { tlm | fileSize = Just fileSize, fileName = Just fileName }
+                        )
+                        model.route
+                        |> Maybe.map TaskList
+                        |> Maybe.withDefault Login
+            in
+            ( { model | route = updatedTlm }, Task.perform (GeoJsonData fileName fileSize) (File.toString head) )
+
+        GeoJsonData fileName fileSize data ->
             case ( JD.decodeString GeoJson.decoder data, model.route ) of
                 ( Result.Ok taskGrid, TaskList tlm ) ->
                     let
@@ -541,7 +557,7 @@ update msg model =
                             tlm.taskValidationErrors
 
                         addition =
-                            Dict.singleton "TASK_GRID" (DecodingError err)
+                            Dict.singleton "TASK_GRID" (DecodingError fileName fileSize err)
 
                         updated =
                             { tlm | taskValidationErrors = Dict.union addition validationErrors }
@@ -551,7 +567,7 @@ update msg model =
                 ( Result.Err err, _ ) ->
                     let
                         validationErrors =
-                            Dict.singleton "TASK_GRID" (DecodingError err)
+                            Dict.singleton "TASK_GRID" (DecodingError fileName fileSize err)
 
                         updated =
                             { emptyTaskListModel | taskValidationErrors = validationErrors }
