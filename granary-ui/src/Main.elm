@@ -281,14 +281,22 @@ update msg model =
 
         GotExecutions taskId (Ok executionsPage) ->
             let
-                withExecutions =
+                executionListModelUpdate =
+                    \elm ->
+                        { elm
+                            | executions = executionsPage.results
+                            , forTask = taskId
+                        }
+
+                freshExecutionListModel =
                     emptyExecutionListModel
-                        |> (\elm ->
-                                { elm
-                                    | executions = executionsPage.results
-                                    , forTask = taskId
-                                }
-                           )
+                        |> executionListModelUpdate
+
+                withExecutions =
+                    updateExecutionListModel
+                        executionListModelUpdate
+                        model.route
+                        |> Maybe.withDefault freshExecutionListModel
             in
             ( { model
                 | route = ExecutionList withExecutions

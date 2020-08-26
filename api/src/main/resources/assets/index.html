@@ -11556,11 +11556,16 @@ var $author$project$Main$update = F2(
 				if (msg.b.$ === 'Ok') {
 					var taskId = msg.a;
 					var executionsPage = msg.b.a;
-					var withExecutions = function (elm) {
+					var executionListModelUpdate = function (elm) {
 						return _Utils_update(
 							elm,
 							{executions: executionsPage.results, forTask: taskId});
-					}($author$project$Pages$ExecutionList$emptyExecutionListModel);
+					};
+					var freshExecutionListModel = executionListModelUpdate($author$project$Pages$ExecutionList$emptyExecutionListModel);
+					var withExecutions = A2(
+						$elm$core$Maybe$withDefault,
+						freshExecutionListModel,
+						A2($author$project$Main$updateExecutionListModel, executionListModelUpdate, model.route));
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
