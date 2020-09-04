@@ -1,6 +1,4 @@
 package com.rasterfoundry.granary.datamodel
-
-import cats.implicits._
 import io.circe.syntax._
 import org.scalacheck._
 import org.scalacheck.cats.implicits._

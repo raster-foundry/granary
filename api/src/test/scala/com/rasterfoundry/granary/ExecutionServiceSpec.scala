@@ -8,7 +8,6 @@ import com.rasterfoundry.granary.datamodel._
 
 import cats.data.OptionT
 import cats.effect.IO
-import cats.implicits._
 import com.azavea.stac4s.StacItemAsset
 import com.colisweb.tracing.NoOpTracingContext
 import eu.timepit.refined.types.numeric.{NonNegInt, PosInt}

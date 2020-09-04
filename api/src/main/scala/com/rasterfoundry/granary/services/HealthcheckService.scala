@@ -5,7 +5,6 @@ import com.rasterfoundry.granary.datamodel.{HealthResult, HealthyResult, Unhealt
 
 import cats._
 import cats.effect._
-import cats.implicits._
 import com.colisweb.tracing.TracingContextBuilder
 import doobie.Transactor
 import doobie.implicits._

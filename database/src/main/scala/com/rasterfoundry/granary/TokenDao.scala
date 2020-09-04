@@ -3,7 +3,6 @@ package com.rasterfoundry.granary.database
 import com.rasterfoundry.granary.datamodel._
 
 import cats.effect.{IO, LiftIO}
-import cats.implicits._
 import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._

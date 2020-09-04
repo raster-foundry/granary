@@ -1,6 +1,4 @@
 package com.rasterfoundry.granary.datamodel
-
-import cats.implicits._
 import com.azavea.stac4s.StacItemAsset
 import io.circe._
 import io.circe.generic.semiauto._

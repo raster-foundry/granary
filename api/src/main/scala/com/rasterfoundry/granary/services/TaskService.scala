@@ -2,7 +2,7 @@ package com.rasterfoundry.granary.api.services
 
 import cats._
 import cats.effect._
-import cats.implicits._
+import cats.syntax.all._
 import com.colisweb.tracing.TracingContextBuilder
 import com.rasterfoundry.granary.api.auth.Auth
 import com.rasterfoundry.granary.api.endpoints._

@@ -1,6 +1,4 @@
 package com.rasterfoundry.granary.api.error
-
-import cats.implicits._
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.syntax._

@@ -4,7 +4,6 @@ import com.rasterfoundry.granary.datamodel._
 
 import cats.data.{EitherT, NonEmptyList, OptionT}
 import cats.data.Validated.{Invalid, Valid}
-import cats.implicits._
 import com.amazonaws.services.batch.model.ClientException
 import doobie._
 import doobie.implicits._

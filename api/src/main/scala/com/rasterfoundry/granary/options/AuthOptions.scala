@@ -1,8 +1,6 @@
 package com.rasterfoundry.granary.api.options
 
 import com.rasterfoundry.granary.api.AuthConfig
-
-import cats.implicits._
 import com.monovore.decline._
 
 import java.util.UUID

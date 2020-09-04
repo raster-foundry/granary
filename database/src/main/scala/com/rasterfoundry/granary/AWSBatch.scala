@@ -1,7 +1,6 @@
 package com.rasterfoundry.granary.database
 
 import cats.effect._
-import cats.implicits._
 import com.amazonaws.services.batch.AWSBatchClientBuilder
 import com.amazonaws.services.batch.model.SubmitJobRequest
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
