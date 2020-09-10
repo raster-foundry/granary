@@ -1,7 +1,7 @@
 package com.rasterfoundry.granary.database
 
 import cats.effect.{ContextShift, IO, LiftIO, Timer}
-import cats.implicits._
+import cats.syntax.all._
 import doobie._
 import doobie.free.connection.unit
 import doobie.implicits._
