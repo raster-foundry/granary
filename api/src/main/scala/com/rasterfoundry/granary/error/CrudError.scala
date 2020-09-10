@@ -1,4 +1,6 @@
 package com.rasterfoundry.granary.api.error
+
+import cats.syntax.functor._
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.syntax._

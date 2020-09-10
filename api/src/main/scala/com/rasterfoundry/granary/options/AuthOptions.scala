@@ -1,5 +1,6 @@
 package com.rasterfoundry.granary.api.options
 
+import cats.syntax.apply._
 import com.rasterfoundry.granary.api.AuthConfig
 import com.monovore.decline._
 

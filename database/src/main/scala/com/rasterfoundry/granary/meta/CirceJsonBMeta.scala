@@ -1,6 +1,7 @@
 package com.rasterfoundry.granary.database.meta
 
 import com.rasterfoundry.granary.datamodel.Validator
+import cats.syntax.either._
 import com.azavea.stac4s.StacItemAsset
 import doobie._
 import doobie.postgres.circe.jsonb.implicits._
