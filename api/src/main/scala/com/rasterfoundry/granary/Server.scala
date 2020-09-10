@@ -113,7 +113,7 @@ object ApiServer extends IOApp {
         Options.paginationConfig
       ).tupled
     }
-    cmd.parse(args) map {
+    cmd.parse(args, env = sys.env) map {
       case (dbConfig, metaConfig, s3Config, authConfig, paginationConfig) =>
         createServer(dbConfig, metaConfig, s3Config, authConfig, paginationConfig)
           .use(_ => IO.never)
