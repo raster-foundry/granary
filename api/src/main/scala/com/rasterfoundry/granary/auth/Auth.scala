@@ -6,7 +6,7 @@ import com.rasterfoundry.granary.api.error._
 import com.rasterfoundry.granary.database.TokenDao
 import com.rasterfoundry.granary.datamodel._
 
-import cats.implicits._
+import cats.syntax.all._
 import cats.effect.Sync
 import doobie._
 import doobie.implicits._

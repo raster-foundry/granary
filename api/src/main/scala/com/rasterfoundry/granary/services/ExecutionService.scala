@@ -4,7 +4,7 @@ import java.util.UUID
 
 import cats._
 import cats.effect._
-import cats.implicits._
+import cats.syntax.all._
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.colisweb.tracing.TracingContextBuilder
 import com.rasterfoundry.granary.api.auth._

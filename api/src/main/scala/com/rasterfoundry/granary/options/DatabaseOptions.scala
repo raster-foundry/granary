@@ -1,7 +1,7 @@
 package com.rasterfoundry.granary.api.options
 
 import cats.effect.{ContextShift, IO}
-import cats.implicits._
+import cats.syntax.apply._
 import com.monovore.decline._
 import com.monovore.decline.refined._
 import doobie.implicits._

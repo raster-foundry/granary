@@ -6,7 +6,7 @@ import com.rasterfoundry.granary.api.endpoints._
 import com.rasterfoundry.granary.api.services._
 import com.rasterfoundry.granary.database.{Config => DBConfig, DatabaseConfig}
 import cats.effect._
-import cats.implicits._
+import cats.syntax.all._
 import com.colisweb.tracing._
 import com.monovore.decline.Command
 import doobie.hikari.HikariTransactor

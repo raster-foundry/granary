@@ -1,5 +1,7 @@
 cancelable in Global := true
 
+ThisBuild / scalacOptions += "-P:semanticdb:synthetics:on"
+
 lazy val commonDependencies = Seq(
   Dependencies.specs2Core,
   Dependencies.specs2Scalacheck

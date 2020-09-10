@@ -4,7 +4,7 @@ import java.util.UUID
 
 import cats.data.OptionT
 import cats.effect.IO
-import cats.implicits._
+import cats.syntax.traverse._
 import com.colisweb.tracing.NoOpTracingContext
 import com.rasterfoundry.granary.api.AuthConfig
 import com.rasterfoundry.granary.api.auth.Auth
