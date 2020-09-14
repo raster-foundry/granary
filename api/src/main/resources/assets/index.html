@@ -19286,19 +19286,23 @@ var $mdgriffith$elm_ui$Element$image = F2(
 	});
 var $author$project$Main$logo = F2(
 	function (attrs, maxSize) {
+		var setMax = function (f) {
+			return f(
+				A2(
+					$mdgriffith$elm_ui$Element$maximum,
+					maxSize,
+					A2(
+						$mdgriffith$elm_ui$Element$minimum,
+						100,
+						$mdgriffith$elm_ui$Element$fillPortion(1))));
+		};
 		return A2(
 			$mdgriffith$elm_ui$Element$image,
 			_Utils_ap(
 				_List_fromArray(
 					[
-						$mdgriffith$elm_ui$Element$height(
-						A2(
-							$mdgriffith$elm_ui$Element$maximum,
-							maxSize,
-							A2(
-								$mdgriffith$elm_ui$Element$minimum,
-								100,
-								$mdgriffith$elm_ui$Element$fillPortion(1)))),
+						setMax($mdgriffith$elm_ui$Element$width),
+						setMax($mdgriffith$elm_ui$Element$height),
 						$mdgriffith$elm_ui$Element$padding(10)
 					]),
 				attrs),
@@ -19388,16 +19392,7 @@ var $author$project$Main$loginPage = function (model) {
 			]),
 		_List_fromArray(
 			[
-				A2(
-				$mdgriffith$elm_ui$Element$row,
-				_List_fromArray(
-					[
-						$mdgriffith$elm_ui$Element$width($mdgriffith$elm_ui$Element$fill)
-					]),
-				_List_fromArray(
-					[
-						A2($author$project$Main$logo, _List_Nil, 200)
-					])),
+				A2($author$project$Main$logo, _List_Nil, 400),
 				A2(
 				$mdgriffith$elm_ui$Element$row,
 				_List_fromArray(

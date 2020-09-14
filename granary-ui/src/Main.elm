@@ -611,8 +611,13 @@ update msg model =
 
 logo : List (Element.Attribute msg) -> Int -> Element msg
 logo attrs maxSize =
+    let
+        setMax f =
+            fillPortion 1 |> Element.minimum 100 |> Element.maximum maxSize |> f
+    in
     Element.image
-        ([ fillPortion 1 |> Element.minimum 100 |> Element.maximum maxSize |> height
+        ([ setMax width
+         , setMax height
          , padding 10
          ]
             ++ attrs
@@ -645,8 +650,13 @@ homeLink =
 
 loginPage : Model -> Element Msg
 loginPage model =
-    column [ spacing 24, Element.centerX, Element.centerY, width Element.shrink ]
-        [ row [ width fill ] [ logo [] 200 ]
+    column
+        [ spacing 24
+        , Element.centerX
+        , Element.centerY
+        , width Element.shrink
+        ]
+        [ logo [] 400
         , row [ width fill, spacing 8 ]
             [ textInput [] TokenInput model.secretsUnsubmitted "Enter a token" "Token input"
             , submitButton (not << String.isEmpty)
