@@ -168,11 +168,19 @@ class ExecutionServiceSpec
             allCreatedPreds <- executions traverse { createExecution(_, executionService) }
             task1Uri = Uri.fromString(s"/executions?taskId=${createdTask1.id}").right.get
             task2Uri = Uri.fromString(s"/executions?taskId=${createdTask2.id}").right.get
+            find1Uri = Uri.fromString(s"/executions?tags=${execution1.tags.mkString(",")}").right.get
+            findNothingUri = Uri.fromString(s"/executions?tags=not-present-in-any-tags").right.get
             listedForTask1 <- executionService.routes.run(
               Request[IO](method = Method.GET, uri = task1Uri)
             ) flatMap { resp => OptionT.liftF { resp.as[PaginatedResponse[Execution]] } }
             listedForTask2 <- executionService.routes.run(
               Request[IO](method = Method.GET, uri = task2Uri)
+            ) flatMap { resp => OptionT.liftF { resp.as[PaginatedResponse[Execution]] } }
+            listedForTags <- executionService.routes.run(
+              Request[IO](method = Method.GET, uri = find1Uri)
+            ) flatMap { resp => OptionT.liftF { resp.as[PaginatedResponse[Execution]] } }
+            findNothing <- executionService.routes.run(
+              Request[IO](method = Method.GET, uri = findNothingUri)
             ) flatMap { resp => OptionT.liftF { resp.as[PaginatedResponse[Execution]] } }
             _ <- List(
               ExecutionSuccess(
@@ -200,6 +208,8 @@ class ExecutionServiceSpec
               createdTask2.id,
               listedForTask1,
               listedForTask2,
+              listedForTags,
+              findNothing,
               allCreatedPreds,
               listedForSuccess,
               listedForFailure
@@ -211,6 +221,8 @@ class ExecutionServiceSpec
             task2Id,
             task1Preds,
             task2Preds,
+            listedTags1,
+            findNothing,
             allCreatedPreds,
             successResults,
             failureResults
@@ -226,7 +238,9 @@ class ExecutionServiceSpec
             JobStatus.Successful
           }) && (failureResults.results map {
             _.status
-          }) ==== (failureResults.results map { _ => JobStatus.Failed })
+          }) ==== (failureResults.results map { _ => JobStatus.Failed }) && (
+            listedTags1.results.map(_.id).contains(task1Id)
+          ) && findNothing.results.isEmpty
         }
     }
 
