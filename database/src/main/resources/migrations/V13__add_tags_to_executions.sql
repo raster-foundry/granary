@@ -1,0 +1,1 @@
+ALTER TABLE executions ADD COLUMN tags text [] NOT NULL default '{}';

@@ -2,8 +2,10 @@ package com.rasterfoundry.granary.datamodel
 
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3URI}
 import com.azavea.stac4s.StacItemAsset
+import eu.timepit.refined.types.string.NonEmptyString
 import io.circe._
 import io.circe.generic.semiauto._
+import io.circe.refined._
 
 import scala.util.Try
 
@@ -20,7 +22,8 @@ case class Execution(
     results: List[StacItemAsset],
     webhookId: Option[UUID],
     owner: Option[UUID],
-    name: String
+    name: String,
+    tags: List[NonEmptyString]
 ) {
 
   def signS3OutputLocation(s3Client: AmazonS3): Execution = {
@@ -46,7 +49,8 @@ object Execution {
   case class Create(
       name: String,
       taskId: UUID,
-      arguments: Json
+      arguments: Json,
+      tags: List[NonEmptyString] = List.empty
   )
 
   object Create {

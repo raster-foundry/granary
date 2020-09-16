@@ -181,9 +181,8 @@ class ExecutionServiceSpec
                 )
               ),
               ExecutionFailure("wasn't set up to succeed")
-            ).zip(allCreatedPreds) traverse {
-              case (msg, execution) =>
-                updateExecution[Execution](msg, execution, execution.webhookId.get)
+            ).zip(allCreatedPreds) traverse { case (msg, execution) =>
+              updateExecution[Execution](msg, execution, execution.webhookId.get)
             }
             successUri = Uri.fromString(s"/executions?status=successful").right.get
             failureUri = Uri.fromString(s"/executions?status=failed").right.get

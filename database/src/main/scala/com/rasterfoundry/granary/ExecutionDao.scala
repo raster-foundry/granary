@@ -5,12 +5,15 @@ import com.rasterfoundry.granary.datamodel._
 import cats.data.{EitherT, NonEmptyList, OptionT}
 import cats.data.Validated.{Invalid, Valid}
 import cats.syntax.applicative._
+import cats.syntax.list._
 import com.amazonaws.services.batch.model.ClientException
 import doobie._
 import doobie.implicits._
 import doobie.implicits.legacy.instant._
 import doobie.postgres.implicits._
 import doobie.postgres.circe.jsonb.implicits._
+import doobie.refined.implicits._
+import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.DecodingFailure
 import io.circe.schema.ValidationError
 import io.circe.syntax._
@@ -33,7 +36,7 @@ object ExecutionDao {
     fr"""
       SELECT
         id, task_id, invoked_at, arguments, status,
-        status_reason, results, webhook_id, owner, name
+        status_reason, results, webhook_id, owner, name, tags
       FROM executions
     """
 
@@ -42,7 +45,8 @@ object ExecutionDao {
       pageRequest: PageRequest,
       taskId: Option[UUID],
       status: Option[JobStatus],
-      name: Option[String]
+      name: Option[String],
+      tags: List[NonEmptyString]
   ): ConnectionIO[List[Execution]] =
     Page(
       selectF ++ Fragments.whereAndOpt(
@@ -53,6 +57,14 @@ object ExecutionDao {
         tokenToFilter(token),
         name map { s =>
           Fragment.const(s"name like '%$s%'")
+        },
+        tags.toNel map { requiredTags =>
+          Fragment.const(
+            s"""tags @> ARRAY[${requiredTags
+              .map({ tag => s"'$tag'" })
+              .toList
+              .mkString(",")}]") }]"""
+          )
         }
       ),
       pageRequest
@@ -156,10 +168,10 @@ object ExecutionDao {
     val owner    = tokenToUserId(token)
     val fragment = fr"""
       INSERT INTO executions
-        (id, task_id, invoked_at, arguments, status, status_reason, results, webhook_id, owner, name)
+        (id, task_id, invoked_at, arguments, status, status_reason, results, webhook_id, owner, name, tags)
       VALUES
         (uuid_generate_v4(), ${execution.taskId}, now(), ${execution.arguments},
-        'CREATED', NULL, '[]' :: jsonb, uuid_generate_v4(), $owner, ${execution.name})
+        'CREATED', NULL, '[]' :: jsonb, uuid_generate_v4(), $owner, ${execution.name}, ${execution.tags})
     """
     val insertIO: OptionT[ConnectionIO, Either[ExecutionDaoError, Execution]] = for {
       task <- OptionT { TaskDao.getTask(token, execution.taskId) }
@@ -179,7 +191,8 @@ object ExecutionDao {
               "results",
               "webhook_id",
               "owner",
-              "name"
+              "name",
+              "tags"
             ) map { Right(_) }
         }
       }
@@ -240,7 +253,8 @@ object ExecutionDao {
           "results",
           "webhook_id",
           "owner",
-          "name"
+          "name",
+          "tags"
         )
       }
     } yield update

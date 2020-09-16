@@ -55,6 +55,7 @@ lazy val datamodelDependencies = commonDependencies ++ Seq(
   Dependencies.circeJsonSchema,
   Dependencies.newtype,
   Dependencies.refined,
+  Dependencies.refinedScalacheck % "test",
   Dependencies.shapeless,
   Dependencies.stac4s,
   Dependencies.scalacheck
