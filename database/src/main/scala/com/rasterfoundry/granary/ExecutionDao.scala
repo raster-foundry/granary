@@ -135,7 +135,8 @@ object ExecutionDao {
             "results",
             "webhook_id",
             "owner",
-            "name"
+            "name",
+            "tags"
           ) map { Right(_) }
       }
     }
@@ -173,6 +174,7 @@ object ExecutionDao {
         (uuid_generate_v4(), ${execution.taskId}, now(), ${execution.arguments},
         'CREATED', NULL, '[]' :: jsonb, uuid_generate_v4(), $owner, ${execution.name}, ${execution.tags})
     """
+    println(s"Fragment is: $fragment")
     val insertIO: OptionT[ConnectionIO, Either[ExecutionDaoError, Execution]] = for {
       task <- OptionT { TaskDao.getTask(token, execution.taskId) }
       argCheck = task.validator.validate(execution.arguments)

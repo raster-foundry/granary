@@ -55,6 +55,11 @@ object Execution {
 
   object Create {
     implicit val encCreate: Encoder[Create] = deriveEncoder
-    implicit val decCreate: Decoder[Create] = deriveDecoder
+    implicit val decCreate: Decoder[Create] = Decoder.forProduct4(
+      "name", "taskId", "arguments", "tags"
+      )((name: String, taskId: UUID, arguments: Json, tags: Option[List[NonEmptyString]]) =>
+        Create(name, taskId, arguments, tags getOrElse Nil
+        )
+      )
   }
 }
