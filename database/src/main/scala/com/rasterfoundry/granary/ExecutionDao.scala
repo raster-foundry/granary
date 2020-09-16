@@ -58,13 +58,8 @@ object ExecutionDao {
         name map { s =>
           Fragment.const(s"name like '%$s%'")
         },
-        tags.toNel map { requiredTags =>
-          Fragment.const(
-            s"""tags @> ARRAY[${requiredTags
-              .map({ tag => s"'$tag'" })
-              .toList
-              .mkString(",")}]") }]"""
-          )
+        tags.toNel map { _ =>
+            fr"""tags @> $tags :: text[]"""
         }
       ),
       pageRequest
@@ -174,7 +169,6 @@ object ExecutionDao {
         (uuid_generate_v4(), ${execution.taskId}, now(), ${execution.arguments},
         'CREATED', NULL, '[]' :: jsonb, uuid_generate_v4(), $owner, ${execution.name}, ${execution.tags})
     """
-    println(s"Fragment is: $fragment")
     val insertIO: OptionT[ConnectionIO, Either[ExecutionDaoError, Execution]] = for {
       task <- OptionT { TaskDao.getTask(token, execution.taskId) }
       argCheck = task.validator.validate(execution.arguments)
