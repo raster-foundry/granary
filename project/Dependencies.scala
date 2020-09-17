@@ -78,7 +78,6 @@ object Dependencies {
   val pureConfigGeneric   = "com.github.pureconfig"       %% "pureconfig-generic"    % Versions.PureConfig
   val refined             = "eu.timepit"                  %% "refined"               % Versions.RefinedVersion
   val refinedPureconfig   = "eu.timepit"                  %% "refined-pureconfig"    % Versions.RefinedVersion
-  val refinedScalacheck   = "eu.timepit"                  %% "refined-scalacheck"    % Versions.RefinedVersion
   val scalacheck          = "org.scalacheck"              %% "scalacheck"            % Versions.ScalacheckVersion % "test"
   val shapeless           = "com.chuusai"                 %% "shapeless"             % Versions.ShapelessVersion
   val slf4jApi            = "org.slf4j"                    % "slf4j-api"             % Versions.Slf4jVersion

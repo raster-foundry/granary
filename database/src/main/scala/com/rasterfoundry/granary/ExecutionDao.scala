@@ -59,7 +59,7 @@ object ExecutionDao {
           Fragment.const(s"name like '%$s%'")
         },
         tags.toNel map { _ =>
-            fr"""tags @> $tags :: text[]"""
+          fr"""tags @> $tags :: text[]"""
         }
       ),
       pageRequest

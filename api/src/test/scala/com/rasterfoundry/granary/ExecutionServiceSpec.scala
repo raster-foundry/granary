@@ -168,7 +168,10 @@ class ExecutionServiceSpec
             allCreatedPreds <- executions traverse { createExecution(_, executionService) }
             task1Uri = Uri.fromString(s"/executions?taskId=${createdTask1.id}").right.get
             task2Uri = Uri.fromString(s"/executions?taskId=${createdTask2.id}").right.get
-            find1Uri = Uri.fromString(s"/executions?tags=${execution1.tags.mkString(",")}").right.get
+            find1Uri = Uri
+              .fromString(s"/executions?tags=${execution1.tags.mkString(",")}")
+              .right
+              .get
             findNothingUri = Uri.fromString(s"/executions?tags=not-present-in-any-tags").right.get
             listedForTask1 <- executionService.routes.run(
               Request[IO](method = Method.GET, uri = task1Uri)

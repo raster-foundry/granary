@@ -1,7 +1,6 @@
 package com.rasterfoundry.granary.datamodel
 
 import cats.syntax.apply._
-import eu.timepit.refined.scalacheck.string._
 import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.syntax._
 import org.scalacheck._
@@ -28,7 +27,9 @@ trait Generators {
       shortStringGen,
       Gen.delay(UUID.randomUUID),
       Gen.const(Map.empty[String, String].asJson),
-      Gen.listOf(Arbitrary.arbitrary[NonEmptyString])
+      Gen.choose(0, 20) flatMap { listLength =>
+        Gen.listOfN(listLength, shortStringGen map { NonEmptyString.unsafeFrom })
+      }
     ).tupled map {
       Function.tupled(Execution.Create.apply)
     }
