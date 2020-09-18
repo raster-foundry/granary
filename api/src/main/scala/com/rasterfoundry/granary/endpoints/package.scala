@@ -13,14 +13,16 @@ package object endpoints {
     Codec.string.mapDecode(s => DecodeResult.Value(TokenHeader(s)))(_.headerValue)
 
   implicit val listNonEmptyStringCodec: Codec[String, List[NonEmptyString], TextPlain] =
-    Codec.string.mapDecode(commaSepString =>
-      DecodeResult.fromOption(
-        commaSepString
-          .split(",")
-          .toList
-          .traverse({ s =>
-            NonEmptyString.from(s).toOption
-          })
-      )
-    )(_.toList.mkString(","))
+    Codec.string.mapDecode({
+      case "" => DecodeResult.Value(Nil)
+      case commaSepString =>
+        DecodeResult.fromOption(
+          commaSepString
+            .split(",")
+            .toList
+            .traverse({ s =>
+              NonEmptyString.from(s).toOption
+            })
+        )
+    })(_.toList.mkString(","))
 }
