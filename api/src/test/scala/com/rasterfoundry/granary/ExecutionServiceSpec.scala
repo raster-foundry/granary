@@ -161,13 +161,17 @@ class ExecutionServiceSpec
           val testIO = for {
             createdTask1 <- createTask(task1, taskService)
             createdTask2 <- createTask(task2, taskService)
-            executions = List(
+            createdExecution1 <- createExecution(
               execution1.copy(taskId = createdTask1.id),
-              execution2.copy(taskId = createdTask2.id)
+              executionService
             )
-            allCreatedPreds <- executions traverse { createExecution(_, executionService) }
-            task1Uri = Uri.fromString(s"/executions?taskId=${createdTask1.id}").right.get
-            task2Uri = Uri.fromString(s"/executions?taskId=${createdTask2.id}").right.get
+            createdExecution2 <- createExecution(
+              execution2.copy(taskId = createdTask2.id),
+              executionService
+            )
+            allCreatedPreds = List(createdExecution1, createdExecution2)
+            task1Uri        = Uri.fromString(s"/executions?taskId=${createdTask1.id}").right.get
+            task2Uri        = Uri.fromString(s"/executions?taskId=${createdTask2.id}").right.get
             find1Uri = Uri
               .fromString(s"/executions?tags=${execution1.tags.mkString(",")}")
               .right
@@ -209,6 +213,7 @@ class ExecutionServiceSpec
             (
               createdTask1.id,
               createdTask2.id,
+              createdExecution1,
               listedForTask1,
               listedForTask2,
               listedForTags,
@@ -222,6 +227,7 @@ class ExecutionServiceSpec
           val (
             task1Id,
             task2Id,
+            createdExecution1,
             task1Preds,
             task2Preds,
             listedTags1,
@@ -242,7 +248,7 @@ class ExecutionServiceSpec
           }) && (failureResults.results map {
             _.status
           }) ==== (failureResults.results map { _ => JobStatus.Failed }) && (
-            listedTags1.results.map(_.id).contains(task1Id)
+            listedTags1.results.map(_.id).contains(createdExecution1.id)
           ) && findNothing.results.isEmpty
         }
     }
