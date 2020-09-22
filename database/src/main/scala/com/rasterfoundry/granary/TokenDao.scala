@@ -28,7 +28,7 @@ object TokenDao {
     (for {
       uuid <- LiftIO[ConnectionIO].liftIO(IO { UUID.fromString(tokenId) })
       validated <- (
-          selectF ++ Fragments.whereAnd(fr"id = $uuid")
+        selectF ++ Fragments.whereAnd(fr"id = $uuid")
       ).query[Token].option
     } yield validated) handleErrorWith { e =>
       LiftIO[ConnectionIO].liftIO {

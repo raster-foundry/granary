@@ -161,18 +161,33 @@ class ExecutionServiceSpec
           val testIO = for {
             createdTask1 <- createTask(task1, taskService)
             createdTask2 <- createTask(task2, taskService)
-            executions = List(
+            createdExecution1 <- createExecution(
               execution1.copy(taskId = createdTask1.id),
-              execution2.copy(taskId = createdTask2.id)
+              executionService
             )
-            allCreatedPreds <- executions traverse { createExecution(_, executionService) }
-            task1Uri = Uri.fromString(s"/executions?taskId=${createdTask1.id}").right.get
-            task2Uri = Uri.fromString(s"/executions?taskId=${createdTask2.id}").right.get
+            createdExecution2 <- createExecution(
+              execution2.copy(taskId = createdTask2.id),
+              executionService
+            )
+            allCreatedPreds = List(createdExecution1, createdExecution2)
+            task1Uri        = Uri.fromString(s"/executions?taskId=${createdTask1.id}").right.get
+            task2Uri        = Uri.fromString(s"/executions?taskId=${createdTask2.id}").right.get
+            find1Uri = Uri
+              .fromString(s"/executions?tags=${execution1.tags.mkString(",")}")
+              .right
+              .get
+            findNothingUri = Uri.fromString(s"/executions?tags=not-present-in-any-tags").right.get
             listedForTask1 <- executionService.routes.run(
               Request[IO](method = Method.GET, uri = task1Uri)
             ) flatMap { resp => OptionT.liftF { resp.as[PaginatedResponse[Execution]] } }
             listedForTask2 <- executionService.routes.run(
               Request[IO](method = Method.GET, uri = task2Uri)
+            ) flatMap { resp => OptionT.liftF { resp.as[PaginatedResponse[Execution]] } }
+            listedForTags <- executionService.routes.run(
+              Request[IO](method = Method.GET, uri = find1Uri)
+            ) flatMap { resp => OptionT.liftF { resp.as[PaginatedResponse[Execution]] } }
+            findNothing <- executionService.routes.run(
+              Request[IO](method = Method.GET, uri = findNothingUri)
             ) flatMap { resp => OptionT.liftF { resp.as[PaginatedResponse[Execution]] } }
             _ <- List(
               ExecutionSuccess(
@@ -181,9 +196,8 @@ class ExecutionServiceSpec
                 )
               ),
               ExecutionFailure("wasn't set up to succeed")
-            ).zip(allCreatedPreds) traverse {
-              case (msg, execution) =>
-                updateExecution[Execution](msg, execution, execution.webhookId.get)
+            ).zip(allCreatedPreds) traverse { case (msg, execution) =>
+              updateExecution[Execution](msg, execution, execution.webhookId.get)
             }
             successUri = Uri.fromString(s"/executions?status=successful").right.get
             failureUri = Uri.fromString(s"/executions?status=failed").right.get
@@ -199,8 +213,11 @@ class ExecutionServiceSpec
             (
               createdTask1.id,
               createdTask2.id,
+              createdExecution1,
               listedForTask1,
               listedForTask2,
+              listedForTags,
+              findNothing,
               allCreatedPreds,
               listedForSuccess,
               listedForFailure
@@ -210,8 +227,11 @@ class ExecutionServiceSpec
           val (
             task1Id,
             task2Id,
+            createdExecution1,
             task1Preds,
             task2Preds,
+            listedTags1,
+            findNothing,
             allCreatedPreds,
             successResults,
             failureResults
@@ -227,7 +247,9 @@ class ExecutionServiceSpec
             JobStatus.Successful
           }) && (failureResults.results map {
             _.status
-          }) ==== (failureResults.results map { _ => JobStatus.Failed })
+          }) ==== (failureResults.results map { _ => JobStatus.Failed }) && (
+            listedTags1.results.map(_.id).contains(createdExecution1.id)
+          ) && findNothing.results.isEmpty
         }
     }
 

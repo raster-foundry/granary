@@ -14,9 +14,9 @@ import com.rasterfoundry.granary.database.ExecutionDao
 import com.rasterfoundry.granary.datamodel._
 import doobie._
 import doobie.implicits._
+import eu.timepit.refined.types.string.NonEmptyString
 import io.circe.syntax._
 import org.http4s._
-import shapeless.syntax.std.tuple._
 import sttp.tapir.server.http4s._
 
 class ExecutionService[F[_]: Sync](
@@ -36,13 +36,14 @@ class ExecutionService[F[_]: Sync](
       pageRequest: PageRequest,
       taskId: Option[UUID],
       status: Option[JobStatus],
-      name: Option[String]
+      name: Option[String],
+      tags: Option[List[NonEmptyString]]
   ): F[Either[CrudError, PaginatedResponse[Execution]]] = {
     val forPage = pageRequest `combine` defaultPageRequest
     mkContext("listExecutions", Map.empty, contextBuilder) use { _ =>
       Functor[F].map(
         ExecutionDao
-          .listExecutions(token, forPage, taskId, status, name)
+          .listExecutions(token, forPage, taskId, status, name, tags getOrElse Nil)
           .transact(xa)
       ) { executions =>
         val updatedExecutions = executions.map(_.signS3OutputLocation(s3Client))
@@ -110,24 +111,22 @@ class ExecutionService[F[_]: Sync](
 
   val list = ExecutionEndpoints.list
     .serverLogicPart(auth.fallbackToForbidden)
-    .andThen({
-      case (token, rest) =>
-        val tupled = Function.tupled(listExecutions _)
-        tupled(token +: rest)
+    .andThen({ case (token, (pageRequest, taskId, status, name, tags)) =>
+      listExecutions(token, pageRequest, taskId, status, name, tags)
     })
     .toRoutes
 
   val detail = ExecutionEndpoints.idLookup
     .serverLogicPart(auth.fallbackToForbidden)
-    .andThen({
-      case (token, rest) => getById(token, rest)
+    .andThen({ case (token, rest) =>
+      getById(token, rest)
     })
     .toRoutes
 
   val create = ExecutionEndpoints.create
     .serverLogicPart(auth.fallbackToForbidden)
-    .andThen({
-      case (token, rest) => createExecution(token, rest)
+    .andThen({ case (token, rest) =>
+      createExecution(token, rest)
     })
     .toRoutes
 

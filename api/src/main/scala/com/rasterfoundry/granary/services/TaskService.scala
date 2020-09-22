@@ -64,29 +64,29 @@ class TaskService[F[_]: Sync](
 
   val create = TaskEndpoints.create
     .serverLogicPart(auth.fallbackToForbidden)
-    .andThen({
-      case (token, rest) => createTask(token, rest)
+    .andThen({ case (token, rest) =>
+      createTask(token, rest)
     })
     .toRoutes
 
   val list = TaskEndpoints.list
     .serverLogicPart(auth.fallbackToForbidden)
-    .andThen({
-      case (token, rest) => listTasks(token, rest)
+    .andThen({ case (token, rest) =>
+      listTasks(token, rest)
     })
     .toRoutes
 
   val detail = TaskEndpoints.idLookup
     .serverLogicPart(auth.fallbackToForbidden)
-    .andThen({
-      case (token, rest) => getById(token, rest)
+    .andThen({ case (token, rest) =>
+      getById(token, rest)
     })
     .toRoutes
 
   val delete = TaskEndpoints.delete
     .serverLogicPart(auth.fallbackToForbidden)
-    .andThen({
-      case (token, rest) => deleteById(token, rest)
+    .andThen({ case (token, rest) =>
+      deleteById(token, rest)
     })
     .toRoutes
 
