@@ -3,8 +3,10 @@ package com.rasterfoundry.granary.api.endpoints
 import com.rasterfoundry.granary.api._
 import com.rasterfoundry.granary.api.error._
 import com.rasterfoundry.granary.datamodel._
+import eu.timepit.refined.types.string.NonEmptyString
 import sttp.tapir.{ValidationError => _, _}
 import sttp.tapir.json.circe._
+import sttp.tapir.codec.refined._
 
 import java.util.UUID
 
@@ -54,6 +56,7 @@ object ExecutionEndpoints {
       .in(query[Option[UUID]]("taskId"))
       .in(query[Option[JobStatus]]("status"))
       .in(query[Option[String]]("name"))
+      .in(query[Option[List[NonEmptyString]]]("tags"))
       .out(jsonBody[PaginatedResponse[Execution]])
       .errorOut(
         oneOf[CrudError](

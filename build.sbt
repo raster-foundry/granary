@@ -53,6 +53,7 @@ lazy val datamodelDependencies = commonDependencies ++ Seq(
   Dependencies.circeCore,
   Dependencies.circeGeneric,
   Dependencies.circeJsonSchema,
+  Dependencies.circeRefined,
   Dependencies.newtype,
   Dependencies.refined,
   Dependencies.shapeless,
