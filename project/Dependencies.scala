@@ -22,7 +22,7 @@ object Versions {
   val NewtypeVersion         = "0.4.4"
   val OpenTracingVersion     = "0.1.1"
   val PureConfig             = "0.14.0"
-  val RefinedVersion         = "0.9.16"
+  val RefinedVersion         = "0.9.17"
   val ScapegoatVersion       = "1.3.11"
   val ScalacheckVersion      = "1.14.3"
   val ShapelessVersion       = "2.3.3"
