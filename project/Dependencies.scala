@@ -14,6 +14,7 @@ object Versions {
   val DeclineVersion         = "1.3.0"
   val DoobieVersion          = "0.9.2"
   val Flyway                 = "7.1.1"
+  val Fs2                    = "2.4.4"
   val HikariVersion          = "3.4.5"
   val Http4sVersion          = "0.21.8"
   val LogbackVersion         = "1.2.3"
@@ -25,6 +26,7 @@ object Versions {
   val RefinedVersion         = "0.9.17"
   val ScapegoatVersion       = "1.3.11"
   val ScalacheckVersion      = "1.15.0"
+  val ScalaReflect           = "2.12.10"
   val ShapelessVersion       = "2.3.3"
   val Slf4jVersion           = "1.7.30"
   val SourceCodeVersion      = "0.2.1"
@@ -61,6 +63,7 @@ object Dependencies {
   val doobieRefined       = "org.tpolecat"                %% "doobie-refined"        % Versions.DoobieVersion
   val doobieScalatest     = "org.tpolecat"                %% "doobie-scalatest"      % Versions.DoobieVersion     % "test"
   val doobieSpecs2        = "org.tpolecat"                %% "doobie-specs2"         % Versions.DoobieVersion     % "test"
+  val fs2Core             = "co.fs2"                      %% "fs2-core"              % Versions.Fs2
   val flyway              = "org.flywaydb"                 % "flyway-core"           % Versions.Flyway            % "test"
   val hikariCP            = "com.zaxxer"                   % "HikariCP"              % Versions.HikariVersion
   val http4sCirce         = "org.http4s"                  %% "http4s-circe"          % Versions.Http4sVersion
@@ -79,6 +82,7 @@ object Dependencies {
   val refined             = "eu.timepit"                  %% "refined"               % Versions.RefinedVersion
   val refinedPureconfig   = "eu.timepit"                  %% "refined-pureconfig"    % Versions.RefinedVersion
   val scalacheck          = "org.scalacheck"              %% "scalacheck"            % Versions.ScalacheckVersion % "test"
+  val scalaReflect        = "org.scala-lang"               % "scala-reflect"         % Versions.ScalaReflect
   val shapeless           = "com.chuusai"                 %% "shapeless"             % Versions.ShapelessVersion
   val slf4jApi            = "org.slf4j"                    % "slf4j-api"             % Versions.Slf4jVersion
   val sourceCode          = "com.lihaoyi"                 %% "sourcecode"            % Versions.SourceCodeVersion
