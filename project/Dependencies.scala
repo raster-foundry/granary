@@ -13,7 +13,7 @@ object Versions {
   val CirceJsonSchemaVersion = "0.1.0"
   val DeclineVersion         = "1.3.0"
   val DoobieVersion          = "0.9.2"
-  val Flyway                 = "7.2.0"
+  val Flyway                 = "7.2.1"
   val Fs2                    = "2.4.5"
   val HikariVersion          = "3.4.5"
   val Http4sVersion          = "0.21.9"
