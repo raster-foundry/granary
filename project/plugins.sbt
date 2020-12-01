@@ -7,4 +7,4 @@ addSbtPlugin("com.sksamuel.scapegoat"   %% "sbt-scapegoat"             % "1.1.0"
 addSbtPlugin("ch.epfl.scala"             % "sbt-scalafix"              % "0.9.24")
 addSbtPlugin("com.eed3si9n"              % "sbt-assembly"              % "0.15.0")
 addSbtPlugin("org.jmotor.sbt"            % "sbt-dependency-updates"    % "1.2.2")
-addSbtPlugin("com.github.cb372"          % "sbt-explicit-dependencies" % "0.2.15")
+addSbtPlugin("com.github.cb372"          % "sbt-explicit-dependencies" % "0.2.16")
