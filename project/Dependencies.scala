@@ -34,6 +34,7 @@ object Versions {
   val Stac4s                 = "0.0.21"
   val SttpVersion            = "1.1.4"
   val TapirVersion           = "0.16.16"
+  val TypenameVersion        = "0.1.3"
 }
 
 object Dependencies {
@@ -92,6 +93,7 @@ object Dependencies {
   val sttpModel           = "com.softwaremill.sttp.model" %% "core"                  % Versions.SttpVersion
   val tapir               = "com.softwaremill.sttp.tapir" %% "tapir-core"            % Versions.TapirVersion
   val tapirCirce          = "com.softwaremill.sttp.tapir" %% "tapir-json-circe"      % Versions.TapirVersion
+  val typename            = "org.tpolecat"                %% "typename"              % Versions.TypenameVersion
 
   val tapirOpenAPIModel =
     "com.softwaremill.sttp.tapir" %% "tapir-openapi-model" % Versions.TapirVersion

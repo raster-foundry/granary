@@ -100,7 +100,8 @@ lazy val databaseDependencies = commonDependencies ++ Seq(
   Dependencies.shapeless,
   Dependencies.slf4jApi,
   Dependencies.sourceCode,
-  Dependencies.stac4s
+  Dependencies.stac4s,
+  Dependencies.typename
 )
 
 lazy val database = (project in file("database"))
