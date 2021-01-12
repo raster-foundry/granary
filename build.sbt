@@ -99,7 +99,6 @@ lazy val databaseDependencies = commonDependencies ++ Seq(
   Dependencies.scalaReflect,
   Dependencies.shapeless,
   Dependencies.slf4jApi,
-  Dependencies.sourceCode,
   Dependencies.stac4s,
   Dependencies.typename
 )
@@ -162,7 +161,6 @@ lazy val apiDependencies = commonDependencies ++ Seq(
   Dependencies.refined,
   Dependencies.shapeless,
   Dependencies.slf4jApi,
-  Dependencies.sourceCode,
   Dependencies.stac4s,
   Dependencies.sttpModel,
   Dependencies.tapir,

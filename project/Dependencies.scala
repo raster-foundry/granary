@@ -86,7 +86,6 @@ object Dependencies {
   val scalaReflect        = "org.scala-lang"               % "scala-reflect"         % Versions.ScalaReflect
   val shapeless           = "com.chuusai"                 %% "shapeless"             % Versions.ShapelessVersion
   val slf4jApi            = "org.slf4j"                    % "slf4j-api"             % Versions.Slf4jVersion
-  val sourceCode          = "com.lihaoyi"                 %% "sourcecode"            % Versions.SourceCodeVersion
   val specs2Core          = "org.specs2"                  %% "specs2-core"           % Versions.Specs2Version     % "test"
   val specs2Scalacheck    = "org.specs2"                  %% "specs2-scalacheck"     % Versions.Specs2Version     % "test"
   val stac4s              = "com.azavea.stac4s"           %% "core"                  % Versions.Stac4s
