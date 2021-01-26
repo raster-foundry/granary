@@ -32,7 +32,7 @@ object Versions {
   val SourceCodeVersion      = "0.2.1"
   val Specs2Version          = "4.10.6"
   val Stac4s                 = "0.0.21"
-  val SttpVersion            = "1.1.4"
+  val SttpVersion            = "1.2.2"
   val TapirVersion           = "0.16.16"
   val TypenameVersion        = "0.1.3"
 }
