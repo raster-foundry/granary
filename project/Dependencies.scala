@@ -25,7 +25,7 @@ object Versions {
   val PureConfig             = "0.14.0"
   val RefinedVersion         = "0.9.20"
   val ScapegoatVersion       = "1.3.11"
-  val ScalacheckVersion      = "1.15.2"
+  val ScalacheckVersion      = "1.15.3"
   val ScalaReflect           = "2.12.10"
   val ShapelessVersion       = "2.3.3"
   val Slf4jVersion           = "1.7.30"
