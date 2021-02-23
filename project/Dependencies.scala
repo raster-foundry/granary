@@ -34,7 +34,7 @@ object Versions {
   val Stac4s                 = "0.0.21"
   val SttpVersion            = "1.1.4"
   val TapirVersion           = "0.16.16"
-  val TypenameVersion        = "0.1.3"
+  val TypenameVersion        = "0.1.5"
 }
 
 object Dependencies {
