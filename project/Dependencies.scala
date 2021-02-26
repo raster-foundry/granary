@@ -18,7 +18,7 @@ object Versions {
   val HikariVersion          = "3.4.5"
   val Http4sVersion          = "0.21.18"
   val LogbackVersion         = "1.2.3"
-  val Log4CatsVersion        = "1.1.1"
+  val Log4CatsVersion        = "1.2.0"
   val MagnoliaVersion        = "0.16.0"
   val NewtypeVersion         = "0.4.4"
   val OpenTracingVersion     = "0.1.1"
