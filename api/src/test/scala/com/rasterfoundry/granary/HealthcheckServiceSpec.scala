@@ -6,7 +6,7 @@ import com.rasterfoundry.granary.datamodel._
 import cats.data.OptionT
 import cats.effect.IO
 import com.colisweb.tracing.NoOpTracingContext
-import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 import org.http4s._
 import org.http4s.circe.CirceEntityDecoder._
 import org.specs2.{ScalaCheck, Specification}

@@ -6,8 +6,8 @@ import cats.syntax.traverse._
 import com.amazonaws.services.batch.AWSBatchClientBuilder
 import com.amazonaws.services.batch.model.SubmitJobRequest
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import io.chrisdavenport.log4cats.{Logger, SelfAwareStructuredLogger}
-import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
+import org.typelevel.log4cats.{Logger, SelfAwareStructuredLogger}
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 import io.circe.Json
 
 import scala.collection.JavaConverters._

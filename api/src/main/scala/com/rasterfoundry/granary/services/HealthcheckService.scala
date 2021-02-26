@@ -11,7 +11,7 @@ import cats.syntax.functor._
 import com.colisweb.tracing.TracingContextBuilder
 import doobie.Transactor
 import doobie.implicits._
-import io.chrisdavenport.log4cats.Logger
+import org.typelevel.log4cats.Logger
 import sttp.tapir.server.http4s._
 
 import scala.concurrent.duration._

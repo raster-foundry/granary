@@ -11,8 +11,8 @@ import com.colisweb.tracing._
 import com.monovore.decline.Command
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
-import io.chrisdavenport.log4cats.Logger
-import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 import org.http4s.implicits._
 import org.http4s.server.blaze._
 import org.http4s.server.middleware.{Logger => RequestResponseLogger, _}
