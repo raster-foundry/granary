@@ -5,7 +5,7 @@ import sbt._
 // Versions
 object Versions {
 
-  val awsSDK                 = "1.11.968"
+  val awsSDK                 = "1.11.972"
   val CatsEffectVersion      = "2.3.1"
   val CatsVersion            = "2.3.1"
   val CatsScalacheckVersion  = "0.3.0"
@@ -13,8 +13,8 @@ object Versions {
   val CirceJsonSchemaVersion = "0.1.0"
   val DeclineVersion         = "1.3.0"
   val DoobieVersion          = "0.10.0"
-  val Flyway                 = "7.6.0"
-  val Fs2                    = "2.5.3"
+  val Flyway                 = "7.7.0"
+  val Fs2                    = "2.5.0"
   val HikariVersion          = "3.4.5"
   val Http4sVersion          = "0.21.18"
   val LogbackVersion         = "1.2.3"
