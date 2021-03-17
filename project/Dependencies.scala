@@ -5,14 +5,14 @@ import sbt._
 // Versions
 object Versions {
 
-  val awsSDK                 = "1.11.972"
-  val CatsEffectVersion      = "2.3.1"
-  val CatsVersion            = "2.3.1"
+  val awsSDK                 = "1.11.976"
+  val CatsEffectVersion      = "2.3.3"
+  val CatsVersion            = "2.4.2"
   val CatsScalacheckVersion  = "0.3.0"
   val CirceVersion           = "0.13.0"
   val CirceJsonSchemaVersion = "0.1.0"
-  val DeclineVersion         = "1.3.0"
-  val DoobieVersion          = "0.12.1"
+  val DeclineVersion         = "1.4.0"
+  val DoobieVersion          = "0.10.0"
   val Flyway                 = "7.7.0"
   val Fs2                    = "2.5.0"
   val HikariVersion          = "3.4.5"
@@ -31,7 +31,7 @@ object Versions {
   val Slf4jVersion           = "1.7.30"
   val SourceCodeVersion      = "0.2.1"
   val Specs2Version          = "4.10.6"
-  val Stac4s                 = "0.0.21"
+  val Stac4s                 = "0.1.1"
   val SttpVersion            = "1.1.4"
   val TapirVersion           = "0.16.16"
   val TypenameVersion        = "0.1.5"
