@@ -14,7 +14,7 @@ object Versions {
   val DeclineVersion         = "1.4.0"
   val DoobieVersion          = "0.10.0"
   val Flyway                 = "7.7.1"
-  val Fs2                    = "2.5.3"
+  val Fs2                    = "3.0.0"
   val HikariVersion          = "3.4.5"
   val Http4sVersion          = "0.21.21"
   val LogbackVersion         = "1.2.3"
