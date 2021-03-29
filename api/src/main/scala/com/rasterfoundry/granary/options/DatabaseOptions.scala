@@ -1,6 +1,6 @@
 package com.rasterfoundry.granary.api.options
 
-import cats.effect.{ContextShift, IO}
+import cats.effect.IO
 import cats.syntax.apply._
 import com.monovore.decline._
 import com.monovore.decline.refined._
@@ -67,9 +67,7 @@ trait DatabaseOptions {
       help = databasePoolSizeHelp
     ) withDefault (refineMV(5))
 
-  def databaseConfig(implicit
-      contextShift: ContextShift[IO]
-  ): Opts[DatabaseConfig] =
+  def databaseConfig: Opts[DatabaseConfig] =
     (
       driverOpt,
       jdbcUrl,

@@ -16,13 +16,14 @@ import sttp.tapir.server.http4s._
 
 import scala.concurrent.duration._
 import com.rasterfoundry.granary.datamodel.HealthcheckResult
+import cats.effect.Temporal
 
 class HealthcheckService[F[_]: Sync: Logger: MonadError[*[_], Throwable]: Concurrent](
     contextBuilder: TracingContextBuilder[F],
     xa: Transactor[F]
 )(implicit
     contextShift: ContextShift[F],
-    timer: Timer[F]
+    timer: Temporal[F]
 ) extends GranaryService {
 
   def checkHealth: F[Either[UnhealthyResult, HealthyResult]] =
