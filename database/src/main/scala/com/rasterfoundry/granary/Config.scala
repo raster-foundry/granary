@@ -1,6 +1,6 @@
 package com.rasterfoundry.granary.database
 
-import cats.effect.{Async, ContextShift}
+import cats.effect.Async
 import com.zaxxer.hikari.HikariConfig
 import doobie.Transactor
 import eu.timepit.refined._
@@ -23,7 +23,7 @@ object Config {
 
   def nonHikariTransactor[F[_]: Async](
       conf: DatabaseConfig
-  )(implicit contextShift: ContextShift[F]): Transactor[F] =
+  ): Transactor[F] =
     Transactor.fromDriverManager[F](
       conf.driver,
       conf.connectionUrl.value + conf.databaseName,
@@ -33,7 +33,7 @@ object Config {
 
   private[database] def nonHikariTransactor[F[_]: Async](
       dbName: String
-  )(implicit contextShift: ContextShift[F]): Transactor[F] =
+  ): Transactor[F] =
     nonHikariTransactor[F](DatabaseConfig(databaseName = dbName))
 
   def hikariConfig(conf: DatabaseConfig): HikariConfig = {
