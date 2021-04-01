@@ -5,16 +5,16 @@ import sbt._
 // Versions
 object Versions {
 
-  val awsSDK                 = "1.11.987"
-  val CatsEffectVersion      = "2.4.0"
-  val CatsVersion            = "2.4.2"
+  val awsSDK                 = "1.11.989"
+  val CatsEffectVersion      = "2.4.1"
+  val CatsVersion            = "2.5.0"
   val CatsScalacheckVersion  = "0.3.0"
   val CirceVersion           = "0.13.0"
   val CirceJsonSchemaVersion = "0.1.0"
   val DeclineVersion         = "1.4.0"
   val DoobieVersion          = "0.10.0"
-  val Flyway                 = "7.7.1"
-  val Fs2                    = "2.5.4"
+  val Flyway                 = "7.7.2"
+  val Fs2                    = "2.5.3"
   val HikariVersion          = "3.4.5"
   val Http4sVersion          = "0.21.21"
   val LogbackVersion         = "1.2.3"
@@ -34,7 +34,7 @@ object Versions {
   val Stac4s                 = "0.1.1"
   val SttpVersion            = "1.1.4"
   val TapirVersion           = "0.16.16"
-  val TypenameVersion        = "0.1.5"
+  val TypenameVersion        = "0.1.6"
 }
 
 object Dependencies {
