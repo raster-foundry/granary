@@ -5,7 +5,7 @@ import sbt._
 // Versions
 object Versions {
 
-  val awsSDK                 = "1.11.989"
+  val awsSDK                 = "1.11.991"
   val CatsEffectVersion      = "2.4.1"
   val CatsVersion            = "2.5.0"
   val CatsScalacheckVersion  = "0.3.0"
