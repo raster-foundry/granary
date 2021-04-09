@@ -46,7 +46,7 @@ object ApiServer extends IOApp {
       paginationConfig: PaginationConfig
   ): Resource[IO, Server[IO]] =
     for {
-      tracingContextBuilder <- Resource.liftF {
+      tracingContextBuilder <- Resource.eval {
         getTracingContextBuilder flatMap {
           case Left(e)        => IO.raiseError(new Exception(e.toString))
           case Right(builder) => IO.pure(builder)
