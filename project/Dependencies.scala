@@ -27,7 +27,7 @@ object Versions {
   val ScapegoatVersion       = "1.3.11"
   val ScalacheckVersion      = "1.15.3"
   val ScalaReflect           = "2.12.10"
-  val ShapelessVersion       = "2.3.3"
+  val ShapelessVersion       = "2.3.4"
   val Slf4jVersion           = "1.7.30"
   val SourceCodeVersion      = "0.2.1"
   val Specs2Version          = "4.10.6"
