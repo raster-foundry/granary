@@ -1,6 +1,6 @@
 package com.rasterfoundry.granary.database
 
-import cats.effect.{ContextShift, IO, LiftIO, Timer}
+import cats.effect.{IO, LiftIO}
 import cats.syntax.all._
 import doobie._
 import doobie.free.connection.unit
@@ -13,6 +13,7 @@ import org.specs2.specification.{AfterAll, BeforeAll}
 
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import cats.effect.Temporal
 
 object SetupTemplateDB {
   val templateDbName: String = "testing_template"
@@ -58,7 +59,7 @@ trait TestDatabaseSpec extends Specification with BeforeAll with AfterAll {
   val dbName: String         = getClass.getSimpleName.toLowerCase
   val templateDbName: String = SetupTemplateDB.templateDbName
 
-  implicit val timer: Timer[IO]     = IO.timer(global)
+  implicit val timer: Temporal[IO]     = IO.timer(global)
   implicit val cs: ContextShift[IO] = IO.contextShift(global)
 
   // Transactor used by tests with rollback behavior and transactions

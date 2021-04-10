@@ -24,6 +24,7 @@ import sttp.tapir.openapi.circe.yaml._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import com.rasterfoundry.granary.datamodel.PageRequest
+import cats.effect.Resource
 
 object ApiServer extends IOApp {
 
@@ -53,8 +54,8 @@ object ApiServer extends IOApp {
         }
       }
       connectionEc        <- ExecutionContexts.fixedThreadPool[IO](2)
-      dbBlocker           <- Blocker[IO]
-      staticAssetsBlocker <- Blocker[IO]
+      dbBlocker           <- Resource.unit[IO]
+      staticAssetsBlocker <- Resource.unit[IO]
       transactor <-
         HikariTransactor
           .fromHikariConfig[IO](DBConfig.hikariConfig(databaseConfig), connectionEc, dbBlocker)
@@ -96,7 +97,7 @@ object ApiServer extends IOApp {
             )
           }
           .orNotFound
-      serverBuilderBlocker <- Blocker[IO]
+      serverBuilderBlocker <- Resource.unit[IO]
       server <- BlazeServerBuilder[IO](serverBuilderBlocker.blockingContext)
         .bindHttp(8080, "0.0.0.0")
         .withHttpApp(router)
