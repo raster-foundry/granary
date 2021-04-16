@@ -1,6 +1,8 @@
 # granary [![CircleCI](https://circleci.com/gh/raster-foundry/granary.svg?style=svg)](https://circleci.com/gh/raster-foundry/granary) [![Docker Repository on Quay](https://quay.io/repository/raster-foundry/granary-api/status "Docker Repository on Quay")](https://quay.io/repository/raster-foundry/granary-api) [![Scala Steward badge](https://img.shields.io/badge/Scala_Steward-helping-blue.svg?style=flat&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAQCAMAAAARSr4IAAAAVFBMVEUAAACHjojlOy5NWlrKzcYRKjGFjIbp293YycuLa3pYY2LSqql4f3pCUFTgSjNodYRmcXUsPD/NTTbjRS+2jomhgnzNc223cGvZS0HaSD0XLjbaSjElhIr+AAAAAXRSTlMAQObYZgAAAHlJREFUCNdNyosOwyAIhWHAQS1Vt7a77/3fcxxdmv0xwmckutAR1nkm4ggbyEcg/wWmlGLDAA3oL50xi6fk5ffZ3E2E3QfZDCcCN2YtbEWZt+Drc6u6rlqv7Uk0LdKqqr5rk2UCRXOk0vmQKGfc94nOJyQjouF9H/wCc9gECEYfONoAAAAASUVORK5CYII=)](https://scala-steward.org)
 An API project that uses http4s and doobie
 
+**UNMAINTAINED**: This application is not currently being maintained. Its dependencies and code are more or less frozen at whatever was auto-mergeable up to 2021/04/16.
+
 ## Requirements
 
 - `docker`
